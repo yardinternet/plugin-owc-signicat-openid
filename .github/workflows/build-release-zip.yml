@@ -1,0 +1,26 @@
+name: Build release zip
+on: workflow_dispatch
+jobs:
+  build:
+    name: Build release zip
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v2
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.2'
+          coverage: none
+          tools: composer
+
+      - name: Install dependencies
+        run: composer install --no-progress --no-dev --no-ansi --prefer-dist --no-interaction --no-scripts --optimize-autoloader
+
+      - name: Generate zip
+        uses: 10up/action-wordpress-plugin-build-zip@stable
+        env:
+          SLUG: owc-signicat-openid
+        with:
+          retention-days: 1

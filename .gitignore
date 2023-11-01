@@ -1,0 +1,6 @@
+# Files
+*.map
+.DS_Store
+
+# Folders
+vendor

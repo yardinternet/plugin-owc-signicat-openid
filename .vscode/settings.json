@@ -1,0 +1,13 @@
+{
+	"editor.codeActionsOnSave": {
+		"source.fixAll": true
+	},
+	"eslint.validate": ["javascript"],
+	"phpsab.standard": "WordPress",
+	"phpcbf.onsave": true,
+	"phpsab.snifferEnable": true,
+	"phpsab.executablePathCBF": "./vendor/squizlabs/php_codesniffer/bin/phpcbf",
+	"phpsab.executablePathCS": "./vendor/squizlabs/php_codesniffer/bin/phpcs",
+	"phpsab.snifferShowSources": true,
+	"editor.defaultFormatter": "esbenp.prettier-vscode"
+}
