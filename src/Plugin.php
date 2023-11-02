@@ -40,8 +40,8 @@ class Plugin extends BasePlugin implements Composable
 		do_action( 'owc_signicat_openid_compose', $this, $container );
 
 		// Register hook providers.
-		// $this
-		//  ->register_hooks( $container->get( 'hooks.something' ) );
+		$this
+			->register_hooks( $container->get( 'hooks.oidc' ) );
 
 		if ( is_admin() ) {
 			$this

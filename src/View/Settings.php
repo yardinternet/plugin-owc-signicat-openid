@@ -9,7 +9,7 @@
 
 declare ( strict_types = 1 );
 
-namespace OWCSignicatOpenID\Provider;
+namespace OWCSignicatOpenID\View;
 
 /**
  * Exit when accessed directly.
@@ -35,6 +35,8 @@ class Settings extends AbstractHookProvider
 
 	/**
 	 * Add a settings page.
+	 *
+	 * @since 0.0.1
 	 */
 	public function add_settings_page(): void
 	{
@@ -49,6 +51,8 @@ class Settings extends AbstractHookProvider
 
 	/**
 	 * Register settings fields.
+	 *
+	 * @since 0.0.1
 	 */
 	public function register_settings(): void
 	{
@@ -59,8 +63,13 @@ class Settings extends AbstractHookProvider
 		register_setting( 'owc_signicat_openid_settings_group', 'owc_signicat_openid_path_logout_settings' );
 	}
 
+	/**
+	 * Render the settings page.
+	 *
+	 * @since 0.0.1
+	 */
 	public function render_settings_page(): void
 	{
-		include $this->plugin->get_path( 'views/screen-settings.php' );
+		include $this->plugin->get_path( 'resources/views/settings.php' );
 	}
 }
