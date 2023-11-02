@@ -43,6 +43,11 @@ class Plugin extends BasePlugin implements Composable
 		// $this
 		//  ->register_hooks( $container->get( 'hooks.something' ) );
 
+		if ( is_admin() ) {
+			$this
+				->register_hooks( $container->get( 'view.settings' ) );
+		}
+
 		/**
 		 * Finished composing the object graph.
 		 *
