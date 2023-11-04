@@ -166,9 +166,6 @@ class OpenID extends AbstractHookProvider
 		$access_token  = $token_set->getAccessToken();
 		$refresh_token = $token_set->getRefreshToken();
 
-		// $user_info_service = ( new UserInfoServiceBuilder() )->build();
-		// $user_info         = $user_info_service->getUserInfo( $this->oidc_client, $token_set );
-
 		if ($id_token) {
 			$claims = $token_set->claims();
 		} else {
@@ -196,13 +193,18 @@ class OpenID extends AbstractHookProvider
 	 * Logout and end the session.
 	 *
 	 * @since 0.0.1
+	 * @throws RuntimeException You were not logged in
 	 */
 	protected function logout()
 	{
 		$revocation_service = ( new RevocationServiceBuilder() )->build();
-		$access_token       = $this->session->get( 'access_token' );
-		$revocation_service->revoke( $this->oidc_client, $access_token );
 
-		$this->session->destroy();
+		if ( ! $this->session->has( 'access_token' )) {
+			throw new RuntimeException( 'You were not logged in' );
+		} else {
+			$access_token = $this->session->get( 'access_token' );
+			$revocation_service->revoke( $this->oidc_client, $access_token );
+			$this->session->destroy();
+		}
 	}
 }
