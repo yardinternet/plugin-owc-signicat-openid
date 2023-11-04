@@ -11,14 +11,13 @@ declare ( strict_types = 1 );
 
 namespace OWCSignicatOpenID;
 
-use Aura\Session\Session;
-use Aura\Session\SessionFactory;
 use Facile\OpenIDClient\Client\ClientInterface;
 use Facile\OpenIDClient\Client\ClientBuilder;
 use Facile\OpenIDClient\Client\Metadata\ClientMetadata;
 use Facile\OpenIDClient\Issuer\IssuerBuilder;
 use Facile\OpenIDClient\Service\AuthorizationService;
 use Facile\OpenIDClient\Service\Builder\AuthorizationServiceBuilder;
+use Odan\Session\PhpSession;
 use Pimple\Container as PimpleContainer;
 use Pimple\ServiceProviderInterface;
 use Psr\Log\LogLevel;
@@ -105,16 +104,16 @@ class ServiceProvider implements ServiceProviderInterface
 			return ( new AuthorizationServiceBuilder() )->build();
 		};
 
-		$container['session'] = function (): Session {
-			$session_factory = new SessionFactory();
-			$session         = $session_factory->newInstance( $_COOKIE );
-			$session->setCookieParams(
+		$container['session'] = function (): PhpSession {
+			$session = new PhpSession();
+			$session->setOptions(
 				array(
-					'secure'   => true,
-					'httponly' => true,
+					'name'            => 'OWC_Signicat_OpenID',
+					'cookie_secure'   => true,
+					'cookie_httponly' => true,
 				)
 			);
-
+			$session->start();
 			return $session;
 		};
 

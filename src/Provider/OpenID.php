@@ -18,17 +18,18 @@ if ( ! defined( 'ABSPATH' )) {
 	exit;
 }
 
-use Aura\Session\Session;
-use Aura\Session\Segment;
 use Cedaro\WP\Plugin\AbstractHookProvider;
 use Facile\OpenIDClient\Client\ClientInterface;
 use Facile\OpenIDClient\Middleware\UserInfoMiddleware;
 use Facile\OpenIDClient\Service\AuthorizationService;
 use Facile\OpenIDClient\Service\Builder\AuthorizationServiceBuilder;
+use Facile\OpenIDClient\Service\Builder\RevocationServiceBuilder;
 use Facile\OpenIDClient\Service\Builder\UserInfoServiceBuilder;
 use GuzzleHttp\Psr7\ServerRequest;
+use Odan\Session\PhpSession;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * OpenID class.
@@ -61,12 +62,9 @@ class OpenID extends AbstractHookProvider
 	/**
 	 * Session.
 	 *
-	 * @var Session
+	 * @var PhpSession
 	 */
 	protected $session;
-
-
-	private Segment $segment;
 
 	/**
 	 * Constructor.
@@ -76,13 +74,13 @@ class OpenID extends AbstractHookProvider
 	 * @param ClientInterface      $oidc_client         OIDC Client.
 	 * @param AuthorizationService $oidc_service        OIDC Service.
 	 * @param LoggerInterface      $logger              Logger.
-	 * @param Session              $session             Session.
+	 * @param PhpSession           $session             Session.
 	 */
 	public function __construct(
 		ClientInterface $oidc_client,
 		AuthorizationService $oidc_service,
 		LoggerInterface $logger,
-		Session $session
+		PhpSession $session
 	) {
 		$this->oidc_client  = $oidc_client;
 		$this->oidc_service = $oidc_service;
@@ -115,16 +113,21 @@ class OpenID extends AbstractHookProvider
 			'parse_request',
 			function ( $wp ) use ( $path_login, $path_logout, $path_redirect ) {
 				if ($wp->request === $path_login) {
-					$this->authenticate();
+					if ( ! $this->session->has( 'access_token' ) ) {
+						$this->authenticate();
+					} else {
+						wp_safe_redirect( home_url() );
+						exit;
+					}
 				}
 
 				if ($wp->request === $path_redirect) {
 					$server_request = ServerRequest::fromGlobals();
-					$this->get_user_info( $server_request );
+					$this->handle_redirect( $server_request );
 				}
 
 				if ($wp->request === $path_logout) {
-					$this->logout();
+					$this->logout( $server_request );
 				}
 			}
 		);
@@ -147,12 +150,14 @@ class OpenID extends AbstractHookProvider
 	}
 
 	/**
-	 * Get user info.
+	 * Handle the OpenID redirect.
 	 *
 	 * @since 0.0.1
+	 * @throws RuntimeException Unauthorized;
+	 *
 	 * @return void;
 	 */
-	protected function get_user_info( ServerRequestInterface $server_request ): void
+	protected function handle_redirect( ServerRequestInterface $server_request )
 	{
 		$callback_params = $this->oidc_service->getCallbackParams( $server_request, $this->oidc_client );
 		$token_set       = $this->oidc_service->callback( $this->oidc_client, $callback_params );
@@ -161,17 +166,30 @@ class OpenID extends AbstractHookProvider
 		$access_token  = $token_set->getAccessToken();
 		$refresh_token = $token_set->getRefreshToken();
 
-		$user_info_service = ( new UserInfoServiceBuilder() )->build();
-		$user_info         = $user_info_service->getUserInfo( $this->oidc_client, $token_set );
+		// $user_info_service = ( new UserInfoServiceBuilder() )->build();
+		// $user_info         = $user_info_service->getUserInfo( $this->oidc_client, $token_set );
 
 		if ($id_token) {
 			$claims = $token_set->claims();
 		} else {
-			throw new \RuntimeException( 'Unauthorized' );
+			throw new RuntimeException( 'Unauthorized' );
 		}
 
-		var_dump( $claims );
-		die;
+		$this->session->set( 'access_token', $access_token ?? '' );
+		$this->session->set( 'refresh_token', $refresh_token ?? '' );
+		$this->session->set( 'exp', $claims['exp'] ?? '' );
+		$this->session->save();
+	}
+
+	/**
+	 * Get user info.
+	 *
+	 * @return void
+	 */
+	public function get_user_info(): void
+	{
+		$userInfoService = $container->get( UserInfoService::class );
+		$middleware      = new UserInfoMiddleware( $userInfoService );
 	}
 
 	/**
@@ -179,15 +197,12 @@ class OpenID extends AbstractHookProvider
 	 *
 	 * @since 0.0.1
 	 */
-	protected function logout( $request, $response )
+	protected function logout()
 	{
-		var_dump( $request, $response );
-		die;
 		$revocation_service = ( new RevocationServiceBuilder() )->build();
-		$callback_params    = $this->oidc_service->getCallbackParams( $request, $this->oidc_client );
-		$token_set          = $this->oidc_service->callback( $this->oidc_client, $callback_params );
-		$params             = $revocation_service->revoke( $this->oidc_client, $token_set->getRefreshToken() );
+		$access_token       = $this->session->get( 'access_token' );
+		$revocation_service->revoke( $this->oidc_client, $access_token );
 
-		return $response;
+		$this->session->destroy();
 	}
 }
