@@ -20,11 +20,9 @@ if ( ! defined( 'ABSPATH' )) {
 
 use Cedaro\WP\Plugin\AbstractHookProvider;
 use Facile\OpenIDClient\Client\ClientInterface;
-use Facile\OpenIDClient\Middleware\UserInfoMiddleware;
 use Facile\OpenIDClient\Service\AuthorizationService;
-use Facile\OpenIDClient\Service\Builder\AuthorizationServiceBuilder;
 use Facile\OpenIDClient\Service\Builder\RevocationServiceBuilder;
-use Facile\OpenIDClient\Service\Builder\UserInfoServiceBuilder;
+use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\ServerRequest;
 use Odan\Session\PhpSession;
 use Psr\Http\Message\ServerRequestInterface;
@@ -92,6 +90,8 @@ class OpenID extends AbstractHookProvider
 	 * Register hooks.
 	 *
 	 * @since 0.0.1
+	 *
+	 * @return void
 	 */
 	public function register_hooks(): void
 	{
@@ -127,7 +127,7 @@ class OpenID extends AbstractHookProvider
 				}
 
 				if ($wp->request === $path_logout) {
-					$this->logout( $server_request );
+					$this->logout();
 				}
 			}
 		);
@@ -137,12 +137,12 @@ class OpenID extends AbstractHookProvider
 	 * Authenticate.
 	 *
 	 * @since 0.0.1
+	 *
 	 * @return void
 	 */
 	protected function authenticate(): void
 	{
-		$auth_service               = ( new AuthorizationServiceBuilder() )->build();
-		$redirect_authorization_uri = $auth_service->getAuthorizationUri(
+		$redirect_authorization_uri = $this->oidc_service->getAuthorizationUri(
 			$this->oidc_client,
 		);
 		header( 'Location: ' . $redirect_authorization_uri );
@@ -172,35 +172,68 @@ class OpenID extends AbstractHookProvider
 			throw new RuntimeException( 'Unauthorized' );
 		}
 
-		$this->session->set( 'access_token', $access_token ?? '' );
-		$this->session->set( 'refresh_token', $refresh_token ?? '' );
-		$this->session->set( 'exp', $claims['exp'] ?? '' );
+		$this->session->set( 'access_token', $access_token );
+		$this->session->set( 'refresh_token', $refresh_token );
+		$this->session->set( 'exp', $claims['exp'] );
 		$this->session->save();
 	}
 
 	/**
 	 * Get user info.
 	 *
-	 * @return void
+	 * @since 0.0.1
+	 *
+	 * @return array
 	 */
-	public function get_user_info(): void
+	public function get_user_info(): array
 	{
-		$userInfoService = $container->get( UserInfoService::class );
-		$middleware      = new UserInfoMiddleware( $userInfoService );
+		$endpoint     = $this->oidc_client->getIssuer()->getMetadata()->getUserInfoEndpoint();
+		$access_token = $this->session->get( 'access_token' ) ?? '';
+		$client       = new Client();
+
+		$headers = array(
+			'Authorization' => 'Bearer ' . $access_token,
+			'Accept'        => 'application/json',
+		);
+
+		$response = $client->request(
+			'GET',
+			$endpoint,
+			array(
+				'headers' => $headers,
+			)
+		);
+
+		$user_info = array();
+
+		// Check the response status code
+		if ($response->getStatusCode() === 200) {
+			// Convert the response content (object) to a JSON string
+			$json_response = $response->getBody()->getContents();
+
+			// Parse and process the JSON response
+			$user_info = json_decode( $json_response, true );
+		} else {
+			echo 'Error: ' . $response->getStatusCode() . ' ' . $response->getReasonPhrase();
+		}
+
+		return $user_info;
 	}
 
 	/**
 	 * Logout and end the session.
 	 *
 	 * @since 0.0.1
-	 * @throws RuntimeException You were not logged in
+	 * @throws RuntimeException You are not logged in
+	 *
+	 * @return void
 	 */
-	protected function logout()
+	protected function logout(): void
 	{
 		$revocation_service = ( new RevocationServiceBuilder() )->build();
 
 		if ( ! $this->session->has( 'access_token' )) {
-			throw new RuntimeException( 'You were not logged in' );
+			throw new RuntimeException( 'You are not logged in' );
 		} else {
 			$access_token = $this->session->get( 'access_token' );
 			$revocation_service->revoke( $this->oidc_client, $access_token );

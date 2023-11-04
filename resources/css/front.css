@@ -1,0 +1,11 @@
+.sopenid-button-container {
+	@apply sopenid-block sopenid-w-full sopenid-bg-slate-200 sopenid-px-5 sopenid-py-4;
+}
+
+.sopenid-countdown {
+	@apply sopenid-flex sopenid-items-center sopenid-justify-between;
+}
+
+.sopenid-countdown-logout {
+	@apply sopenid-border-0 sopenid-px-4 sopenid-py-3 sopenid-text-sm sopenid-text-gray-500;
+}

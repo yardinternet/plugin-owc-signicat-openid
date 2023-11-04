@@ -22,6 +22,7 @@ use Pimple\Container as PimpleContainer;
 use Pimple\ServiceProviderInterface;
 use Psr\Log\LogLevel;
 
+use OWCSignicatOpenID\Block;
 use OWCSignicatOpenID\Logger;
 use OWCSignicatOpenID\Provider;
 use OWCSignicatOpenID\View;
@@ -39,6 +40,13 @@ class ServiceProvider implements ServiceProviderInterface
 	 * @param PimpleContainer $container Container instance.
 	 */
 	public function register( PimpleContainer $container ) {
+		$container['blocks.eherkenning'] = function ( $container ) {
+			return new Block\eHerkenning(
+				$container['hooks.oidc'],
+				$container['session']
+			);
+		};
+
 		$container['hooks.activation'] = function () {
 			return new Provider\Activation();
 		};

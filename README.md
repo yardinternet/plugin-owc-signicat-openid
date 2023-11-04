@@ -19,7 +19,17 @@ You can use this plugin outside GravityForms as well but you should handle the "
 
 This plugin is a first draft, there is a lot [TODO](./TODO.md) still.
 
-## Logging
+## Getting started
+
+```sh
+# install node deps
+npm i
+
+# install composer deps
+composer i
+```
+
+### Logging
 
 Warnings are logged when WP_DEBUG is enabled.
 The messages are logged using PHP's `error_log()` you can override this and use a custom logger:
