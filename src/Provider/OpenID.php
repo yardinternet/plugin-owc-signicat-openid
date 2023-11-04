@@ -21,8 +21,13 @@ if ( ! defined( 'ABSPATH' )) {
 use Aura\Session\Session;
 use Aura\Session\Segment;
 use Cedaro\WP\Plugin\AbstractHookProvider;
-use Jumbojett\OpenIDConnectClient;
-use Jumbojett\OpenIDConnectClientException;
+use Facile\OpenIDClient\Client\ClientInterface;
+use Facile\OpenIDClient\Middleware\UserInfoMiddleware;
+use Facile\OpenIDClient\Service\AuthorizationService;
+use Facile\OpenIDClient\Service\Builder\AuthorizationServiceBuilder;
+use Facile\OpenIDClient\Service\Builder\UserInfoServiceBuilder;
+use GuzzleHttp\Psr7\ServerRequest;
+use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -40,13 +45,26 @@ class OpenID extends AbstractHookProvider
 	protected $logger;
 
 	/**
+	 * OIDC Client.
+	 *
+	 * @var ClientInterface
+	 */
+	protected $oidc_client;
+
+	/**
+	 * OIDC Service.
+	 *
+	 * @var AuthorizationService;
+	 */
+	protected $oidc_service;
+
+	/**
 	 * Session.
 	 *
 	 * @var Session
 	 */
 	protected $session;
 
-	private OpenIDConnectClient $oidc;
 
 	private Segment $segment;
 
@@ -55,15 +73,21 @@ class OpenID extends AbstractHookProvider
 	 *
 	 * @since 0.0.1
 	 *
-	 * @param LoggerInterface $logger               Logger.
-	 * @param Session         $session             Session.
+	 * @param ClientInterface      $oidc_client         OIDC Client.
+	 * @param AuthorizationService $oidc_service        OIDC Service.
+	 * @param LoggerInterface      $logger              Logger.
+	 * @param Session              $session             Session.
 	 */
 	public function __construct(
+		ClientInterface $oidc_client,
+		AuthorizationService $oidc_service,
 		LoggerInterface $logger,
 		Session $session
 	) {
-		$this->logger  = $logger;
-		$this->session = $session;
+		$this->oidc_client  = $oidc_client;
+		$this->oidc_service = $oidc_service;
+		$this->logger       = $logger;
+		$this->session      = $session;
 	}
 
 	/**
@@ -73,24 +97,7 @@ class OpenID extends AbstractHookProvider
 	 */
 	public function register_hooks(): void
 	{
-		$this->segment = $this->session->getSegment( 'sopenid' );
-
-		$this->oidc = new OpenIDConnectClient(
-			get_option( 'owc_signicat_openid_broker_url_settings' ),
-			get_option( 'owc_signicat_openid_client_id_settings' ),
-			get_option( 'owc_signicat_openid_client_secret_settings' )
-		);
-
-		$this->oidc->addScope( 'openid' ); // idp_scoping:eherkenning
-		$this->oidc->setRedirectURL( '' );
-
-		if (defined( 'WP_DEBUG' ) && WP_DEBUG === true) {
-			$this->oidc->setHttpUpgradeInsecureRequests( false );
-			$this->oidc->setVerifyHost( false );
-			$this->oidc->setVerifyPeer( false );
-		}
-
-		$this->register_routes( $this->oidc );
+		$this->register_routes();
 	}
 
 	/**
@@ -98,78 +105,73 @@ class OpenID extends AbstractHookProvider
 	 *
 	 * @since 0.0.1
 	 */
-	protected function register_routes( $oidc ): void
+	protected function register_routes(): void
 	{
-		$path_login  = get_option( 'owc_signicat_openid_path_login_settings' );
-		$path_logout = get_option( 'owc_signicat_openid_path_logout_settings' );
+		$path_login    = sanitize_text_field( get_option( 'owc_signicat_openid_path_login_settings' ) );
+		$path_logout   = sanitize_text_field( get_option( 'owc_signicat_openid_path_logout_settings' ) );
+		$path_redirect = sanitize_text_field( get_option( 'owc_signicat_openid_path_redirect_settings' ) );
 
 		add_action(
 			'parse_request',
-			function ($wp ) use ($oidc, $path_login, $path_logout ) {
+			function ( $wp ) use ( $path_login, $path_logout, $path_redirect ) {
 				if ($wp->request === $path_login) {
-					if (empty( $this->segment->get( 'sopenid.user-info' ) )) {
-						$this->authenticate( $oidc );
-					} else {
-						wp_safe_redirect( home_url() );
-						exit;
-					}
+					$this->authenticate();
+				}
+
+				if ($wp->request === $path_redirect) {
+					$server_request = ServerRequest::fromGlobals();
+					$this->get_user_info( $server_request );
 				}
 
 				if ($wp->request === $path_logout) {
-					if ( ! empty( $this->segment->get( 'sopenid.user-info' ) )) {
-						$this->logout();
-					} else {
-						$this->authenticate( $oidc );
-					}
+					$this->logout();
 				}
 			}
 		);
 	}
 
 	/**
-	 * Authenticate and set session.
+	 * Authenticate.
 	 *
 	 * @since 0.0.1
+	 * @return void
 	 */
-	protected function authenticate( $oidc ): void
+	protected function authenticate(): void
 	{
-		try {
-			$oidc->authenticate();
-		} catch (OpenIDConnectClientException $e) {
-			$this->logger->info(
-				'Could not connect to Signicat Identity Broker',
-				array(
-					'exception' => $e,
-				)
-			);
-		}
-
-		$user_info     = $oidc->request_user_info();
-		$access_token  = $oidc->get_access_token();
-		$refresh_token = $oidc->get_refresh_token();
-
-		$this->segment->set( 'sopenid.user-info', $user_info );
-		$this->segment->set( 'sopenid.access-token', $access_token );
-		$this->segment->set( 'sopenid.refresh-token', $refresh_token );
+		$auth_service               = ( new AuthorizationServiceBuilder() )->build();
+		$redirect_authorization_uri = $auth_service->getAuthorizationUri(
+			$this->oidc_client,
+		);
+		header( 'Location: ' . $redirect_authorization_uri );
+		exit();
 	}
 
 	/**
-	 * Verify token validity.
+	 * Get user info.
 	 *
 	 * @since 0.0.1
-	 *
-	 * @param string $token
-	 * @return void
+	 * @return void;
 	 */
-	public function verify_token( $token )
+	protected function get_user_info( ServerRequestInterface $server_request ): void
 	{
-		$access_token = $this->segment->get( 'sopenid.access-token' );
+		$callback_params = $this->oidc_service->getCallbackParams( $server_request, $this->oidc_client );
+		$token_set       = $this->oidc_service->callback( $this->oidc_client, $callback_params );
 
-		$data = $this->oidc->introspectToken( $access_token );
+		$id_token      = $token_set->getIdToken();
+		$access_token  = $token_set->getAccessToken();
+		$refresh_token = $token_set->getRefreshToken();
 
-		if ( ! $data->active) {
-			// the token is no longer usable
+		$user_info_service = ( new UserInfoServiceBuilder() )->build();
+		$user_info         = $user_info_service->getUserInfo( $this->oidc_client, $token_set );
+
+		if ($id_token) {
+			$claims = $token_set->claims();
+		} else {
+			throw new \RuntimeException( 'Unauthorized' );
 		}
+
+		var_dump( $claims );
+		die;
 	}
 
 	/**
@@ -177,8 +179,15 @@ class OpenID extends AbstractHookProvider
 	 *
 	 * @since 0.0.1
 	 */
-	protected function logout(): void
+	protected function logout( $request, $response )
 	{
-		$this->segment->clear();
+		var_dump( $request, $response );
+		die;
+		$revocation_service = ( new RevocationServiceBuilder() )->build();
+		$callback_params    = $this->oidc_service->getCallbackParams( $request, $this->oidc_client );
+		$token_set          = $this->oidc_service->callback( $this->oidc_client, $callback_params );
+		$params             = $revocation_service->revoke( $this->oidc_client, $token_set->getRefreshToken() );
+
+		return $response;
 	}
 }
