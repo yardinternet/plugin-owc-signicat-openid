@@ -41,11 +41,13 @@ class Plugin extends BasePlugin implements Composable
 
 		// Register hook providers.
 		$this
+			->register_hooks( $container->get( 'blocks.eherkenning' ) )
+			->register_hooks( $container->get( 'blocks.eidas' ) )
 			->register_hooks( $container->get( 'hooks.oidc' ) );
 
 		if ( is_admin() ) {
 			$this
-				->register_hooks( $container->get( 'view.settings' ) );
+				->register_hooks( $container->get( 'screen.settings' ) );
 		}
 
 		/**

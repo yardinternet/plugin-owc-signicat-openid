@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin settings view.
+ * Plugin settings screen.
  *
  * @package OWC_Signicat_OpenID
  * @author  Yard | Digital Agency
@@ -9,7 +9,7 @@
 
 declare ( strict_types = 1 );
 
-namespace OWCSignicatOpenID\View;
+namespace OWCSignicatOpenID\Screen;
 
 /**
  * Exit when accessed directly.
@@ -56,11 +56,12 @@ class Settings extends AbstractHookProvider
 	 */
 	public function register_settings(): void
 	{
-		register_setting( 'owc_signicat_openid_settings_group', 'owc_signicat_openid_broker_url_settings' );
+		register_setting( 'owc_signicat_openid_settings_group', 'owc_signicat_openid_configuration_url_settings' );
 		register_setting( 'owc_signicat_openid_settings_group', 'owc_signicat_openid_client_id_settings' );
 		register_setting( 'owc_signicat_openid_settings_group', 'owc_signicat_openid_client_secret_settings' );
 		register_setting( 'owc_signicat_openid_settings_group', 'owc_signicat_openid_path_login_settings' );
 		register_setting( 'owc_signicat_openid_settings_group', 'owc_signicat_openid_path_logout_settings' );
+		register_setting( 'owc_signicat_openid_settings_group', 'owc_signicat_openid_path_redirect_settings' );
 	}
 
 	/**

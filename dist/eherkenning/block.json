@@ -1,0 +1,23 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 2,
+  "name": "owc0signicat-openid/eherkenning",
+  "version": "0.0.1",
+  "title": "eHerkenning",
+  "category": "widgets",
+  "icon": "universal-access",
+  "description": "Show the eHerkenning login button",
+  "attributes": {
+    "redirectUrl": {
+      "type": "string",
+      "default": "/sso-login"
+    }
+  },
+  "supports": {
+    "html": false
+  },
+  "textdomain": "owc-signicat-openid",
+  "editorScript": "file:./eherkenning.js",
+  "editorStyle": "file:./eherkenning.css",
+  "style": "file:./style-eherkenning.css"
+}

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 2,
+  "name": "owc-signicat-openid/eidas",
+  "version": "0.0.1",
+  "title": "eIDAS",
+  "category": "widgets",
+  "icon": "universal-access",
+  "description": "Show the eIDAS login button",
+  "attributes": {
+    "redirectUrl": {
+      "type": "string",
+      "default": "/sso-login"
+    }
+  },
+  "supports": {
+    "html": false
+  },
+  "textdomain": "owc-signicat-openid",
+  "editorScript": "file:./eidas.js",
+  "editorStyle": "file:./eidas.css",
+  "style": "file:./style-eidas.css"
+}

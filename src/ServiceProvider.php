@@ -11,15 +11,21 @@ declare ( strict_types = 1 );
 
 namespace OWCSignicatOpenID;
 
-use Aura\Session\Session;
-use Aura\Session\SessionFactory;
+use Facile\OpenIDClient\Client\ClientInterface;
+use Facile\OpenIDClient\Client\ClientBuilder;
+use Facile\OpenIDClient\Client\Metadata\ClientMetadata;
+use Facile\OpenIDClient\Issuer\IssuerBuilder;
+use Facile\OpenIDClient\Service\AuthorizationService;
+use Facile\OpenIDClient\Service\Builder\AuthorizationServiceBuilder;
+use Odan\Session\PhpSession;
 use Pimple\Container as PimpleContainer;
 use Pimple\ServiceProviderInterface;
 use Psr\Log\LogLevel;
 
+use OWCSignicatOpenID\Block;
 use OWCSignicatOpenID\Logger;
 use OWCSignicatOpenID\Provider;
-use OWCSignicatOpenID\View;
+use OWCSignicatOpenID\Screen;
 
 /**
  * Plugin service provider class.
@@ -34,6 +40,20 @@ class ServiceProvider implements ServiceProviderInterface
 	 * @param PimpleContainer $container Container instance.
 	 */
 	public function register( PimpleContainer $container ) {
+		$container['blocks.eherkenning'] = function ( $container ) {
+			return new Block\eHerkenning(
+				$container['hooks.oidc'],
+				$container['session']
+			);
+		};
+
+		$container['blocks.eidas'] = function ( $container ) {
+			return new Block\eIDAS(
+				$container['hooks.oidc'],
+				$container['session']
+			);
+		};
+
 		$container['hooks.activation'] = function () {
 			return new Provider\Activation();
 		};
@@ -44,6 +64,8 @@ class ServiceProvider implements ServiceProviderInterface
 
 		$container['hooks.oidc'] = function ( $container ) {
 			return new Provider\OpenID(
+				$container['oidc_client'],
+				$container['oidc_service'],
 				$container['logger'],
 				$container['session']
 			);
@@ -65,21 +87,53 @@ class ServiceProvider implements ServiceProviderInterface
 			return $level ?? '';
 		};
 
-		$container['session'] = function (): Session {
-			$session_factory = new SessionFactory();
-			$session         = $session_factory->newInstance( $_COOKIE );
-			$session->setCookieParams(
+		$container['oidc_client'] = function ( $container ): ClientInterface {
+			$configuration_url = get_option( 'owc_signicat_openid_configuration_url_settings' );
+			$client_id         = get_option( 'owc_signicat_openid_client_id_settings' );
+			$client_secret     = get_option( 'owc_signicat_openid_client_secret_settings' );
+			$path_redirect     = get_option( 'owc_signicat_openid_path_redirect_settings' );
+
+			if ( ! $configuration_url ) {
+				$container['logger']->log( 'Configuration URL is empty', LogLevel::WARNING );
+			}
+
+			$issuer          = ( new IssuerBuilder() )->build( $configuration_url );
+			$client_metadata = ClientMetadata::fromArray(
 				array(
-					'secure'   => true,
-					'httponly' => true,
+					'client_id'     => sanitize_text_field( $client_id ),
+					'client_secret' => sanitize_text_field( $client_secret ),
+					'redirect_uris' => array(
+						sanitize_text_field( wp_unslash( get_site_url() ) . '/' . $path_redirect ),
+					),
 				)
 			);
+
+			return ( new ClientBuilder() )
+				->setIssuer( $issuer )
+				->setClientMetadata( $client_metadata )
+				->build();
+		};
+
+		$container['oidc_service'] = function (): AuthorizationService {
+			return ( new AuthorizationServiceBuilder() )->build();
+		};
+
+		$container['session'] = function (): PhpSession {
+			$session = new PhpSession();
+			$session->setOptions(
+				array(
+					'name'            => 'OWC_Signicat_OpenID',
+					'cookie_secure'   => true,
+					'cookie_httponly' => true,
+				)
+			);
+			$session->start();
 
 			return $session;
 		};
 
-		$container['view.settings'] = function () {
-			return new View\Settings();
+		$container['screen.settings'] = function () {
+			return new Screen\Settings();
 		};
 	}
 }

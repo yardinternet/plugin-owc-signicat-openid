@@ -22,12 +22,15 @@ namespace OWCSignicatOpenID;
 		<table class="form-table">
 			<tr>
 				<th scope="row">
-					<label for="owc_signicat_openid_broker_url_settings">
-						<?php esc_html_e( 'Broker URL', 'owc-signicat-openid' ); ?>
+					<label for="owc_signicat_openid_configuration_url_settings">
+						<?php esc_html_e( 'Configuration URL', 'owc-signicat-openid' ); ?>
 					</label>
 				</th>
 				<td>
-					<input type="text" name="owc_signicat_openid_broker_url_settings" id="owc_signicat_openid_broker_url_settings" value="<?php echo esc_attr( get_option( 'owc_signicat_openid_broker_url_settings' ) ); ?>" required>
+					<input type="text" name="owc_signicat_openid_configuration_url_settings" id="owc_signicat_openid_configuration_url_settings" value="<?php echo esc_attr( get_option( 'owc_signicat_openid_configuration_url_settings' ) ); ?>" required>
+					<p class="description">
+						<?php esc_html_e( 'Example: https://example.com/.well-known/openid-configuration', 'owc-signicat-openid' ); ?>
+					</p>
 				</td>
 			</tr>
 			<tr>
@@ -73,6 +76,19 @@ namespace OWCSignicatOpenID;
 					<input type="text" name="owc_signicat_openid_path_logout_settings" id="owc_signicat_openid_path_logout_settings" value="<?php echo esc_attr( get_option( 'owc_signicat_openid_path_logout_settings' ) ); ?>" required>
 					<p class="description">
 					<?php esc_html_e( 'Example: sso-logout', 'owc-signicat-openid' ); ?>
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<th scope="row">
+					<label for="owc_signicat_openid_path_redirect_settings">
+						<?php esc_html_e( 'Redirect path', 'owc-signicat-openid' ); ?>
+					</label>
+				</th>
+				<td>
+					<input type="text" name="owc_signicat_openid_path_redirect_settings" id="owc_signicat_openid_path_redirect_settings" value="<?php echo esc_attr( get_option( 'owc_signicat_openid_path_redirect_settings' ) ); ?>" required>
+					<p class="description">
+						<?php esc_html_e( 'Example: redirect', 'owc-signicat-openid' ); ?>
 					</p>
 				</td>
 			</tr>
