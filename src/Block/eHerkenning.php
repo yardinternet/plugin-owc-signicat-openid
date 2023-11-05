@@ -22,6 +22,7 @@ use Cedaro\WP\Plugin\AbstractHookProvider;
 use Facile\OpenIDClient\Client\ClientInterface;
 use Odan\Session\PhpSession;
 
+use OWCSignicatOpenID\Provider\OpenID;
 use OWCSignicatOpenID\View;
 
 /**
@@ -34,7 +35,7 @@ class EHerkenning extends AbstractHookProvider
 	/**
 	 * OIDC Client.
 	 *
-	 * @var ClientInterface
+	 * @var OpenID
 	 */
 	protected $oidc_client;
 
@@ -57,18 +58,15 @@ class EHerkenning extends AbstractHookProvider
 	 *
 	 * @since 0.0.1
 	 *
-	 * @param  $oidc_client         OIDC Client.
-	 * @param PhpSession                      $session             Session.
-	 * @param View                            $view             View.
+	 * @param OpenID     $oidc_client         OIDC Client.
+	 * @param PhpSession $session             Session.
 	 */
 	public function __construct(
-		$oidc_client,
-		PhpSession $session,
-		View $view
+		OpenID $oidc_client,
+		PhpSession $session
 	) {
 		$this->oidc_client = $oidc_client;
 		$this->session     = $session;
-		$this->view        = $view;
 	}
 
 	/**
@@ -119,18 +117,16 @@ class EHerkenning extends AbstractHookProvider
 	public function render_output(): string
 	{
 		// TODO handle when not logged in
-		$user_info = $this->oidc_client->get_user_info();
+		$data = array();
 
-		$vars = array(
-			'kvknr' => $user_info['urn:etoegang:1.9:EntityConcernedID:KvKnr'],
-		);
-
-		$template = 'blocks/eherkenning-output.php';
-
-		if ( ! $this->view->exists( $template )) {
-			return '';
+		if ($this->session->has( 'access_token' )) {
+			$data = $this->oidc_client->get_user_info();
 		}
 
-		return $this->view->render( $template, $vars );
+		$view = new View();
+		$view->assign( 'kvknr', $data['urn:etoegang:1.9:EntityConcernedID:KvKnr'] );
+		$rendered_output = $view->render( 'blocks/eherkenning-output.php' );
+
+		return $rendered_output;
 	}
 }

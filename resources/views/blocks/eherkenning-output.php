@@ -1,11 +1,9 @@
 <div class="sopenid-eherkenning-output">
-	<?php
-	echo $kvknr;
-	if ( ! empty( $kvknr )) {
-		echo "<p>Je KvK nummer is: $kvknr</p>";
-	} else {
-		echo "<p>Je KvK nummer is niet beschikbaar</p>";
-	}
-	?>
-	<p>Je bent niet ingelogd</p>
+	<?php if ( ! empty( $kvknr )) : ?>
+		<p>Je KvK nummer is: <?php echo esc_html( $kvknr ); ?></p>
+	<?php elseif (0 === $kvknr) : ?>
+		<p>Je KvK nummer is niet beschikbaar</p>
+	<?php else : ?>
+		<p>Je bent niet ingelogd</p>
+	<?php endif; ?>
 </div>

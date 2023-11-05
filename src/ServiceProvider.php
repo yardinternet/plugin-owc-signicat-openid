@@ -44,8 +44,7 @@ class ServiceProvider implements ServiceProviderInterface
 		$container['blocks.eherkenning'] = function ( $container ) {
 			return new Block\eHerkenning(
 				$container['hooks.oidc'],
-				$container['session'],
-				$container[ View::class ]
+				$container['session']
 			);
 		};
 
@@ -129,10 +128,6 @@ class ServiceProvider implements ServiceProviderInterface
 
 		$container['screen.settings'] = function () {
 			return new Screen\Settings();
-		};
-
-		$container[ View::class ] = function () {
-			return new View();
 		};
 	}
 }
