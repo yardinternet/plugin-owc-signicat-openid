@@ -5,6 +5,8 @@
     <arg value="ps" />
 	  <arg name="colors" />
     <exclude-pattern>.github/*</exclude-pattern>
+    <exclude-pattern>.vscode/*</exclude-pattern>
+    <exclude-pattern>dist/*</exclude-pattern>
     <exclude-pattern>vendor/*</exclude-pattern>
     <rule ref="WordPress">
         <exclude name="WordPress.Files.FileName.NotHyphenatedLowercase" />
