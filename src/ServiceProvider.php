@@ -26,7 +26,6 @@ use OWCSignicatOpenID\Block;
 use OWCSignicatOpenID\Logger;
 use OWCSignicatOpenID\Provider;
 use OWCSignicatOpenID\Screen;
-use OWCSignicatOpenID\View;
 
 /**
  * Plugin service provider class.
@@ -43,6 +42,13 @@ class ServiceProvider implements ServiceProviderInterface
 	public function register( PimpleContainer $container ) {
 		$container['blocks.eherkenning'] = function ( $container ) {
 			return new Block\eHerkenning(
+				$container['hooks.oidc'],
+				$container['session']
+			);
+		};
+
+		$container['blocks.eidas'] = function ( $container ) {
+			return new Block\eIDAS(
 				$container['hooks.oidc'],
 				$container['session']
 			);

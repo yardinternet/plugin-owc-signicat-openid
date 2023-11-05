@@ -1,12 +1,12 @@
 {
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 2,
-	"name": "owc0signicat-openid/eherkenning",
+	"name": "owc-signicat-openid/eidas",
 	"version": "0.0.1",
-	"title": "eHerkenning",
+	"title": "eIDAS",
 	"category": "widgets",
 	"icon": "universal-access",
-	"description": "Show the eHerkenning login button",
+	"description": "Show the eIDAS login button",
 	"attributes": {
 		"redirectUrl": {
 			"type": "string",
@@ -17,7 +17,7 @@
 		"html": false
 	},
 	"textdomain": "owc-signicat-openid",
-	"editorScript": "file:./eherkenning.js",
-	"editorStyle": "file:./eherkenning.css",
-	"style": "file:./style-eherkenning.css"
+	"editorScript": "file:./eidas.js",
+	"editorStyle": "file:./eidas.css",
+	"style": "file:./style-eidas.css"
 }

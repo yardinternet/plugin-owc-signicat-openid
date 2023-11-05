@@ -2,10 +2,10 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
-/***/ "./resources/blocks/eherkenning-output/edit.js":
-/*!*****************************************************!*\
-  !*** ./resources/blocks/eherkenning-output/edit.js ***!
-  \*****************************************************/
+/***/ "./resources/blocks/eidas-output/edit.js":
+/*!***********************************************!*\
+  !*** ./resources/blocks/eidas-output/edit.js ***!
+  \***********************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
@@ -18,7 +18,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _wordpress_components__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_wordpress_components__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var _wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @wordpress/i18n */ "@wordpress/i18n");
 /* harmony import */ var _wordpress_i18n__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var _editor_css__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./editor.css */ "./resources/blocks/eherkenning-output/editor.css");
+/* harmony import */ var _editor_css__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./editor.css */ "./resources/blocks/eidas-output/editor.css");
 /**
  * External dependencies.
  */
@@ -36,25 +36,25 @@ __webpack_require__.r(__webpack_exports__);
 function Edit() {
   var blockProps = (0,_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_0__.useBlockProps)();
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", (0,_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_0__.useBlockProps)(), /*#__PURE__*/React.createElement(_wordpress_components__WEBPACK_IMPORTED_MODULE_1__.Placeholder, {
-    label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)('This block displays the eHerkenning output on the front-end', 'owc-signicat-openid')
+    label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)('This block displays the eIDAS output on the front-end', 'owc-signicat-openid')
   })));
 }
 
 /***/ }),
 
-/***/ "./resources/blocks/eherkenning-output/index.js":
-/*!******************************************************!*\
-  !*** ./resources/blocks/eherkenning-output/index.js ***!
-  \******************************************************/
+/***/ "./resources/blocks/eidas-output/index.js":
+/*!************************************************!*\
+  !*** ./resources/blocks/eidas-output/index.js ***!
+  \************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _wordpress_blocks__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @wordpress/blocks */ "@wordpress/blocks");
 /* harmony import */ var _wordpress_blocks__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_wordpress_blocks__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _style_css__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./style.css */ "./resources/blocks/eherkenning-output/style.css");
-/* harmony import */ var _edit__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./edit */ "./resources/blocks/eherkenning-output/edit.js");
-/* harmony import */ var _save__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./save */ "./resources/blocks/eherkenning-output/save.js");
-/* harmony import */ var _block_json__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./block.json */ "./resources/blocks/eherkenning-output/block.json");
+/* harmony import */ var _style_css__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./style.css */ "./resources/blocks/eidas-output/style.css");
+/* harmony import */ var _edit__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./edit */ "./resources/blocks/eidas-output/edit.js");
+/* harmony import */ var _save__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./save */ "./resources/blocks/eidas-output/save.js");
+/* harmony import */ var _block_json__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./block.json */ "./resources/blocks/eidas-output/block.json");
 /**
  * External dependencies.
  */
@@ -82,10 +82,10 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
-/***/ "./resources/blocks/eherkenning-output/save.js":
-/*!*****************************************************!*\
-  !*** ./resources/blocks/eherkenning-output/save.js ***!
-  \*****************************************************/
+/***/ "./resources/blocks/eidas-output/save.js":
+/*!***********************************************!*\
+  !*** ./resources/blocks/eidas-output/save.js ***!
+  \***********************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
@@ -98,10 +98,10 @@ function Save() {
 
 /***/ }),
 
-/***/ "./resources/blocks/eherkenning-output/editor.css":
-/*!********************************************************!*\
-  !*** ./resources/blocks/eherkenning-output/editor.css ***!
-  \********************************************************/
+/***/ "./resources/blocks/eidas-output/editor.css":
+/*!**************************************************!*\
+  !*** ./resources/blocks/eidas-output/editor.css ***!
+  \**************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
@@ -110,10 +110,10 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
-/***/ "./resources/blocks/eherkenning-output/style.css":
-/*!*******************************************************!*\
-  !*** ./resources/blocks/eherkenning-output/style.css ***!
-  \*******************************************************/
+/***/ "./resources/blocks/eidas-output/style.css":
+/*!*************************************************!*\
+  !*** ./resources/blocks/eidas-output/style.css ***!
+  \*************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
@@ -162,13 +162,13 @@ module.exports = window["wp"]["i18n"];
 
 /***/ }),
 
-/***/ "./resources/blocks/eherkenning-output/block.json":
-/*!********************************************************!*\
-  !*** ./resources/blocks/eherkenning-output/block.json ***!
-  \********************************************************/
+/***/ "./resources/blocks/eidas-output/block.json":
+/*!**************************************************!*\
+  !*** ./resources/blocks/eidas-output/block.json ***!
+  \**************************************************/
 /***/ ((module) => {
 
-module.exports = JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":2,"name":"signicat-openid/eherkenning-output","version":"0.0.1","title":"eHerkenning output","category":"widgets","icon":"text","description":"Show the eHerkenning output","attributes":{},"supports":{"html":false},"textdomain":"signicat-openid","editorScript":"file:./eherkenning-output.js","editorStyle":"file:./eherkenning-output.css","style":"file:./style-eherkenning-output.css"}');
+module.exports = JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":2,"name":"owc-signicat-openid/eidas-output","version":"0.0.1","title":"eIDAS output","category":"widgets","icon":"text","description":"Show the eIDAS output","attributes":{},"supports":{"html":false},"textdomain":"owc-signicat-openid","editorScript":"file:./eidas-output.js","editorStyle":"file:./eidas-output.css","style":"file:./style-eidas-output.css"}');
 
 /***/ })
 
@@ -282,8 +282,8 @@ module.exports = JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json
 /******/ 		// undefined = chunk not loaded, null = chunk preloaded/prefetched
 /******/ 		// [resolve, reject, Promise] = chunk loading, 0 = chunk loaded
 /******/ 		var installedChunks = {
-/******/ 			"eherkenning-output/eherkenning-output": 0,
-/******/ 			"eherkenning-output/style-eherkenning-output": 0
+/******/ 			"eidas-output/eidas-output": 0,
+/******/ 			"eidas-output/style-eidas-output": 0
 /******/ 		};
 /******/ 		
 /******/ 		// no chunk on demand loading
@@ -333,9 +333,9 @@ module.exports = JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module depends on other loaded chunks and execution need to be delayed
-/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, ["eherkenning-output/style-eherkenning-output"], () => (__webpack_require__("./resources/blocks/eherkenning-output/index.js")))
+/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, ["eidas-output/style-eidas-output"], () => (__webpack_require__("./resources/blocks/eidas-output/index.js")))
 /******/ 	__webpack_exports__ = __webpack_require__.O(__webpack_exports__);
 /******/ 	
 /******/ })()
 ;
-//# sourceMappingURL=eherkenning-output.js.map
+//# sourceMappingURL=eidas-output.js.map

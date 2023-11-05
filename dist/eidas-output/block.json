@@ -1,0 +1,18 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 2,
+  "name": "owc-signicat-openid/eidas-output",
+  "version": "0.0.1",
+  "title": "eIDAS output",
+  "category": "widgets",
+  "icon": "text",
+  "description": "Show the eIDAS output",
+  "attributes": {},
+  "supports": {
+    "html": false
+  },
+  "textdomain": "owc-signicat-openid",
+  "editorScript": "file:./eidas-output.js",
+  "editorStyle": "file:./eidas-output.css",
+  "style": "file:./style-eidas-output.css"
+}

@@ -17,6 +17,11 @@ module.exports = (env, argv) => {
 				__dirname,
 				'resources/blocks/eherkenning-output/index.js'
 			),
+			'eidas/eidas': path.resolve(__dirname, 'resources/blocks/eidas/index.js'),
+			'eidas-output/eidas-output': path.resolve(
+				__dirname,
+				'resources/blocks/eidas-output/index.js'
+			),
 			front: path.resolve(__dirname, 'resources/js/front.js'),
 		},
 		output: {

@@ -8,7 +8,7 @@ import { __ } from '@wordpress/i18n';
 /**
  * Internal dependencies.
  */
-import image from '../../../resources/img/logo-eherkenning.svg';
+import image from '../../../resources/img/logo-eidas.svg';
 
 /**
  * Lets webpack process CSS, SASS or SCSS files referenced in JavaScript files.
@@ -40,7 +40,7 @@ export default function Edit({ attributes, setAttributes }) {
 			</InspectorControls>
 			<div {...blockProps}>
 				<a className="sopenid-button-container">
-					<img src={image} width="160" height="28" />
+					<img src={image} width="60" height="60" />
 				</a>
 			</div>
 		</>

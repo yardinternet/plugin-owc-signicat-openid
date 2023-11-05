@@ -21,7 +21,7 @@ export default function Edit() {
 			<div {...useBlockProps()}>
 				<Placeholder
 					label={__(
-						'This block displays the eHerkenning output on the front-end',
+						'This block displays the eIDAS output on the front-end',
 						'owc-signicat-openid'
 					)}
 				/>

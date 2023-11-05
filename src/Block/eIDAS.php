@@ -1,6 +1,6 @@
 <?php
 /**
- * EHerkenning Block provider.
+ * EIDAS Block provider.
  *
  * @package OWC_Signicat_OpenID
  * @author  Yard | Digital Agency
@@ -29,7 +29,7 @@ use OWCSignicatOpenID\View;
  *
  * @since 0.0.1
  */
-class EHerkenning extends AbstractHookProvider
+class EIDAS extends AbstractHookProvider
 {
 	/**
 	 * OIDC Client.
@@ -95,11 +95,11 @@ class EHerkenning extends AbstractHookProvider
 		}
 
 		register_block_type_from_metadata(
-			$this->plugin->get_directory() . '/dist/eherkenning',
+			$this->plugin->get_directory() . '/dist/eidas',
 		);
 
 		register_block_type_from_metadata(
-			$this->plugin->get_directory() . '/dist/eherkenning-output',
+			$this->plugin->get_directory() . '/dist/eidas-output',
 			array(
 				'render_callback' => array( $this, 'render_output' ),
 			)
@@ -123,8 +123,12 @@ class EHerkenning extends AbstractHookProvider
 		}
 
 		$view = new View();
-		$view->assign( 'kvknr', $data['urn:etoegang:1.9:EntityConcernedID:KvKnr'] );
-		$rendered_output = $view->render( 'blocks/eherkenning-output.php' );
+		$view->assign( 'pseudo', $data['urn:etoegang:1.12:EntityConcernedID:PseudoID'] );
+		$view->assign( 'bsn', $data['urn:etoegang:1.12:EntityConcernedID:BSN'] );
+		$view->assign( 'family_name', $data['urn:etoegang:1.9:attribute:FamilyName'] );
+		$view->assign( 'first_name', $data['urn:etoegang:1.9:attribute:FirstName'] );
+		$view->assign( 'date_of_birth', $data['urn:etoegang:1.9:attribute:DateOfBirth'] );
+		$rendered_output = $view->render( 'blocks/eidas-output.php' );
 
 		return $rendered_output;
 	}

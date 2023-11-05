@@ -90,10 +90,10 @@ function Edit(_ref) {
   var redirectUrl = attributes.redirectUrl;
   var blockProps = (0,_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_0__.useBlockProps)();
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_0__.InspectorControls, null, /*#__PURE__*/React.createElement(_wordpress_components__WEBPACK_IMPORTED_MODULE_1__.PanelBody, {
-    title: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)('Settings', 'signicat-openid'),
+    title: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)('Settings', 'owc-signicat-openid'),
     initialOpen: false
   }, /*#__PURE__*/React.createElement(_wordpress_components__WEBPACK_IMPORTED_MODULE_1__.PanelRow, null, /*#__PURE__*/React.createElement(_wordpress_components__WEBPACK_IMPORTED_MODULE_1__.TextControl, {
-    label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)('Redirect URL', 'signicat-openid'),
+    label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)('Redirect URL', 'owc-signicat-openid'),
     onChange: function onChange(url) {
       return setAttributes({
         redirectUrl: url
@@ -271,7 +271,7 @@ module.exports = window["wp"]["i18n"];
   \*************************************************/
 /***/ ((module) => {
 
-module.exports = JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":2,"name":"signicat-openid/eherkenning","version":"0.0.1","title":"eHerkenning","category":"widgets","icon":"universal-access","description":"Show the eHerkenning login button","attributes":{"redirectUrl":{"type":"string","default":"/sso-login"}},"supports":{"html":false},"textdomain":"signicat-openid","editorScript":"file:./eherkenning.js","editorStyle":"file:./eherkenning.css","style":"file:./style-eherkenning.css"}');
+module.exports = JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":2,"name":"owc0signicat-openid/eherkenning","version":"0.0.1","title":"eHerkenning","category":"widgets","icon":"universal-access","description":"Show the eHerkenning login button","attributes":{"redirectUrl":{"type":"string","default":"/sso-login"}},"supports":{"html":false},"textdomain":"owc-signicat-openid","editorScript":"file:./eherkenning.js","editorStyle":"file:./eherkenning.css","style":"file:./style-eherkenning.css"}');
 
 /***/ })
 
