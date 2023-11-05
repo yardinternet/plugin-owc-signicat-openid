@@ -29,6 +29,10 @@ npm i
 composer i
 ```
 
+## Caveats
+
+1. Make sure whatever URL you use as the redirect URL does not really exist within WordPress, else WP's routing might try to handle it instead.
+
 ### Logging
 
 Warnings are logged when WP_DEBUG is enabled.

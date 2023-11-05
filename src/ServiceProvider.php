@@ -25,6 +25,7 @@ use Psr\Log\LogLevel;
 use OWCSignicatOpenID\Block;
 use OWCSignicatOpenID\Logger;
 use OWCSignicatOpenID\Provider;
+use OWCSignicatOpenID\Screen;
 use OWCSignicatOpenID\View;
 
 /**
@@ -43,7 +44,8 @@ class ServiceProvider implements ServiceProviderInterface
 		$container['blocks.eherkenning'] = function ( $container ) {
 			return new Block\eHerkenning(
 				$container['hooks.oidc'],
-				$container['session']
+				$container['session'],
+				$container[ View::class ]
 			);
 		};
 
@@ -100,12 +102,11 @@ class ServiceProvider implements ServiceProviderInterface
 					),
 				)
 			);
-			$client          = ( new ClientBuilder() )
+
+			return ( new ClientBuilder() )
 				->setIssuer( $issuer )
 				->setClientMetadata( $client_metadata )
 				->build();
-
-			return $client;
 		};
 
 		$container['oidc_service'] = function (): AuthorizationService {
@@ -122,11 +123,16 @@ class ServiceProvider implements ServiceProviderInterface
 				)
 			);
 			$session->start();
+
 			return $session;
 		};
 
-		$container['view.settings'] = function () {
-			return new View\Settings();
+		$container['screen.settings'] = function () {
+			return new Screen\Settings();
+		};
+
+		$container[ View::class ] = function () {
+			return new View();
 		};
 	}
 }

@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin settings view.
+ * Plugin settings screen.
  *
  * @package OWC_Signicat_OpenID
  * @author  Yard | Digital Agency
@@ -9,7 +9,7 @@
 
 declare ( strict_types = 1 );
 
-namespace OWCSignicatOpenID\View;
+namespace OWCSignicatOpenID\Screen;
 
 /**
  * Exit when accessed directly.

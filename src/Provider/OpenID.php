@@ -112,6 +112,7 @@ class OpenID extends AbstractHookProvider
 		add_action(
 			'parse_request',
 			function ( $wp ) use ( $path_login, $path_logout, $path_redirect ) {
+
 				if ($wp->request === $path_login) {
 					if ( ! $this->session->has( 'access_token' ) ) {
 						$this->authenticate();
@@ -143,8 +144,9 @@ class OpenID extends AbstractHookProvider
 	protected function authenticate(): void
 	{
 		$redirect_authorization_uri = $this->oidc_service->getAuthorizationUri(
-			$this->oidc_client,
+			$this->oidc_client
 		);
+
 		header( 'Location: ' . $redirect_authorization_uri );
 		exit();
 	}
