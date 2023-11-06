@@ -11,9 +11,11 @@ declare ( strict_types = 1 );
 
 namespace OWCSignicatOpenID;
 
+use Facile\JoseVerifier\JWK\JwksProviderBuilder;
 use Facile\OpenIDClient\Client\ClientInterface;
 use Facile\OpenIDClient\Client\ClientBuilder;
 use Facile\OpenIDClient\Client\Metadata\ClientMetadata;
+use Facile\OpenIDClient\Issuer\Metadata\Provider\MetadataProviderBuilder;
 use Facile\OpenIDClient\Issuer\IssuerBuilder;
 use Facile\OpenIDClient\Service\AuthorizationService;
 use Facile\OpenIDClient\Service\Builder\AuthorizationServiceBuilder;
@@ -21,6 +23,7 @@ use Odan\Session\PhpSession;
 use Pimple\Container as PimpleContainer;
 use Pimple\ServiceProviderInterface;
 use Psr\Log\LogLevel;
+use Psr\SimpleCache\CacheInterface;
 
 use OWCSignicatOpenID\Block;
 use OWCSignicatOpenID\Logger;
@@ -52,6 +55,10 @@ class ServiceProvider implements ServiceProviderInterface
 				$container['hooks.oidc'],
 				$container['session']
 			);
+		};
+
+		$container['cache'] = function (): CacheInterface {
+			return new Cache();
 		};
 
 		$container['hooks.activation'] = function () {
@@ -97,7 +104,21 @@ class ServiceProvider implements ServiceProviderInterface
 				$container['logger']->log( 'Configuration URL is empty', LogLevel::WARNING );
 			}
 
-			$issuer          = ( new IssuerBuilder() )->build( $configuration_url );
+			$cache = $container->get( 'cache' );
+
+			// Cache configuration.
+			$metadata_provider_builder = ( new MetadataProviderBuilder() )
+				->setCache( $cache )
+				->setCacheTtl( 86400 * 30 ); // Cache metadata for 30 days
+			$jwks_provider_builder     = ( new JwksProviderBuilder() )
+				->setCache( $cache )
+				->setCacheTtl( 86400 ); // Cache JWKS for 1 day
+			$issuer_builder            = ( new IssuerBuilder() )
+				->setMetadataProviderBuilder( $metadata_provider_builder )
+				->setJwksProviderBuilder( $jwks_provider_builder );
+
+			// Set issuer and build the client.
+			$issuer          = $issuer_builder->build( $configuration_url );
 			$client_metadata = ClientMetadata::fromArray(
 				array(
 					'client_id'     => sanitize_text_field( $client_id ),
