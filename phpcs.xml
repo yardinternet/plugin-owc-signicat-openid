@@ -4,9 +4,13 @@
     <arg name="parallel" value="40" />
     <arg value="ps" />
 	  <arg name="colors" />
+		<file>.</file>
     <exclude-pattern>.github/*</exclude-pattern>
     <exclude-pattern>.vscode/*</exclude-pattern>
     <exclude-pattern>dist/*</exclude-pattern>
+    <exclude-pattern>index.php</exclude-pattern>
+    <exclude-pattern>node_modules/*</exclude-pattern>
+    <exclude-pattern>src/GravityForms/*</exclude-pattern>
     <exclude-pattern>vendor/*</exclude-pattern>
     <rule ref="WordPress">
         <exclude name="WordPress.Files.FileName.NotHyphenatedLowercase" />

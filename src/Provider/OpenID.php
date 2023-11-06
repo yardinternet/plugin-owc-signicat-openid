@@ -216,7 +216,14 @@ class OpenID extends AbstractHookProvider
 			// Parse and process the JSON response
 			$user_info = json_decode( $json_response, true );
 		} else {
-			echo 'Error: ' . $response->getStatusCode() . ' ' . $response->getReasonPhrase();
+			$error_message = sprintf(
+				/* Translators: %1$s is the HTTP status code, %2$s is the reason phrase. */
+				_x( 'Error: %1$s %2$s', 'Error message with status code and reason phrase', 'owc-openid-signicat' ),
+				$response->getStatusCode(),
+				$response->getReasonPhrase()
+			);
+
+			return $error_message;
 		}
 
 		return $user_info;

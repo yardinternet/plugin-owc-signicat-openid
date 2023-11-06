@@ -38,9 +38,10 @@ class View
 		$template_path = $this->template_directory . '/' . $template_file;
 
 		if ( ! file_exists( $template_path )) {
-			throw new Exception( 'Template file not found: ' . $template_path );
+			throw new Exception( 'Template file not found: ' . esc_html( $template_path ) );
 		}
 
+		// phpcs:ignore WordPress.PHP.DontExtract.extract_extract
 		extract( $this->data ); // Extract data variables
 
 		ob_start();
