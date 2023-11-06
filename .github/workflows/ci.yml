@@ -33,6 +33,11 @@ jobs:
           php-version: ${{ matrix.php-version }}
           coverage: none
 
+      - name: Install PHPCS
+        run: |
+          composer global require squizlabs/php_codesniffer
+          export PATH=$PATH:$HOME/.composer/vendor/bin
+
       - name: Install composer dependencies
         uses: ramsey/composer-install@v2
         with:
