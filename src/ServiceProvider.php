@@ -109,10 +109,10 @@ class ServiceProvider implements ServiceProviderInterface
 			// Cache configuration.
 			$metadata_provider_builder = ( new MetadataProviderBuilder() )
 				->setCache( $cache )
-				->setCacheTtl( 86400 * 30 ); // Cache metadata for 30 days
+				->setCacheTtl( 86400 * 30 ); // Cache 30 days
 			$jwks_provider_builder     = ( new JwksProviderBuilder() )
 				->setCache( $cache )
-				->setCacheTtl( 86400 ); // Cache JWKS for 1 day
+				->setCacheTtl( 86400 ); // Cache 1 day
 			$issuer_builder            = ( new IssuerBuilder() )
 				->setMetadataProviderBuilder( $metadata_provider_builder )
 				->setJwksProviderBuilder( $jwks_provider_builder );

@@ -90,8 +90,6 @@ class OpenID extends AbstractHookProvider
 	 * Register hooks.
 	 *
 	 * @since 0.0.1
-	 *
-	 * @return void
 	 */
 	public function register_hooks(): void
 	{
@@ -100,18 +98,17 @@ class OpenID extends AbstractHookProvider
 
 	/**
 	 * Register the SSO routes.
-	 *
-	 * @since 0.0.1
 	 */
 	protected function register_routes(): void
 	{
 		$path_login    = sanitize_text_field( get_option( 'owc_signicat_openid_path_login_settings' ) );
 		$path_logout   = sanitize_text_field( get_option( 'owc_signicat_openid_path_logout_settings' ) );
 		$path_redirect = sanitize_text_field( get_option( 'owc_signicat_openid_path_redirect_settings' ) );
+		$path_refresh  = sanitize_text_field( get_option( 'owc_signicat_openid_path_refresh_settings' ) );
 
 		add_action(
 			'parse_request',
-			function ( $wp ) use ( $path_login, $path_logout, $path_redirect ) {
+			function ( $wp ) use ( $path_login, $path_logout, $path_redirect, $path_refresh ) {
 
 				if ($wp->request === $path_login) {
 					if ( ! $this->session->has( 'access_token' ) ) {
@@ -127,6 +124,11 @@ class OpenID extends AbstractHookProvider
 					$this->handle_redirect( $server_request );
 				}
 
+				if ($wp->request === $path_refresh) {
+					$server_request = ServerRequest::fromGlobals();
+					$this->refresh( $server_request );
+				}
+
 				if ($wp->request === $path_logout) {
 					$this->logout();
 				}
@@ -138,8 +140,6 @@ class OpenID extends AbstractHookProvider
 	 * Authenticate.
 	 *
 	 * @since 0.0.1
-	 *
-	 * @return void
 	 */
 	protected function authenticate(): void
 	{
@@ -156,10 +156,8 @@ class OpenID extends AbstractHookProvider
 	 *
 	 * @since 0.0.1
 	 * @throws RuntimeException Unauthorized;
-	 *
-	 * @return void;
 	 */
-	protected function handle_redirect( ServerRequestInterface $server_request )
+	protected function handle_redirect( ServerRequestInterface $server_request ): void
 	{
 		$callback_params = $this->oidc_service->getCallbackParams( $server_request, $this->oidc_client );
 		$token_set       = $this->oidc_service->callback( $this->oidc_client, $callback_params );
@@ -172,6 +170,42 @@ class OpenID extends AbstractHookProvider
 			$claims = $token_set->claims();
 		} else {
 			throw new RuntimeException( 'Unauthorized' );
+		}
+
+		$this->session->set( 'access_token', $access_token );
+		$this->session->set( 'refresh_token', $refresh_token );
+		$this->session->set( 'exp', $claims['exp'] );
+		$this->session->save();
+	}
+
+	/**
+	 * Refresh the tokens with the refresh token.
+	 *
+	 * @since 0.0.1
+	 * @throws RuntimeException Unauthorized;
+	 */
+	protected function refresh( ServerRequestInterface $server_request ): void
+	{
+		$refresh_token   = $this->session->get( 'refresh_token' );
+		$callback_params = $this->oidc_service->getCallbackParams( $server_request, $this->oidc_client );
+		$token_set       = $this->oidc_service->callback( $this->oidc_client, $callback_params );
+
+		if (empty( $refresh_token )) {
+			throw new RuntimeException( 'No refresh token set' );
+		}
+		var_dump( $token_set );
+		die;
+
+		$token_set = $this->oidc_service->refresh( $this->oidc_client, $refresh_token );
+
+		$id_token      = $token_set->getIdToken();
+		$access_token  = $token_set->getAccessToken();
+		$refresh_token = $token_set->getRefreshToken();
+
+		if ($id_token) {
+			$claims = $token_set->claims();
+		} else {
+			throw new RuntimeException( 'Failed to renew session' );
 		}
 
 		$this->session->set( 'access_token', $access_token );
@@ -234,8 +268,6 @@ class OpenID extends AbstractHookProvider
 	 *
 	 * @since 0.0.1
 	 * @throws RuntimeException You are not logged in
-	 *
-	 * @return void
 	 */
 	protected function logout(): void
 	{

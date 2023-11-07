@@ -62,6 +62,7 @@ class Settings extends AbstractHookProvider
 		register_setting( 'owc_signicat_openid_settings_group', 'owc_signicat_openid_path_login_settings' );
 		register_setting( 'owc_signicat_openid_settings_group', 'owc_signicat_openid_path_logout_settings' );
 		register_setting( 'owc_signicat_openid_settings_group', 'owc_signicat_openid_path_redirect_settings' );
+		register_setting( 'owc_signicat_openid_settings_group', 'owc_signicat_openid_path_refresh_settings' );
 	}
 
 	/**
