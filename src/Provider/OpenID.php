@@ -125,8 +125,7 @@ class OpenID extends AbstractHookProvider
 				}
 
 				if ($wp->request === $path_refresh) {
-					$server_request = ServerRequest::fromGlobals();
-					$this->refresh( $server_request );
+					$this->refresh();
 				}
 
 				if ($wp->request === $path_logout) {
@@ -184,19 +183,17 @@ class OpenID extends AbstractHookProvider
 	 * @since 0.0.1
 	 * @throws RuntimeException Unauthorized;
 	 */
-	protected function refresh( ServerRequestInterface $server_request ): void
+	protected function refresh(): void
 	{
-		$refresh_token   = $this->session->get( 'refresh_token' );
-		$callback_params = $this->oidc_service->getCallbackParams( $server_request, $this->oidc_client );
-		$token_set       = $this->oidc_service->callback( $this->oidc_client, $callback_params );
+		$current_refresh_token = $this->session->get( 'refresh_token' );
 
-		if (empty( $refresh_token )) {
+		if (empty( $current_refresh_token )) {
 			throw new RuntimeException( 'No refresh token set' );
 		}
-		var_dump( $token_set );
-		die;
 
-		$token_set = $this->oidc_service->refresh( $this->oidc_client, $refresh_token );
+		$token_set = $this->oidc_service->refresh( $this->oidc_client, $current_refresh_token );
+
+		$this->session->remove( 'refresh_token' );
 
 		$id_token      = $token_set->getIdToken();
 		$access_token  = $token_set->getAccessToken();
