@@ -185,30 +185,31 @@ class OpenID extends AbstractHookProvider
 	 */
 	protected function refresh(): void
 	{
-		$current_refresh_token = $this->session->get( 'refresh_token' );
+		if ($this->session->has( 'refresh_token' ) && time() > $this->session->get( 'exp' )) {
+			// The access token has expired, but we have a refresh token
+			$current_refresh_token = $this->session->get( 'refresh_token' );
 
-		if (empty( $current_refresh_token )) {
-			throw new RuntimeException( 'No refresh token set' );
+			// Refresh.
+			$token_set = $this->oidc_service->refresh( $this->oidc_client, $current_refresh_token );
+
+			$id_token      = $token_set->getIdToken();
+			$access_token  = $token_set->getAccessToken();
+			$refresh_token = $token_set->getRefreshToken();
+
+			if ($id_token) {
+				$claims = $token_set->claims();
+			} else {
+				throw new RuntimeException( 'Failed to renew session' );
+			}
+
+			$this->session->set( 'access_token', $access_token );
+			$this->session->set( 'refresh_token', $refresh_token );
+			$this->session->set( 'exp', $claims['exp'] );
+			$this->session->save();
 		}
 
-		$token_set = $this->oidc_service->refresh( $this->oidc_client, $current_refresh_token );
-
-		$this->session->remove( 'refresh_token' );
-
-		$id_token      = $token_set->getIdToken();
-		$access_token  = $token_set->getAccessToken();
-		$refresh_token = $token_set->getRefreshToken();
-
-		if ($id_token) {
-			$claims = $token_set->claims();
-		} else {
-			throw new RuntimeException( 'Failed to renew session' );
-		}
-
-		$this->session->set( 'access_token', $access_token );
-		$this->session->set( 'refresh_token', $refresh_token );
-		$this->session->set( 'exp', $claims['exp'] );
-		$this->session->save();
+		wp_safe_redirect( home_url() );
+		exit;
 	}
 
 	/**
