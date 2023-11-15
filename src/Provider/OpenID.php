@@ -185,6 +185,8 @@ class OpenID extends AbstractHookProvider
 	 */
 	protected function refresh(): void
 	{
+		header( 'Content-Type: application/json' );
+
 		if ($this->session->has( 'refresh_token' ) && time() > $this->session->get( 'exp' )) {
 			// The access token has expired, but we have a refresh token
 			$current_refresh_token = $this->session->get( 'refresh_token' );
@@ -215,8 +217,6 @@ class OpenID extends AbstractHookProvider
 			$this->session->set( 'refresh_token', $refresh_token );
 			$this->session->set( 'exp', $claims['exp'] );
 			$this->session->save();
-
-			header( 'Content-Type: application/json' );
 
 			echo wp_json_encode(
 				array(

@@ -231,7 +231,7 @@ function initCountdown(sessionTTL, refreshUri, logoutUri) {
     registerEventListeners();
   });
 }
-var sessionTTL = Date.now() + 1000;
+var sessionTTL = Date.now() + 1000; // TODO: should be sopendIdSettings.exp
 var refreshUri = sopenidSettings.refresh_uri;
 var logoutUri = sopenidSettings.logout_uri;
 if (sessionTTL > 0) {
