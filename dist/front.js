@@ -2,9 +2,9 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
-/***/ "./resources/css/admin.css":
+/***/ "./resources/css/front.css":
 /*!*********************************!*\
-  !*** ./resources/css/admin.css ***!
+  !*** ./resources/css/front.css ***!
   \*********************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
@@ -57,13 +57,51 @@ var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
 /*!*******************************!*\
-  !*** ./resources/js/admin.js ***!
+  !*** ./resources/js/front.js ***!
   \*******************************/
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _css_admin_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../css/admin.css */ "./resources/css/admin.css");
+/* harmony import */ var _css_front_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../css/front.css */ "./resources/css/front.css");
 
+document.addEventListener('DOMContentLoaded', function () {
+  var countdown = document.getElementById('js-sopenid-countdown');
+  var timer = document.getElementById('js-sopenid-timer');
+  var logout = document.getElementById('js-sopenid-logout');
+
+  /**
+   * Countdown.
+   */
+  if (countdown) {
+    var currentTime = new Date(timer.dataset.current).getTime();
+    var expiryTime = timer.dataset.expiry;
+    var logoutUrl = logout.dataset.action;
+    var interval = setInterval(function () {
+      var distance = new Date(expiryTime).getTime() - currentTime;
+      var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      var hours = Math.floor(distance % (1000 * 60 * 60 * 24) / (1000 * 60 * 60));
+      var minutes = Math.floor(distance % (1000 * 60 * 60) / (1000 * 60));
+      var seconds = Math.floor(distance % (1000 * 60) / 1000);
+      currentTime += 1000;
+      timer.innerHTML = "".concat(days, " dagen ").concat(hours, " uren ").concat(minutes, " minuten ").concat(seconds, " seconden");
+      if (distance < 0) {
+        clearInterval(interval);
+        timer.innerHTML = 'Expired';
+        return window.location.href = logoutUrl;
+      }
+    }, 1000);
+  }
+
+  /**
+   * Logout.
+   */
+  if (logout) {
+    logout.addEventListener('click', function (e) {
+      var logoutUrl = e.target.dataset.action;
+      return window.location.href = logoutUrl;
+    });
+  }
+});
 })();
 
 /******/ })()
 ;
-//# sourceMappingURL=admin.js.map
+//# sourceMappingURL=front.js.map

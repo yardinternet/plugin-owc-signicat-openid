@@ -22,7 +22,7 @@ module.exports = (env, argv) => {
 				__dirname,
 				'resources/blocks/eidas-output/index.js'
 			),
-			admin: path.resolve(__dirname, 'resources/js/admin.js'),
+			modal: path.resolve(__dirname, 'resources/js/modal.js'),
 			front: path.resolve(__dirname, 'resources/js/front.js'),
 		},
 		output: {

@@ -26,6 +26,7 @@ use Psr\Log\LogLevel;
 use Psr\SimpleCache\CacheInterface;
 
 use OWCSignicatOpenID\Block;
+use OWCSignicatOpenID\Modal;
 use OWCSignicatOpenID\Logger;
 use OWCSignicatOpenID\Provider;
 use OWCSignicatOpenID\Screen;
@@ -92,6 +93,10 @@ class ServiceProvider implements ServiceProviderInterface
 			}
 
 			return $level ?? '';
+		};
+
+		$container['modal'] = function ($container ) {
+			return new Modal( $container['session'] );
 		};
 
 		$container['oidc_client'] = function ( $container ): ClientInterface {
