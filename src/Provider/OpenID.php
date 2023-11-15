@@ -183,7 +183,7 @@ class OpenID extends AbstractHookProvider
 	 * @since 0.0.1
 	 * @throws RuntimeException Unauthorized;
 	 */
-	protected function refresh(): string
+	protected function refresh(): void
 	{
 		if ($this->session->has( 'refresh_token' ) && time() > $this->session->get( 'exp' )) {
 			// The access token has expired, but we have a refresh token
@@ -199,7 +199,16 @@ class OpenID extends AbstractHookProvider
 			if ($id_token) {
 				$claims = $token_set->claims();
 			} else {
-				throw new RuntimeException( 'Failed to renew session' );
+				wp_die(
+					wp_json_encode(
+						array(
+							'status'  => 'error',
+							'message' => 'Failed to renew session',
+						)
+					),
+					'Error',
+					array( 'response' => 500 )
+				);
 			}
 
 			$this->session->set( 'access_token', $access_token );
@@ -207,19 +216,26 @@ class OpenID extends AbstractHookProvider
 			$this->session->set( 'exp', $claims['exp'] );
 			$this->session->save();
 
-			return wp_json_encode(
+			header( 'Content-Type: application/json' );
+
+			echo wp_json_encode(
 				array(
 					'status'  => 'success',
 					'message' => 'Session refreshed',
 				)
 			);
+			exit;
 		}
 
-		return wp_json_encode(
-			array(
-				'status'  => 'error',
-				'message' => 'Session not refreshed',
-			)
+		wp_die(
+			wp_json_encode(
+				array(
+					'status'  => 'error',
+					'message' => 'Session not refreshed',
+				)
+			),
+			'Error',
+			array( 'response' => 500 )
 		);
 	}
 

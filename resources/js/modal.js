@@ -1,3 +1,5 @@
+import apiFetch from '@wordpress/api-fetch';
+
 /**
  * Initialize the countdown.
  *
@@ -86,8 +88,22 @@ function initCountdown(sessionTTL, refreshUri, logoutUri) {
 		}
 	}
 
-	function sessionResume() {
-		fetch(refreshUri);
+	async function sessionResume() {
+		try {
+			const response = await apiFetch({
+				url: refreshUri,
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+			});
+
+			// Handle success
+			console.log(response);
+		} catch (error) {
+			// Handle error
+			console.error('Error:', error);
+		}
 	}
 
 	function logout() {
