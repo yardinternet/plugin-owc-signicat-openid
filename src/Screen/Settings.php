@@ -19,6 +19,7 @@ if ( ! defined( 'ABSPATH' )) {
 }
 
 use Cedaro\WP\Plugin\AbstractHookProvider;
+use Error;
 
 /**
  * Class to activate the plugin.
@@ -29,8 +30,9 @@ class Settings extends AbstractHookProvider
 {
 	public function register_hooks()
 	{
-		add_action( 'admin_menu', array( $this, 'add_settings_page' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
+		add_action( 'admin_menu', array( $this, 'add_settings_page' ) );
 	}
 
 	/**
@@ -47,6 +49,34 @@ class Settings extends AbstractHookProvider
 			'owc-signicat-openid',
 			array( $this, 'render_settings_page' )
 		);
+	}
+
+	/**
+	 * Enqueue assets.
+	 *
+	 * @since 0.0.1
+	 * @throws Error Run npm watch or build
+	 */
+	public function enqueue_assets(): void
+	{
+		$script_asset_path = $this->plugin->get_path( 'dist/admin.asset.php' );
+
+		if ( ! file_exists( $script_asset_path )) {
+			throw new Error(
+				'You need to run `npm run watch` or `npm run build` to be able to use this plugin first.'
+			);
+		}
+
+		$script_asset = require $script_asset_path;
+
+		wp_register_style(
+			'sopenid-admin-style',
+			$this->plugin->get_url( 'dist/admin.css' ),
+			array( 'wp-components' ),
+			$script_asset['version']
+		);
+
+		wp_enqueue_style( 'sopenid-admin-style' );
 	}
 
 	/**

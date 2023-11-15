@@ -13,7 +13,7 @@ namespace OWCSignicatOpenID;
 
 ?>
 
-<div class="wrap">
+<div class="wrap sopenid-admin-container">
 	<h1><?php esc_html_e( 'Signicat OpenID', 'owc-signicat-openid' ); ?></h1>
 
 	<form method="post" action="options.php">
