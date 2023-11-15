@@ -101,8 +101,8 @@ class Modal extends AbstractHookProvider
 			'sopenidSettings',
 			array(
 				'exp'         => $exp,
-				'refresh_uri' => $path_refresh,
-				'logout_uri'  => $path_logout,
+				'refresh_uri' => trailingslashit( get_site_url() ) . $path_refresh,
+				'logout_uri'  => trailingslashit( get_site_url() ) . $path_logout,
 			)
 		);
 

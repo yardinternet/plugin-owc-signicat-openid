@@ -7,20 +7,21 @@ var __webpack_exports__ = {};
  * Initialize the countdown.
  *
  * @param number sessionTTL
- * @param string resumeUri
+ * @param string refreshUri
  * @param string logoutUri
  */
-function initCountdown(sessionTTL, resumeUri, logoutUri) {
+function initCountdown(sessionTTL, refreshUri, logoutUri) {
   var second = 1000;
   var minute = 60 * second;
   var sessionTTLInSeconds = sessionTTL * second;
+  console.log(refreshUri);
 
-  // Elements
+  // Elements.
   var elemModal = 'js-owc-signicat-openid-popup';
   var elemResumeHandler = 'js-owc-signicat-resume-handler';
   var elemLogoutHandler = 'js-owc-signicat-logout-handler';
 
-  // Classes
+  // Classes.
   var classModalShow = 'owc-signicat-openid-popup-show';
 
   // Open the modal 1 minute before the session ends.
@@ -83,7 +84,7 @@ function initCountdown(sessionTTL, resumeUri, logoutUri) {
     }
   }
   function sessionResume() {
-    window.location = resumeUri;
+    fetch(refreshUri);
   }
   function logout() {
     window.location = logoutUri;
@@ -104,11 +105,11 @@ function initCountdown(sessionTTL, resumeUri, logoutUri) {
     registerEventListeners();
   });
 }
-var sessionTTL = sopenidSettings.exp;
-var resumeUri = sopenidSettings.resume_uri;
+var sessionTTL = Date.now() + 1000;
+var refreshUri = sopenidSettings.refresh_uri;
 var logoutUri = sopenidSettings.logout_uri;
 if (sessionTTL > 0) {
-  initCountdown(sessionTTL, resumeUri, logoutUri);
+  initCountdown(sessionTTL, refreshUri, logoutUri);
 }
 /******/ })()
 ;
