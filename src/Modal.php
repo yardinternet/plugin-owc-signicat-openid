@@ -89,11 +89,20 @@ class Modal extends AbstractHookProvider
 			true
 		);
 
+		// Get the expiration from the session.
+		$exp = $this->session->get( 'exp' ) ?? 0;
+
+		// Get the refresh and logout uri's from the settings.
+		$path_refresh = sanitize_text_field( get_option( 'owc_signicat_openid_path_refresh_settings' ) );
+		$path_logout  = sanitize_text_field( get_option( 'owc_signicat_openid_path_logout_settings' ) );
+
 		wp_localize_script(
 			'sopenid-modal-script',
 			'sopenidSettings',
 			array(
-				'exp' => $this->session->get( 'exp' ),
+				'exp'         => $exp,
+				'refresh_uri' => $path_refresh,
+				'logout_uri'  => $path_logout,
 			)
 		);
 
