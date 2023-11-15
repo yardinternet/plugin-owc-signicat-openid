@@ -115,17 +115,27 @@ class EHerkenning extends AbstractHookProvider
 	 */
 	public function render_output(): string
 	{
-		// TODO handle when not logged in
-		$data = array();
+		// Access token exists and not beyond expiration.
+		$valid_session = $this->session->has( 'access_token' ) && time() < $this->session->get( 'exp' );
+		$data          = array();
 
-		if ($this->session->has( 'access_token' )) {
+		// Get the user info.
+		if ($valid_session) {
 			$data = $this->oidc_client->get_user_info();
 		}
 
-		$view = new View();
-		$view->assign( 'kvknr', $data['urn:etoegang:1.9:EntityConcernedID:KvKnr'] );
-		$rendered_output = $view->render( 'blocks/eherkenning-output.php' );
+		// Check if the subject issuer is valid for this authentication method.
+		$is_valid_issuer = in_array( $data['subject_issuer'], array( 'simulator', 'eherkenning' ), true );
 
+		$view = new View();
+		$view->assign( 'is_active', $is_valid_issuer );
+
+		// Check if the subject issuer is valid for this authentication method.
+		if ($is_valid_issuer) {
+			$view->assign( 'kvknr', $data['urn:etoegang:1.9:EntityConcernedID:KvKnr'] );
+		}
+
+		$rendered_output = $view->render( 'blocks/eherkenning-output.php' );
 		return $rendered_output;
 	}
 }

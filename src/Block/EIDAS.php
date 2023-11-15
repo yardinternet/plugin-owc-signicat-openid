@@ -115,21 +115,31 @@ class EIDAS extends AbstractHookProvider
 	 */
 	public function render_output(): string
 	{
-		// TODO handle when not logged in
-		$data = array();
+		// Access token exists and not beyond expiration.
+		$valid_session = $this->session->has( 'access_token' ) && time() < $this->session->get( 'exp' );
+		$data          = array();
 
-		if ($this->session->has( 'access_token' )) {
+		// Get the user info.
+		if ($valid_session) {
 			$data = $this->oidc_client->get_user_info();
 		}
 
-		$view = new View();
-		$view->assign( 'pseudo', $data['urn:etoegang:1.12:EntityConcernedID:PseudoID'] );
-		$view->assign( 'bsn', $data['urn:etoegang:1.12:EntityConcernedID:BSN'] );
-		$view->assign( 'family_name', $data['urn:etoegang:1.9:attribute:FamilyName'] );
-		$view->assign( 'first_name', $data['urn:etoegang:1.9:attribute:FirstName'] );
-		$view->assign( 'date_of_birth', $data['urn:etoegang:1.9:attribute:DateOfBirth'] );
-		$rendered_output = $view->render( 'blocks/eidas-output.php' );
+		// Check if the subject issuer is valid for this authentication method.
+		$is_valid_issuer = in_array( $data['subject_issuer'], array( 'simulator', 'eidas' ), true );
 
+		$view = new View();
+		$view->assign( 'is_active', $is_valid_issuer );
+
+		// Check if the subject issuer is valid for this authentication method.
+		if ($is_valid_issuer) {
+			$view->assign( 'pseudo', $data['urn:etoegang:1.12:EntityConcernedID:PseudoID'] );
+			$view->assign( 'bsn', $data['urn:etoegang:1.12:EntityConcernedID:BSN'] );
+			$view->assign( 'family_name', $data['urn:etoegang:1.9:attribute:FamilyName'] );
+			$view->assign( 'first_name', $data['urn:etoegang:1.9:attribute:FirstName'] );
+			$view->assign( 'date_of_birth', $data['urn:etoegang:1.9:attribute:DateOfBirth'] );
+		}
+
+		$rendered_output = $view->render( 'blocks/eidas-output.php' );
 		return $rendered_output;
 	}
 }
