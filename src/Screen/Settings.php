@@ -19,6 +19,7 @@ if ( ! defined( 'ABSPATH' )) {
 }
 
 use Cedaro\WP\Plugin\AbstractHookProvider;
+use Error;
 
 /**
  * Class to activate the plugin.
@@ -29,8 +30,8 @@ class Settings extends AbstractHookProvider
 {
 	public function register_hooks()
 	{
-		add_action( 'admin_menu', array( $this, 'add_settings_page' ) );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
+		add_action( 'admin_menu', array( $this, 'add_settings_page' ) );
 	}
 
 	/**
@@ -62,6 +63,7 @@ class Settings extends AbstractHookProvider
 		register_setting( 'owc_signicat_openid_settings_group', 'owc_signicat_openid_path_login_settings' );
 		register_setting( 'owc_signicat_openid_settings_group', 'owc_signicat_openid_path_logout_settings' );
 		register_setting( 'owc_signicat_openid_settings_group', 'owc_signicat_openid_path_redirect_settings' );
+		register_setting( 'owc_signicat_openid_settings_group', 'owc_signicat_openid_path_refresh_settings' );
 	}
 
 	/**

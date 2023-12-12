@@ -43,7 +43,8 @@ class Plugin extends BasePlugin implements Composable
 		$this
 			->register_hooks( $container->get( 'blocks.eherkenning' ) )
 			->register_hooks( $container->get( 'blocks.eidas' ) )
-			->register_hooks( $container->get( 'hooks.oidc' ) );
+			->register_hooks( $container->get( 'hooks.oidc' ) )
+			->register_hooks( $container->get( 'modal' ) );
 
 		if ( is_admin() ) {
 			$this

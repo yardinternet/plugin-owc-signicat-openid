@@ -26,6 +26,7 @@ use Psr\Log\LogLevel;
 use Psr\SimpleCache\CacheInterface;
 
 use OWCSignicatOpenID\Block;
+use OWCSignicatOpenID\Modal;
 use OWCSignicatOpenID\Logger;
 use OWCSignicatOpenID\Provider;
 use OWCSignicatOpenID\Screen;
@@ -94,6 +95,10 @@ class ServiceProvider implements ServiceProviderInterface
 			return $level ?? '';
 		};
 
+		$container['modal'] = function ($container ) {
+			return new Modal( $container['session'] );
+		};
+
 		$container['oidc_client'] = function ( $container ): ClientInterface {
 			$configuration_url = get_option( 'owc_signicat_openid_configuration_url_settings' );
 			$client_id         = get_option( 'owc_signicat_openid_client_id_settings' );
@@ -109,10 +114,10 @@ class ServiceProvider implements ServiceProviderInterface
 			// Cache configuration.
 			$metadata_provider_builder = ( new MetadataProviderBuilder() )
 				->setCache( $cache )
-				->setCacheTtl( 86400 * 30 ); // Cache metadata for 30 days
+				->setCacheTtl( 86400 * 30 ); // Cache 30 days
 			$jwks_provider_builder     = ( new JwksProviderBuilder() )
 				->setCache( $cache )
-				->setCacheTtl( 86400 ); // Cache JWKS for 1 day
+				->setCacheTtl( 86400 ); // Cache 1 day
 			$issuer_builder            = ( new IssuerBuilder() )
 				->setMetadataProviderBuilder( $metadata_provider_builder )
 				->setJwksProviderBuilder( $jwks_provider_builder );

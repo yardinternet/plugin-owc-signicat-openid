@@ -92,6 +92,19 @@ namespace OWCSignicatOpenID;
 					</p>
 				</td>
 			</tr>
+			<tr>
+				<th scope="row">
+					<label for="owc_signicat_openid_path_refresh_settings">
+						<?php esc_html_e( 'Refresh path', 'owc-signicat-openid' ); ?>
+					</label>
+				</th>
+				<td>
+					<input type="text" name="owc_signicat_openid_path_refresh_settings" id="owc_signicat_openid_path_refresh_settings" value="<?php echo esc_attr( get_option( 'owc_signicat_openid_path_refresh_settings' ) ); ?>" required>
+					<p class="description">
+						<?php esc_html_e( 'Example: sso-refresh', 'owc-signicat-openid' ); ?>
+					</p>
+				</td>
+			</tr>
 		</table>
 		<?php submit_button(); ?>
 	</form>
