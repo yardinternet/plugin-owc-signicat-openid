@@ -20,8 +20,6 @@
 
 declare ( strict_types = 1 );
 
-namespace OWCSignicatOpenID;
-
 /**
  * If this file is called directly, abort.
  */
@@ -40,26 +38,4 @@ if (file_exists( OWC_SIGNICAT_OPENID_DIR_PATH . '/vendor/autoload.php' )) {
 	require_once OWC_SIGNICAT_OPENID_DIR_PATH . '/vendor/autoload.php';
 }
 
-// Autoload mapped classes.
-spl_autoload_register( __NAMESPACE__ . '\autoloader_classmap' );
-
-// Load the WordPress plugin administration API.
-require_once ABSPATH . 'wp-admin/includes/plugin.php';
-
-// Create a container and register a service provider.
-$owc_signicat_openid_container = new Container();
-$owc_signicat_openid_container->register( new ServiceProvider() );
-
-
-// Initialize the plugin and inject the container.
-$owc_signicat_openid = plugin()
-	->set_basename( plugin_basename( __FILE__ ) )
-	->set_directory( plugin_dir_path( __FILE__ ) )
-	->set_file( __DIR__ . '/owc-signicat-openid.php' )
-	->set_slug( 'owc-signicat-openid' )
-	->set_url( plugin_dir_url( __FILE__ ) )
-	->set_container( $owc_signicat_openid_container )
-	->register_hooks( $owc_signicat_openid_container->get( 'hooks.activation' ) )
-	->register_hooks( $owc_signicat_openid_container->get( 'hooks.deactivation' ) );
-
-add_action( 'plugins_loaded', array( $owc_signicat_openid, 'compose' ), 5 );
+$init = new OWCSignicatOpenID\Bootstrap();
