@@ -16,14 +16,14 @@ if ( ! defined( 'ABSPATH' )) {
 	exit;
 }
 
-// use OWCSignicatOpenID\Interfaces\Services\LifeCycleServiceInterface;
+use OWCSignicatOpenID\Interfaces\Services\LifeCycleServiceInterface;
 
 /**
  * Register life cycle service.
  *
  * @since 0.0.1
  */
-class LifeCycleService extends Service
+class LifeCycleService extends Service implements LifeCycleServiceInterface
 {
 	/**
 	 * @inheritDoc

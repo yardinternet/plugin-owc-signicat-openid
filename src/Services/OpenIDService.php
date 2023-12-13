@@ -92,7 +92,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 	 *
 	 * @since 0.0.1
 	 */
-	public function register_hooks(): void
+	public function register(): void
 	{
 		$this->register_routes();
 	}

@@ -11,17 +11,19 @@ use Facile\OpenIDClient\Service\Builder\AuthorizationServiceBuilder;
 use Odan\Session\PhpSession;
 use OWCSignicatOpenID\Block;
 use OWCSignicatOpenID\Interfaces\Providers\AppServiceProviderInterface;
+use OWCSignicatOpenID\Interfaces\Services\CacheServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\LifeCycleServiceInterface;
+use OWCSignicatOpenID\Interfaces\Services\OpenIDServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\ResourceServiceInterface;
 use OWCSignicatOpenID\Logger;
 use OWCSignicatOpenID\Modal;
-use OWCSignicatOpenID\Provider;
 use OWCSignicatOpenID\Providers\AppServiceProvider;
 use OWCSignicatOpenID\Screen;
+use OWCSignicatOpenID\Services\CacheService;
 use OWCSignicatOpenID\Services\LifeCycleService;
+use OWCSignicatOpenID\Services\OpenIDService;
 use OWCSignicatOpenID\Services\ResourceService;
 use Psr\Log\LogLevel;
-use Psr\SimpleCache\CacheInterface;
 
 return array(
 	'blocks.eherkenning'               => array(
@@ -41,13 +43,13 @@ return array(
 		},
 	),
 	'cache'                            => array(
-		function (): CacheInterface {
-			return new Cache();
+		function (): CacheServiceInterface {
+			return new CacheService();
 		},
 	),
 	'hooks.oidc'                       => array(
-		function ( $container ) {
-			return new Provider\OpenID(
+		function ( $container ): OpenIDServiceInterface {
+			return new OpenIDService(
 				$container['oidc_client'],
 				$container['oidc_service'],
 				$container['logger'],
