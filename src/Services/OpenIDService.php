@@ -9,7 +9,7 @@
 
 declare ( strict_types = 1 );
 
-namespace OWCSignicatOpenID\Provider;
+namespace OWCSignicatOpenID\Services;
 
 /**
  * Exit when accessed directly.
@@ -18,7 +18,6 @@ if ( ! defined( 'ABSPATH' )) {
 	exit;
 }
 
-use Cedaro\WP\Plugin\AbstractHookProvider;
 use Facile\OpenIDClient\Client\ClientInterface;
 use Facile\OpenIDClient\Service\AuthorizationService;
 use Facile\OpenIDClient\Service\Builder\RevocationServiceBuilder;
@@ -29,12 +28,14 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
+use OWCSignicatOpenID\Interfaces\Services\OpenIDServiceInterface;
+
 /**
- * OpenID class.
+ * Register OpenID service.
  *
  * @since 0.0.1
  */
-class OpenID extends AbstractHookProvider
+class OpenIDService extends Service implements OpenIDServiceInterface
 {
 	/**
 	 * Logger.

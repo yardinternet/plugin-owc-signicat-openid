@@ -30,6 +30,7 @@
 	},
 	"require": {
 		"cmdisp/monolog-microsoft-teams": "1.3.0",
+		"doctrine/annotations": "^1.13",
 		"facile-it/php-openid-client": "^0.3.4",
 		"guzzlehttp/guzzle": "^7.8",
 		"guzzlehttp/psr7": "^1.7",
