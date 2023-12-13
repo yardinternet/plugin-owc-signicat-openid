@@ -17,13 +17,7 @@ if ( ! defined( 'ABSPATH' )) {
 }
 
 use Psr\Container\ContainerInterface;
-use OWCSignicatOpenID\Interfaces\Providers\ApiServiceProviderInterface;
 use OWCSignicatOpenID\Interfaces\Providers\AppServiceProviderInterface;
-use OWCSignicatOpenID\Interfaces\Providers\MonitorServiceProviderInterface;
-use OWCSignicatOpenID\Interfaces\Providers\SettingsServiceProviderInterface;
-use OWCSignicatOpenID\Interfaces\Providers\SiteServiceProviderInterface;
-
-require_once __DIR__ . '/helpers.php';
 
 /**
  * Bootstrap providers and containers.
@@ -69,11 +63,7 @@ final class Bootstrap
 	 */
 	protected function get_providers(): array {
 		$providers = array(
-			ApiServiceProviderInterface::class,
 			AppServiceProviderInterface::class,
-			MonitorServiceProviderInterface::class,
-			SettingsServiceProviderInterface::class,
-			SiteServiceProviderInterface::class,
 		);
 		foreach ( $providers as &$provider ) {
 			$provider = $this->container->get( $provider );

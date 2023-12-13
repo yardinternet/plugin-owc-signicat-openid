@@ -3,7 +3,7 @@
     <arg name="extensions" value="php"/>
     <arg name="parallel" value="40" />
     <arg value="ps" />
-	  <arg name="colors" />
+		<arg name="colors" />
 		<file>.</file>
     <exclude-pattern>.github/*</exclude-pattern>
     <exclude-pattern>.vscode/*</exclude-pattern>
@@ -15,7 +15,7 @@
     <rule ref="WordPress">
         <exclude name="WordPress.Files.FileName.NotHyphenatedLowercase" />
         <exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
-		    <exclude name="Squiz.Functions.FunctionDeclarationArgumentSpacing.SpacingAfterOpen"/>
+				<exclude name="Squiz.Functions.FunctionDeclarationArgumentSpacing.SpacingAfterOpen"/>
         <exclude name="Squiz.Commenting.FileComment.Missing"/>
         <exclude name="Squiz.Strings.DoubleQuoteUsage.NotRequired" />
         <exclude name="Generic.Classes.OpeningBraceSameLine.BraceOnNewLine" />

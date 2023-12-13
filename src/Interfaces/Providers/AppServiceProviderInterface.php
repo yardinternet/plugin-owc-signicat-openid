@@ -1,13 +1,13 @@
 <?php
 /**
- * Resource service interface.
+ * App service provider interface.
  *
  * @package OWC_Signicat_OpenID
  * @author  Yard | Digital Agency
  * @since   0.0.1
  */
 
-namespace OWCSignicatOpenID\Interfaces\Services;
+namespace OWCSignicatOpenID\Interfaces\Providers;
 
 /**
  * Exit when accessed directly.
@@ -17,10 +17,10 @@ if ( ! defined( 'ABSPATH' )) {
 }
 
 /**
- * Resource service interface.
+ * App service provider interface.
  *
  * @since 0.0.1
  */
-interface ResourceServiceInterface extends ServiceInterface
+interface AppServiceProviderInterface extends ServiceProviderInterface
 {
 }
