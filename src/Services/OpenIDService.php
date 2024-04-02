@@ -3,32 +3,35 @@
  * OpenID provider.
  *
  * @package OWC_Signicat_OpenID
+ *
  * @author  Yard | Digital Agency
+ *
  * @since   0.0.1
  */
 
-declare ( strict_types = 1 );
+declare (strict_types = 1);
 
 namespace OWCSignicatOpenID\Services;
 
 /**
  * Exit when accessed directly.
  */
-if ( ! defined( 'ABSPATH' )) {
-	exit;
+if (! defined('ABSPATH')) {
+    exit;
 }
 
 use Facile\OpenIDClient\Client\ClientInterface;
 use Facile\OpenIDClient\Service\AuthorizationService;
+use Facile\OpenIDClient\Service\Builder\IntrospectionServiceBuilder;
 use Facile\OpenIDClient\Service\Builder\RevocationServiceBuilder;
-use GuzzleHttp\Client;
-use GuzzleHttp\Psr7\ServerRequest;
-use Odan\Session\PhpSession;
+use Facile\OpenIDClient\Service\Builder\UserInfoServiceBuilder;
+use Facile\OpenIDClient\Token\IdTokenVerifierBuilder;
+use Odan\Session\SessionInterface;
+use OWCSignicatOpenID\Interfaces\Services\OpenIDServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
 
-use OWCSignicatOpenID\Interfaces\Services\OpenIDServiceInterface;
+use RuntimeException;
 
 /**
  * Register OpenID service.
@@ -37,274 +40,189 @@ use OWCSignicatOpenID\Interfaces\Services\OpenIDServiceInterface;
  */
 class OpenIDService extends Service implements OpenIDServiceInterface
 {
-	/**
-	 * Logger.
-	 *
-	 * @var LoggerInterface
-	 */
-	protected $logger;
 
-	/**
-	 * OIDC Client.
-	 *
-	 * @var ClientInterface
-	 */
-	protected $oidc_client;
+    protected LoggerInterface $logger;
 
-	/**
-	 * OIDC Service.
-	 *
-	 * @var AuthorizationService;
-	 */
-	protected $oidc_service;
+    protected ClientInterface $oidc_client;
 
-	/**
-	 * Session.
-	 *
-	 * @var PhpSession
-	 */
-	protected $session;
+    /**
+     * OIDC Service.
+     */
+    protected AuthorizationService $authorization_service;
 
-	/**
-	 * Constructor.
-	 *
-	 * @since 0.0.1
-	 *
-	 * @param ClientInterface      $oidc_client         OIDC Client.
-	 * @param AuthorizationService $oidc_service        OIDC Service.
-	 * @param LoggerInterface      $logger              Logger.
-	 * @param PhpSession           $session             Session.
-	 */
-	public function __construct(
-		ClientInterface $oidc_client,
-		AuthorizationService $oidc_service,
-		LoggerInterface $logger,
-		PhpSession $session
-	) {
-		$this->oidc_client  = $oidc_client;
-		$this->oidc_service = $oidc_service;
-		$this->logger       = $logger;
-		$this->session      = $session;
-	}
+    protected SessionInterface $session;
 
-	/**
-	 * Register hooks.
-	 *
-	 * @since 0.0.1
-	 */
-	public function register(): void
-	{
-		$this->register_routes();
-	}
+    /**
+     * Constructor.
+     *
+     * @since 0.0.1
+     *
+     * @param ClientInterface      $oidc_client         OIDC Client.
+     * @param AuthorizationService $authorization_service        OIDC Service.
+     * @param LoggerInterface      $logger              Logger.
+     * @param SessionInterface           $session             Session.
+     */
+    public function __construct(
+        ClientInterface $oidc_client,
+        AuthorizationService $authorization_service,
+        LoggerInterface $logger,
+        SessionInterface $session
+    ) {
+        $this->oidc_client = $oidc_client;
+        $this->authorization_service = $authorization_service;
+        $this->logger = $logger;
+        $this->session = $session;
+    }
 
-	/**
-	 * Register the SSO routes.
-	 */
-	protected function register_routes(): void
-	{
-		$path_login    = sanitize_text_field( get_option( 'owc_signicat_openid_path_login_settings' ) );
-		$path_logout   = sanitize_text_field( get_option( 'owc_signicat_openid_path_logout_settings' ) );
-		$path_redirect = sanitize_text_field( get_option( 'owc_signicat_openid_path_redirect_settings' ) );
-		$path_refresh  = sanitize_text_field( get_option( 'owc_signicat_openid_path_refresh_settings' ) );
+    /**
+     * Register hooks.
+     *
+     * @since 0.0.1
+     */
+    public function register(): void
+    {
+    }
 
-		add_action(
-			'parse_request',
-			function ( $wp ) use ( $path_login, $path_logout, $path_redirect, $path_refresh ) {
+    /**
+     * Authenticate.
+     *
+     * @since 0.0.1
+     */
+    public function authenticate(): void
+    {
+        $redirect_authorization_uri = $this->authorization_service->getAuthorizationUri(
+            $this->oidc_client
+        );
 
-				if ($wp->request === $path_login) {
-					if ( ! $this->session->has( 'access_token' ) ) {
-						$this->authenticate();
-					} else {
-						wp_safe_redirect( home_url() );
-						exit;
-					}
-				}
+        header('Location: ' . $redirect_authorization_uri);
+        exit();
+    }
 
-				if ($wp->request === $path_redirect) {
-					$server_request = ServerRequest::fromGlobals();
-					$this->handle_redirect( $server_request );
-				}
+    /**
+     * Handle the OpenID redirect.
+     *
+     * @since 0.0.1
+     *
+     * @throws RuntimeException Unauthorized;
+     */
+    public function handle_redirect(ServerRequestInterface $server_request): void
+    {
+        $callback_params = $this->authorization_service->getCallbackParams($server_request, $this->oidc_client);
+        $token_set = $this->authorization_service->callback($this->oidc_client, $callback_params);
 
-				if ($wp->request === $path_refresh) {
-					$this->refresh();
-				}
+        if (null === $token_set->getIdToken()) {
+            throw new RuntimeException('Unauthorized');
+        }
 
-				if ($wp->request === $path_logout) {
-					$this->logout();
-				}
-			}
-		);
-	}
+        $this->session->set('token_set', $token_set);
+        $this->session->save();
+    }
 
-	/**
-	 * Authenticate.
-	 *
-	 * @since 0.0.1
-	 */
-	protected function authenticate(): void
-	{
-		$redirect_authorization_uri = $this->oidc_service->getAuthorizationUri(
-			$this->oidc_client
-		);
+    /**
+     * Refresh the tokens with the refresh token.
+     *
+     * @since 0.0.1
+     *
+     * @throws RuntimeException Unauthorized;
+     */
+    public function refresh(): void
+    {
+        $service = (new IntrospectionServiceBuilder())->build();
+        $params = $service->introspect($this->oidc_client, $this->session->get('token_set')->getAccessToken());
 
-		header( 'Location: ' . $redirect_authorization_uri );
-		exit();
-	}
+        if ($params['active']) {
+            wp_send_json_success(
+                [
+                    'message' => 'Session still active`',
+                ],
+                \WP_Http::OK
+            );
+        }
 
-	/**
-	 * Handle the OpenID redirect.
-	 *
-	 * @since 0.0.1
-	 * @throws RuntimeException Unauthorized;
-	 */
-	protected function handle_redirect( ServerRequestInterface $server_request ): void
-	{
-		$callback_params = $this->oidc_service->getCallbackParams( $server_request, $this->oidc_client );
-		$token_set       = $this->oidc_service->callback( $this->oidc_client, $callback_params );
+        if (! $this->session->has('token_set') || null === $this->session->get('token_set')->getRefreshToken()) {
+            wp_send_json_success(
+                [
+                    'message' => 'Missing refresh token',
+                ],
+                \WP_Http::INTERNAL_SERVER_ERROR
+            );
+        }
 
-		$id_token      = $token_set->getIdToken();
-		$access_token  = $token_set->getAccessToken();
-		$refresh_token = $token_set->getRefreshToken();
+        // Onderstaande workaround kan weg als https://github.com/facile-it/php-openid-client/issues/38 opgelost is
+        // $token_set = $this->authorization_service->refresh($this->oidc_client, $current_refresh_token);
+        // Begin workaround
+        $tokenSet = $this->authorization_service->grant(
+            $this->oidc_client,
+            [
+                'grant_type' => 'refresh_token',
+                'refresh_token' => $this->session->get('token_set')->getRefreshToken(),
+            ]
+        );
 
-		if ($id_token) {
-			$claims = $token_set->claims();
-		} else {
-			throw new RuntimeException( 'Unauthorized' );
-		}
+        if (null === $tokenSet->getIdToken()) {
+            wp_send_json_error(
+                [
+                    'message' => 'Failed to renew session',
+                ],
+                \WP_Http::INTERNAL_SERVER_ERROR
+            );
+        }
 
-		$this->session->set( 'access_token', $access_token );
-		$this->session->set( 'refresh_token', $refresh_token );
-		$this->session->set( 'exp', $claims['exp'] );
-		$this->session->save();
-	}
+        $claims = (new IdTokenVerifierBuilder())->build($this->oidc_client)->verify($tokenSet->getIdToken());
+        $tokenSet = $tokenSet->withClaims($claims);
+        //Einde workaround
 
-	/**
-	 * Refresh the tokens with the refresh token.
-	 *
-	 * @since 0.0.1
-	 * @throws RuntimeException Unauthorized;
-	 */
-	protected function refresh(): void
-	{
-		header( 'Content-Type: application/json' );
+        $this->session->set('token_set', $tokenSet);
+        $this->session->save();
+        wp_send_json_success(
+            [
+                'message' => 'Session refreshed',
+            ],
+            \WP_Http::OK
+        );
+    }
 
-		if ($this->session->has( 'refresh_token' ) && time() > $this->session->get( 'exp' )) {
-			// The access token has expired, but we have a refresh token
-			$current_refresh_token = $this->session->get( 'refresh_token' );
+    /**
+     * Get user info.
+     *
+     * @since 0.0.1
+     *
+     * @return array
+     */
+    public function get_user_info(): array
+    {
+        if (! $this->session->has('token_set')) {
+            return [];
+        }
 
-			// Refresh.
-			$token_set = $this->oidc_service->refresh( $this->oidc_client, $current_refresh_token );
+        $service = (new IntrospectionServiceBuilder())->build();
+        $params = $service->introspect($this->oidc_client, $this->session->get('token_set')->getAccessToken());
 
-			$id_token      = $token_set->getIdToken();
-			$access_token  = $token_set->getAccessToken();
-			$refresh_token = $token_set->getRefreshToken();
+        if (! $params['active']) {
+            return [];
+        }
 
-			if ($id_token) {
-				$claims = $token_set->claims();
-			} else {
-				wp_die(
-					wp_json_encode(
-						array(
-							'status'  => 'error',
-							'message' => 'Failed to renew session',
-						)
-					),
-					'Error',
-					array( 'response' => 500 )
-				);
-			}
+        $user_info_service = (new UserInfoServiceBuilder())->build();
 
-			$this->session->set( 'access_token', $access_token );
-			$this->session->set( 'refresh_token', $refresh_token );
-			$this->session->set( 'exp', $claims['exp'] );
-			$this->session->save();
+        return $user_info_service->getUserInfo($this->oidc_client, $this->session->get('token_set'));
+    }
 
-			echo wp_json_encode(
-				array(
-					'status'  => 'success',
-					'message' => 'Session refreshed',
-				)
-			);
-			exit;
-		}
+    /**
+     * Logout and end the session.
+     *
+     * @since 0.0.1
+     *
+     * @throws RuntimeException You are not logged in
+     */
+    public function logout(): void
+    {
+        $revocation_service = (new RevocationServiceBuilder())->build();
 
-		wp_die(
-			wp_json_encode(
-				array(
-					'status'  => 'error',
-					'message' => 'Session not refreshed',
-				)
-			),
-			'Error',
-			array( 'response' => 500 )
-		);
-	}
-
-	/**
-	 * Get user info.
-	 *
-	 * @since 0.0.1
-	 *
-	 * @return array
-	 */
-	public function get_user_info(): array
-	{
-		$endpoint     = $this->oidc_client->getIssuer()->getMetadata()->getUserInfoEndpoint();
-		$access_token = $this->session->get( 'access_token' ) ?? '';
-		$client       = new Client();
-
-		$headers = array(
-			'Authorization' => 'Bearer ' . $access_token,
-			'Accept'        => 'application/json',
-		);
-
-		$response = $client->request(
-			'GET',
-			$endpoint,
-			array(
-				'headers' => $headers,
-			)
-		);
-
-		$user_info = array();
-
-		// Check the response status code
-		if ($response->getStatusCode() === 200) {
-			// Convert the response content (object) to a JSON string
-			$json_response = $response->getBody()->getContents();
-
-			// Parse and process the JSON response
-			$user_info = json_decode( $json_response, true );
-		} else {
-			$error_message = sprintf(
-				/* Translators: %1$s is the HTTP status code, %2$s is the reason phrase. */
-				_x( 'Error: %1$s %2$s', 'Error message with status code and reason phrase', 'owc-openid-signicat' ),
-				$response->getStatusCode(),
-				$response->getReasonPhrase()
-			);
-
-			return $error_message;
-		}
-
-		return $user_info;
-	}
-
-	/**
-	 * Logout and end the session.
-	 *
-	 * @since 0.0.1
-	 * @throws RuntimeException You are not logged in
-	 */
-	protected function logout(): void
-	{
-		$revocation_service = ( new RevocationServiceBuilder() )->build();
-
-		if ( ! $this->session->has( 'access_token' )) {
-			throw new RuntimeException( 'You are not logged in' );
-		} else {
-			$access_token = $this->session->get( 'access_token' );
-			$revocation_service->revoke( $this->oidc_client, $access_token );
-			$this->session->destroy();
-		}
-	}
+        if (! $this->session->has('token_set')) {
+            throw new RuntimeException('You are not logged in');
+        } else {
+            $revocation_service->revoke($this->oidc_client, $this->session->get('token_set')->getAccessToken());
+            $this->session->destroy();
+        }
+    }
 }
