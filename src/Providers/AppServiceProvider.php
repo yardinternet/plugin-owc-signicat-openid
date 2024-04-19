@@ -20,6 +20,7 @@ if (! defined('ABSPATH')) {
 
 use OWCSignicatOpenID\Interfaces\Providers\AppServiceProviderInterface;
 use OWCSignicatOpenID\Interfaces\Services\BlockServiceInterface;
+use OWCSignicatOpenID\Interfaces\Services\GravityFormsServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\LifeCycleServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\ResourceServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\RouteServiceInterface;
@@ -37,7 +38,8 @@ class AppServiceProvider extends ServiceProvider implements AppServiceProviderIn
         ResourceServiceInterface $resource_service,
         SettingsServiceInterFace $settings_service,
         BlockServiceInterface $block_service,
-        RouteServiceInterface $route_service
+        RouteServiceInterface $route_service,
+        GravityFormsServiceInterface $gravity_forms_service
     ) {
         $this->services = [
             'life_cycle' => $life_cycle_service,
@@ -45,6 +47,7 @@ class AppServiceProvider extends ServiceProvider implements AppServiceProviderIn
             'settings'   => $settings_service,
             'block'      => $block_service,
             'route'      => $route_service,
+            'gravity_forms' => $gravity_forms_service,
         ];
 
         $this->register_hooks();

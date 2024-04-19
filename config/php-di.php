@@ -12,10 +12,11 @@ use Facile\OpenIDClient\Service\AuthorizationService;
 use Facile\OpenIDClient\Service\Builder\AuthorizationServiceBuilder;
 use Odan\Session\PhpSession;
 use Odan\Session\SessionInterface;
-use OWCSignicatOpenID\Block;
 use OWCSignicatOpenID\Interfaces\Providers\AppServiceProviderInterface;
 use OWCSignicatOpenID\Interfaces\Services\BlockServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\CacheServiceInterface;
+use OWCSignicatOpenID\Interfaces\Services\EncryptionServiceInterface;
+use OWCSignicatOpenID\Interfaces\Services\GravityFormsServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\LifeCycleServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\OpenIDServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\ResourceServiceInterface;
@@ -27,6 +28,8 @@ use OWCSignicatOpenID\Modal;
 use OWCSignicatOpenID\Providers\AppServiceProvider;
 use OWCSignicatOpenID\Services\BlockService;
 use OWCSignicatOpenID\Services\CacheService;
+use OWCSignicatOpenID\Services\EncryptionService;
+use OWCSignicatOpenID\Services\GravityFormsService;
 use OWCSignicatOpenID\Services\LifeCycleService;
 use OWCSignicatOpenID\Services\OpenIDService;
 use OWCSignicatOpenID\Services\ResourceService;
@@ -38,27 +41,9 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 
 return [
-    'blocks' => [
-        'eherkenning',
-        'eidas',
-    ],
+    'routes' => [
 
-    // 'blocks.eherkenning'               => [
-    //     function ($container) {
-    //         return new Block\eHerkenning(
-    //             $container['hooks.oidc'],
-    //             $container['session']
-    //         );
-    //     },
-    // ],
-    // 'blocks.eidas'                     => [
-    //     function ($container) {
-    //         return new Block\eIDAS(
-    //             $container['hooks.oidc'],
-    //             $container['session']
-    //         );
-    //     },
-    // ],
+    ],
 
     LoggerInterface::class             => fn (ContainerInterface $container): LoggerInterface => new Logger($container->get('logger.level')),
     'logger.level'                     => fn (): string => (defined('WP_DEBUG') && WP_DEBUG) ? LogLevel::WARNING : '',
@@ -89,16 +74,14 @@ return [
         ->setClientMetadata($container->get(ClientMetadataInterface::class))
         ->build(),
     AuthorizationService::class                     => fn (): AuthorizationService => (new AuthorizationServiceBuilder())->build(),
-    SessionInterface::class                         => function (): PhpSession {
+    'session_options' => [
+        'name'            => 'OWC_Signicat_OpenID',
+        'cookie_secure'   => true,
+        'cookie_httponly' => true,
+    ],
+    SessionInterface::class                         => function (ContainerInterface $container): PhpSession {
         $session = new PhpSession();
-        $session->setOptions(
-            [
-                'name'            => 'OWC_Signicat_OpenID',
-                'cookie_secure'   => true,
-                'cookie_httponly' => true,
-            ]
-        );
-        $session->start();
+        $session->setOptions($container->get('session_options'));
 
         return $session;
     },
@@ -115,4 +98,6 @@ return [
     ViewServiceInterface::class        => \DI\autowire(ViewService::class),
     RouteServiceInterface::class       => \DI\autowire(RouteService::class),
     OpenIDServiceInterface::class      => \DI\autowire(OpenIDService::class),
+    GravityFormsServiceInterface::class => \DI\autowire(GravityFormsService::class),
+    EncryptionServiceInterface::class   => \DI\autowire(EncryptionService::class),
 ];

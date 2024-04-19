@@ -45,23 +45,10 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 
     protected ClientInterface $oidc_client;
 
-    /**
-     * OIDC Service.
-     */
     protected AuthorizationService $authorization_service;
 
     protected SessionInterface $session;
 
-    /**
-     * Constructor.
-     *
-     * @since 0.0.1
-     *
-     * @param ClientInterface      $oidc_client         OIDC Client.
-     * @param AuthorizationService $authorization_service        OIDC Service.
-     * @param LoggerInterface      $logger              Logger.
-     * @param SessionInterface           $session             Session.
-     */
     public function __construct(
         ClientInterface $oidc_client,
         AuthorizationService $authorization_service,
@@ -83,16 +70,35 @@ class OpenIDService extends Service implements OpenIDServiceInterface
     {
     }
 
-    /**
-     * Authenticate.
-     *
-     * @since 0.0.1
-     */
-    public function authenticate(): void
+    public function authenticate(array $idpScopes = [], string $redirectUrl): void
     {
-        $redirect_authorization_uri = $this->authorization_service->getAuthorizationUri(
-            $this->oidc_client
+        $stateID = bin2hex(random_bytes(12));
+        if (! $this->session->isStarted()) {
+            $this->session->start();
+        }
+        $this->session->set('state', [
+            'stateID' => $stateID,
+            'idpScopes' => $idpScopes,
+            'redirectUrl' => $redirectUrl,
+            'refererUrl' => wp_get_referer(),
+        ]);
+        $this->session->save();
+
+        $idpScopes = array_map(
+            fn (string $idpScope): string => sprintf('idp_scoping:%s', $idpScope),
+            $idpScopes
         );
+        $scopes = ['openid', ...$idpScopes];
+        $scopes = array_intersect(
+            $scopes,
+            $this->oidc_client->getIssuer()->getMetadata()->getScopesSupported()
+        );
+
+        $params = [
+            'scope' => implode(' ', $scopes),
+            'state' => $stateID,
+        ];
+        $redirect_authorization_uri = $this->authorization_service->getAuthorizationUri($this->oidc_client, $params);
 
         header('Location: ' . $redirect_authorization_uri);
         exit();
@@ -108,14 +114,26 @@ class OpenIDService extends Service implements OpenIDServiceInterface
     public function handle_redirect(ServerRequestInterface $server_request): void
     {
         $callback_params = $this->authorization_service->getCallbackParams($server_request, $this->oidc_client);
-        $token_set = $this->authorization_service->callback($this->oidc_client, $callback_params);
 
+        $this->session->start();
+        $state = $this->session->get('state');
+        $this->session->remove('state');
+        if ($callback_params['state'] !== $state['stateID']) {
+            throw new RuntimeException('Unauthorized');
+        }
+
+        $token_set = $this->authorization_service->callback($this->oidc_client, $callback_params);
         if (null === $token_set->getIdToken()) {
             throw new RuntimeException('Unauthorized');
         }
 
+        //TODO: check issuer/scope
+
         $this->session->set('token_set', $token_set);
         $this->session->save();
+
+        wp_safe_redirect($state['redirectUrl']);
+        exit;
     }
 
     /**
@@ -173,7 +191,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
         //Einde workaround
 
         $this->session->set('token_set', $tokenSet);
-        $this->session->save();
+        //$this->session->save();
         wp_send_json_success(
             [
                 'message' => 'Session refreshed',
@@ -191,14 +209,15 @@ class OpenIDService extends Service implements OpenIDServiceInterface
      */
     public function get_user_info(): array
     {
+        if (! $this->session->isStarted()) {
+            $this->session->start();
+        }
         if (! $this->session->has('token_set')) {
             return [];
         }
 
-        $service = (new IntrospectionServiceBuilder())->build();
-        $params = $service->introspect($this->oidc_client, $this->session->get('token_set')->getAccessToken());
-
-        if (! $params['active']) {
+        $introspect = $this->introspect();
+        if (! $introspect['active']) {
             return [];
         }
 
@@ -216,13 +235,21 @@ class OpenIDService extends Service implements OpenIDServiceInterface
      */
     public function logout(): void
     {
-        $revocation_service = (new RevocationServiceBuilder())->build();
-
         if (! $this->session->has('token_set')) {
             throw new RuntimeException('You are not logged in');
-        } else {
-            $revocation_service->revoke($this->oidc_client, $this->session->get('token_set')->getAccessToken());
-            $this->session->destroy();
         }
+        $revocation_service = (new RevocationServiceBuilder())->build();
+        $revocation_service->revoke($this->oidc_client, $this->session->get('token_set')->getAccessToken());
+        $this->session->destroy();
+    }
+
+    public function introspect(): array
+    {
+        if (! $this->session->has('token_set')) {
+            return [];
+        }
+        $service = (new IntrospectionServiceBuilder())->build();
+
+        return $service->introspect($this->oidc_client, $this->session->get('token_set')->getAccessToken());
     }
 }

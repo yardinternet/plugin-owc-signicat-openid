@@ -21,7 +21,7 @@ if (! defined('ABSPATH')) {
 }
 
 use Error;
-use Odan\Session\PhpSession;
+use Odan\Session\SessionInterface;
 
 /**
  * Modal class.
@@ -31,7 +31,7 @@ use Odan\Session\PhpSession;
 class Modal
 {
 
-    protected PhpSession $session;
+    protected SessionInterface $session;
 
     /**
      * Constructor.
@@ -39,7 +39,7 @@ class Modal
      * @since 0.0.1
      */
     public function __construct(
-        PhpSession $session
+        SessionInterface $session
     ) {
         $this->session = $session;
     }

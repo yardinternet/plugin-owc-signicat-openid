@@ -13,27 +13,17 @@ namespace OWCSignicatOpenID\Interfaces\Services;
 
 use Psr\Http\Message\ServerRequestInterface;
 
-/**
- * Exit when accessed directly.
- */
-if (! defined('ABSPATH')) {
-    exit;
-}
-
-/**
- * OpenID service interface.
- *
- * @since 0.0.1
- */
 interface OpenIDServiceInterface extends ServiceInterface
 {
-    public function get_user_info();
+    public function get_user_info(): array;
 
-    public function logout();
+    public function logout(): void;
 
-    public function authenticate();
+    public function authenticate(array $idpScopes = [], string $redirectUrl);
 
-    public function refresh();
+    public function refresh(): void;
+
+    public function introspect(): array;
 
     public function handle_redirect(ServerRequestInterface $server_request): void;
 }
