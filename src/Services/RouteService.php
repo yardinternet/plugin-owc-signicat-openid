@@ -5,21 +5,18 @@ declare(strict_types=1);
 namespace OWCSignicatOpenID\Services;
 
 use GuzzleHttp\Psr7\ServerRequest;
-use Odan\Session\SessionInterface;
 use OWCSignicatOpenID\Interfaces\Services\OpenIDServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\RouteServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\SettingsServiceInterface;
 
 class RouteService extends Service implements RouteServiceInterface
 {
-    protected SessionInterface $session;
     protected SettingsServiceInterface $settings;
     protected OpenIDServiceInterface $open_id;
 
 
-    public function __construct(SessionInterface $session, SettingsServiceInterface $settings, OpenIDServiceInterface $open_id)
+    public function __construct(SettingsServiceInterface $settings, OpenIDServiceInterface $open_id)
     {
-        $this->session = $session;
         $this->settings = $settings;
         $this->open_id = $open_id;
     }
@@ -33,8 +30,13 @@ class RouteService extends Service implements RouteServiceInterface
     {
         switch ($wp->request) {
             case $this->settings->get_setting('path_login'):
-                if (! $this->session->has('access_token')) {
-                    $this->open_id->authenticate();
+
+                if (empty($this->open_id->introspect()['active'])) {
+                    $server_request = ServerRequest::fromGlobals();
+                    $query_params = $server_request->getQueryParams();
+                    $idpScope = $query_params['idp'] ?? '';
+
+                    $this->open_id->authenticate([$idpScope], esc_url($query_params['redirect_url']) ?? wp_get_referer());
                 } else {
                     wp_safe_redirect(home_url());
                     exit;

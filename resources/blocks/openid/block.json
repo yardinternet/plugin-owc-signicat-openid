@@ -1,0 +1,50 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 2,
+	"name": "owc-signicat-openid/openid",
+	"version": "0.0.1",
+	"title": "OpenID",
+	"category": "owc-signicat-openid",
+	"icon": "text",
+	"description": "Show the OpenID login block",
+	"attributes": {
+		"redirectUrl": {
+			"type": "string",
+			"default": "/other-page"
+		},
+		"idp": {
+			"type": "string"
+		}
+	},
+	"supports": {
+		"html": false
+	},
+	"textdomain": "owc-signicat-openid",
+	"editorScript": "file:./openid.js",
+	"editorStyle": "file:./openid.css",
+	"style": "file:./openid.css",
+	"variations": [
+		{
+			"name": "digid",
+			"title": "DigiD",
+			"description": "DigiD login",
+			"attributes": { "idp": "digid" },
+			"isActive": ["idp"],
+			"isDefault": true
+		},
+		{
+			"name": "eherkenning",
+			"title": "eHerkenning",
+			"description": "eHerkenning login",
+			"attributes": { "idp": "eherkenning" },
+			"isActive": ["idp"]
+		},
+		{
+			"name": "eidas",
+			"title": "eIDAS",
+			"description": "eIDAS login",
+			"attributes": { "idp": "eidas" },
+			"isActive": ["idp"]
+		}
+	]
+}
