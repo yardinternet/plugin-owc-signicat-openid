@@ -17,6 +17,7 @@ use OWCSignicatOpenID\Interfaces\Services\BlockServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\CacheServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\EncryptionServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\GravityFormsServiceInterface;
+use OWCSignicatOpenID\Interfaces\Services\IdentityProviderServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\LifeCycleServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\OpenIDServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\ResourceServiceInterface;
@@ -30,6 +31,7 @@ use OWCSignicatOpenID\Services\BlockService;
 use OWCSignicatOpenID\Services\CacheService;
 use OWCSignicatOpenID\Services\EncryptionService;
 use OWCSignicatOpenID\Services\GravityFormsService;
+use OWCSignicatOpenID\Services\IdentityProviderService;
 use OWCSignicatOpenID\Services\LifeCycleService;
 use OWCSignicatOpenID\Services\OpenIDService;
 use OWCSignicatOpenID\Services\ResourceService;
@@ -41,10 +43,16 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 
 return [
-    'routes' => [
-
+    'idps' => [
+        [
+            'slug' => 'digid',
+            'name' => 'DigiD',
+        ],
+        [
+            'slug' => 'eherkenning',
+            'name' => 'eHerkenning',
+        ],
     ],
-
     LoggerInterface::class             => fn (ContainerInterface $container): LoggerInterface => new Logger($container->get('logger.level')),
     'logger.level'                     => fn (): string => (defined('WP_DEBUG') && WP_DEBUG) ? LogLevel::WARNING : '',
     Modal::class                       => fn (ContainerInterface $container): Modal => new Modal($container->get(SessionInterface::class)),
@@ -100,4 +108,5 @@ return [
     OpenIDServiceInterface::class      => \DI\autowire(OpenIDService::class),
     GravityFormsServiceInterface::class => \DI\autowire(GravityFormsService::class),
     EncryptionServiceInterface::class   => \DI\autowire(EncryptionService::class),
+    IdentityProviderServiceInterface::class          => \DI\autowire(IdentityProviderService::class)->method('setIdps', DI\get('idps')),
 ];
