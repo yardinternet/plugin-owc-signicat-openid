@@ -9,8 +9,18 @@ use OWCSignicatOpenID\Interfaces\Services\ViewServiceInterface;
 
 class SettingsService extends Service implements SettingsServiceInterface
 {
-
     protected ViewServiceInterface $view_service;
+
+    protected array $settings = [
+        'configuration_url',
+        'client_id',
+        'client_secret',
+        'path_login',
+        'path_logout',
+        'path_redirect',
+        'path_refresh',
+        'enable_simulator',
+    ];
 
     public function __construct(ViewServiceInterface $view_service)
     {
@@ -34,38 +44,18 @@ class SettingsService extends Service implements SettingsServiceInterface
         );
     }
 
-    /**
-     * Register settings fields.
-     *
-     * @since 0.0.1
-     */
     public function register_settings(): void
     {
-        register_setting('owc_signicat_openid_settings_group', 'owc_signicat_openid_configuration_url_settings');
-        register_setting('owc_signicat_openid_settings_group', 'owc_signicat_openid_client_id_settings');
-        register_setting('owc_signicat_openid_settings_group', 'owc_signicat_openid_client_secret_settings');
-        register_setting('owc_signicat_openid_settings_group', 'owc_signicat_openid_path_login_settings');
-        register_setting('owc_signicat_openid_settings_group', 'owc_signicat_openid_path_logout_settings');
-        register_setting('owc_signicat_openid_settings_group', 'owc_signicat_openid_path_redirect_settings');
-        register_setting('owc_signicat_openid_settings_group', 'owc_signicat_openid_path_refresh_settings');
+        foreach ($this->settings as $setting) {
+            register_setting('owc_signicat_openid_settings_group', "owc_signicat_openid_{$setting}_settings");
+        }
     }
 
-    /**
-     * Render the settings page.
-     *
-     * @since 0.0.1
-     */
     public function render_settings_page(): void
     {
-        $data = [
-            'configuration_url' => get_option('owc_signicat_openid_configuration_url_settings'),
-            'client_id'         => get_option('owc_signicat_openid_client_id_settings'),
-            'client_secret'     => get_option('owc_signicat_openid_client_secret_settings'),
-            'path_login'        => get_option('owc_signicat_openid_path_login_settings'),
-            'path_logout'       => get_option('owc_signicat_openid_path_logout_settings'),
-            'path_redirect'     => get_option('owc_signicat_openid_path_redirect_settings'),
-            'path_refresh'      => get_option('owc_signicat_openid_path_refresh_settings'),
-        ];
+        foreach ($this->settings as $setting) {
+            $data[$setting] = $this->get_setting($setting);
+        }
         echo $this->view_service->render('settings', $data);
     }
 

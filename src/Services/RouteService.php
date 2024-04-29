@@ -14,7 +14,6 @@ class RouteService extends Service implements RouteServiceInterface
     protected SettingsServiceInterface $settings;
     protected OpenIDServiceInterface $open_id;
 
-
     public function __construct(SettingsServiceInterface $settings, OpenIDServiceInterface $open_id)
     {
         $this->settings = $settings;
@@ -35,8 +34,9 @@ class RouteService extends Service implements RouteServiceInterface
                     $server_request = ServerRequest::fromGlobals();
                     $query_params = $server_request->getQueryParams();
                     $idpScope = $query_params['idp'] ?? '';
+                    $redirectUrl = $query_params['redirect_url'] ?? wp_get_referer();
 
-                    $this->open_id->authenticate([$idpScope], esc_url($query_params['redirect_url']) ?? wp_get_referer());
+                    $this->open_id->authenticate([$idpScope], esc_url($redirectUrl));
                 } else {
                     wp_safe_redirect(home_url());
                     exit;
@@ -60,5 +60,4 @@ class RouteService extends Service implements RouteServiceInterface
                 break;
         }
     }
-
 }
