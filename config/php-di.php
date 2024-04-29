@@ -15,7 +15,6 @@ use Odan\Session\SessionInterface;
 use OWCSignicatOpenID\Interfaces\Providers\AppServiceProviderInterface;
 use OWCSignicatOpenID\Interfaces\Services\BlockServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\CacheServiceInterface;
-use OWCSignicatOpenID\Interfaces\Services\EncryptionServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\GravityFormsServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\IdentityProviderServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\LifeCycleServiceInterface;
@@ -29,7 +28,6 @@ use OWCSignicatOpenID\Modal;
 use OWCSignicatOpenID\Providers\AppServiceProvider;
 use OWCSignicatOpenID\Services\BlockService;
 use OWCSignicatOpenID\Services\CacheService;
-use OWCSignicatOpenID\Services\EncryptionService;
 use OWCSignicatOpenID\Services\GravityFormsService;
 use OWCSignicatOpenID\Services\IdentityProviderService;
 use OWCSignicatOpenID\Services\LifeCycleService;
@@ -107,6 +105,5 @@ return [
     RouteServiceInterface::class       => \DI\autowire(RouteService::class),
     OpenIDServiceInterface::class      => \DI\autowire(OpenIDService::class),
     GravityFormsServiceInterface::class => \DI\autowire(GravityFormsService::class),
-    EncryptionServiceInterface::class   => \DI\autowire(EncryptionService::class),
     IdentityProviderServiceInterface::class          => \DI\autowire(IdentityProviderService::class)->method('setIdps', DI\get('idps')),
 ];
