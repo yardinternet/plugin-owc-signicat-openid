@@ -13,61 +13,41 @@ declare (strict_types = 1);
 
 namespace OWCSignicatOpenID\Services;
 
-/**
- * Exit when accessed directly.
- */
-if (! defined('ABSPATH')) {
-    exit;
-}
-
 use Facile\OpenIDClient\Client\ClientInterface;
+use Facile\OpenIDClient\Exception\OAuth2Exception;
 use Facile\OpenIDClient\Service\AuthorizationService;
 use Facile\OpenIDClient\Service\Builder\IntrospectionServiceBuilder;
 use Facile\OpenIDClient\Service\Builder\RevocationServiceBuilder;
 use Facile\OpenIDClient\Service\Builder\UserInfoServiceBuilder;
-use Facile\OpenIDClient\Token\IdTokenVerifierBuilder;
 use Odan\Session\SessionInterface;
 use OWCSignicatOpenID\Interfaces\Services\OpenIDServiceInterface;
+use OWCSignicatOpenID\Interfaces\Services\SettingsServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Log\LoggerInterface;
 
 use RuntimeException;
 
-/**
- * Register OpenID service.
- *
- * @since 0.0.1
- */
 class OpenIDService extends Service implements OpenIDServiceInterface
 {
-
-    protected LoggerInterface $logger;
-
     protected ClientInterface $oidc_client;
-
     protected AuthorizationService $authorization_service;
-
     protected SessionInterface $session;
+    protected SettingsServiceInterface $settings;
 
     public function __construct(
         ClientInterface $oidc_client,
         AuthorizationService $authorization_service,
-        LoggerInterface $logger,
-        SessionInterface $session
+        SessionInterface $session,
+        SettingsServiceInterface $settings
     ) {
         $this->oidc_client = $oidc_client;
         $this->authorization_service = $authorization_service;
-        $this->logger = $logger;
         $this->session = $session;
+        $this->settings = $settings;
     }
 
-    /**
-     * Register hooks.
-     *
-     * @since 0.0.1
-     */
     public function register(): void
     {
+        add_action('owc_signicat_openid_user_info', [$this, 'get_user_info']);
     }
 
     public function authenticate(array $idpScopes = [], string $redirectUrl): void
@@ -89,6 +69,11 @@ class OpenIDService extends Service implements OpenIDServiceInterface
             $idpScopes
         );
         $scopes = ['openid', ...$idpScopes];
+
+        if ($this->settings->get_setting('enable_simulator')) {
+            $scopes[] = 'idp_scoping:simulator';
+        }
+
         $scopes = array_intersect(
             $scopes,
             $this->oidc_client->getIssuer()->getMetadata()->getScopesSupported()
@@ -113,7 +98,11 @@ class OpenIDService extends Service implements OpenIDServiceInterface
      */
     public function handle_redirect(ServerRequestInterface $server_request): void
     {
-        $callback_params = $this->authorization_service->getCallbackParams($server_request, $this->oidc_client);
+        try {
+            $callback_params = $this->authorization_service->getCallbackParams($server_request, $this->oidc_client);
+        } catch (OAuth2Exception $e) {
+            //throw $th;
+        }
 
         $this->session->start();
         $state = $this->session->get('state');
@@ -145,16 +134,8 @@ class OpenIDService extends Service implements OpenIDServiceInterface
      */
     public function refresh(): void
     {
-        $service = (new IntrospectionServiceBuilder())->build();
-        $params = $service->introspect($this->oidc_client, $this->session->get('token_set')->getAccessToken());
-
-        if ($params['active']) {
-            wp_send_json_success(
-                [
-                    'message' => 'Session still active`',
-                ],
-                \WP_Http::OK
-            );
+        if (! $this->session->isStarted()) {
+            $this->session->start();
         }
 
         if (! $this->session->has('token_set') || null === $this->session->get('token_set')->getRefreshToken()) {
@@ -166,29 +147,19 @@ class OpenIDService extends Service implements OpenIDServiceInterface
             );
         }
 
-        // Onderstaande workaround kan weg als https://github.com/facile-it/php-openid-client/issues/38 opgelost is
-        // $token_set = $this->authorization_service->refresh($this->oidc_client, $current_refresh_token);
-        // Begin workaround
-        $tokenSet = $this->authorization_service->grant(
-            $this->oidc_client,
-            [
-                'grant_type' => 'refresh_token',
-                'refresh_token' => $this->session->get('token_set')->getRefreshToken(),
-            ]
-        );
+        $service = (new IntrospectionServiceBuilder())->build();
+        // $params = $service->introspect($this->oidc_client, $this->session->get('token_set')->getAccessToken());
 
-        if (null === $tokenSet->getIdToken()) {
-            wp_send_json_error(
-                [
-                    'message' => 'Failed to renew session',
-                ],
-                \WP_Http::INTERNAL_SERVER_ERROR
-            );
-        }
+        // if ($params['active']) {
+        //     wp_send_json_success(
+        //         [
+        //             'message' => 'Session still active`',
+        //         ],
+        //         \WP_Http::OK
+        //     );
+        // }
 
-        $claims = (new IdTokenVerifierBuilder())->build($this->oidc_client)->verify($tokenSet->getIdToken());
-        $tokenSet = $tokenSet->withClaims($claims);
-        //Einde workaround
+        $tokenSet = $this->authorization_service->refresh($this->oidc_client, $this->session->get('token_set')->getRefreshToken());
 
         $this->session->set('token_set', $tokenSet);
         //$this->session->save();
@@ -212,12 +183,9 @@ class OpenIDService extends Service implements OpenIDServiceInterface
         if (! $this->session->isStarted()) {
             $this->session->start();
         }
-        if (! $this->session->has('token_set')) {
-            return [];
-        }
 
         $introspect = $this->introspect();
-        if (! $introspect['active']) {
+        if (empty($introspect['active'])) {
             return [];
         }
 
@@ -235,6 +203,9 @@ class OpenIDService extends Service implements OpenIDServiceInterface
      */
     public function logout(): void
     {
+        if (! $this->session->isStarted()) {
+            $this->session->start();
+        }
         if (! $this->session->has('token_set')) {
             throw new RuntimeException('You are not logged in');
         }
