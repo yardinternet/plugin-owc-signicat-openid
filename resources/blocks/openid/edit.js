@@ -3,12 +3,9 @@
  */
 import { InspectorControls, useBlockProps } from '@wordpress/block-editor';
 import { TextControl, PanelBody, PanelRow } from '@wordpress/components';
+import ServerSideRender from '@wordpress/server-side-render';
 import { __ } from '@wordpress/i18n';
-
-/**
- * Internal dependencies.
- */
-import image from '../../../resources/img/logo-eherkenning.svg';
+import metadata from './block.json';
 
 /**
  * Lets webpack process CSS, SASS or SCSS files referenced in JavaScript files.
@@ -17,6 +14,7 @@ import image from '../../../resources/img/logo-eherkenning.svg';
  * @see https://www.npmjs.com/package/@wordpress/scripts#using-css
  */
 import './editor.css';
+import { Disabled } from '@wordpress/components';
 
 export default function Edit({ attributes, setAttributes }) {
 	const { redirectUrl } = attributes;
@@ -40,10 +38,13 @@ export default function Edit({ attributes, setAttributes }) {
 					</PanelRow>
 				</PanelBody>
 			</InspectorControls>
-			<div {...blockProps}>
-				<a className="sopenid-button-container">
-					<img src={image} width="160" height="28" />
-				</a>
+			<div {...useBlockProps()}>
+				<Disabled>
+					<ServerSideRender
+						block={metadata.name}
+						attributes={attributes}
+					/>
+				</Disabled>
 			</div>
 		</>
 	);

@@ -1,3 +1,3 @@
-.sopenid-button-container {
-	@apply sopenid-block sopenid-w-full !sopenid-border-0 !sopenid-bg-white !sopenid-py-4 sopenid-px-5 sopenid-no-underline;
+a.owc-signicat-openid img {
+	height: 60px;
 }

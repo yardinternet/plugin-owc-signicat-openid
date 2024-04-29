@@ -107,6 +107,16 @@ namespace OWCSignicatOpenID;
 					</p>
 				</td>
 			</tr>
+			<tr>
+				<th scope="row">
+					<label for="owc_signicat_openid_enable_simulator_settings">
+						<?php esc_html_e('Enable simulator', 'owc-signicat-openid'); ?>
+					</label>
+				</th>
+				<td>
+					<input type='checkbox' name='owc_signicat_openid_enable_simulator_settings' <?php checked($enable_simulator, 1); ?> value='1'>
+				</td>
+			</tr>
 		</table>
 		<?php submit_button(); ?>
 	</form>
