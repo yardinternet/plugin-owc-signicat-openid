@@ -14,7 +14,6 @@ module.exports = (env, argv) => {
 				'resources/blocks/openid/index.js'
 			),
 			modal: path.resolve(__dirname, 'resources/js/modal.js'),
-			front: path.resolve(__dirname, 'resources/js/front.js'),
 		},
 		output: {
 			path: path.resolve(__dirname, 'dist'),

@@ -23,14 +23,14 @@ class IdentityProviderService extends Service implements IdentityProviderService
     public function setIdps(array $idps)
     {
         foreach ($idps as $idp) {
-            $this->idps[] = new IdentityProvider($idp['slug'], $idp['name']);
+            $this->idps[$idp['slug']] = new IdentityProvider($idp);
         }
     }
 
     /**
      * @return IdentityProvider[]
      */
-    public function getActiveIdentityProviders(): array
+    public function getEnabledIdentityProviders(): array
     {
         $scopes = $this->client->getIssuer()->getMetadata()->getScopesSupported();
         $idps = array_filter(
@@ -41,18 +41,10 @@ class IdentityProviderService extends Service implements IdentityProviderService
         return $idps;
     }
 
-    public function getActiveIdentityProvider(string $slug): ?IdentityProvider
+    public function getIdentityProvider(string $slug): ?IdentityProvider
     {
-        $activeIdps = $this->getActiveIdentityProviders();
-        $filteredIdps = array_filter(
-            $activeIdps,
-            fn (IdentityProvider $idp): bool => $idp->getSlug() === $slug
-        );
-        if (count($filteredIdps) !== 1) {
-            return null;
-        }
+        $activeIdps = $this->getEnabledIdentityProviders();
 
-        return reset($filteredIdps);
+        return $activeIdps[$slug] ?? null;
     }
-
 }

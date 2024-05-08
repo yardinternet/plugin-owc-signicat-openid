@@ -18,7 +18,6 @@ class SettingsService extends Service implements SettingsServiceInterface
         'path_login',
         'path_logout',
         'path_redirect',
-        'path_refresh',
         'enable_simulator',
     ];
 
@@ -54,12 +53,12 @@ class SettingsService extends Service implements SettingsServiceInterface
     public function render_settings_page(): void
     {
         foreach ($this->settings as $setting) {
-            $data[$setting] = $this->get_setting($setting);
+            $data[$setting] = $this->getSetting($setting);
         }
         echo $this->view_service->render('settings', $data);
     }
 
-    public function get_setting(string $setting)
+    public function getSetting(string $setting)
     {
         return get_option("owc_signicat_openid_{$setting}_settings");
     }

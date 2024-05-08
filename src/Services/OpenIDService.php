@@ -15,212 +15,246 @@ namespace OWCSignicatOpenID\Services;
 
 use Facile\OpenIDClient\Client\ClientInterface;
 use Facile\OpenIDClient\Exception\OAuth2Exception;
+
+use function Facile\OpenIDClient\parse_callback_params;
 use Facile\OpenIDClient\Service\AuthorizationService;
 use Facile\OpenIDClient\Service\Builder\IntrospectionServiceBuilder;
 use Facile\OpenIDClient\Service\Builder\RevocationServiceBuilder;
 use Facile\OpenIDClient\Service\Builder\UserInfoServiceBuilder;
 use Odan\Session\SessionInterface;
+use OWCSignicatOpenID\IdentityProvider;
+use OWCSignicatOpenID\Interfaces\Services\IdentityProviderServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\OpenIDServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\SettingsServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 use RuntimeException;
+use WP_Error;
 
 class OpenIDService extends Service implements OpenIDServiceInterface
 {
-    protected ClientInterface $oidc_client;
-    protected AuthorizationService $authorization_service;
+    protected ClientInterface $client;
+    protected AuthorizationService $authorizationService;
     protected SessionInterface $session;
     protected SettingsServiceInterface $settings;
+    protected IdentityProviderServiceInterface $identityProviderService;
 
     public function __construct(
-        ClientInterface $oidc_client,
-        AuthorizationService $authorization_service,
+        ClientInterface $client,
+        AuthorizationService $authorizationService,
         SessionInterface $session,
-        SettingsServiceInterface $settings
+        SettingsServiceInterface $settings,
+        IdentityProviderServiceInterface $identityProviderService
     ) {
-        $this->oidc_client = $oidc_client;
-        $this->authorization_service = $authorization_service;
+        $this->client = $client;
+        $this->authorizationService = $authorizationService;
         $this->session = $session;
         $this->settings = $settings;
+        $this->identityProviderService = $identityProviderService;
     }
 
     public function register(): void
     {
-        add_action('owc_signicat_openid_user_info', [$this, 'get_user_info']);
+        add_filter('owc_signicat_openid_user_info', [$this, 'retrieveUserInfo'], 10, 2);
     }
 
-    public function authenticate(array $idpScopes = [], string $redirectUrl): void
+    public function retrieveUserInfo(array $userInfo, string $idpSlug): array
     {
-        $stateID = bin2hex(random_bytes(12));
-        if (! $this->session->isStarted()) {
-            $this->session->start();
-        }
-        $this->session->set('state', [
-            'stateID' => $stateID,
-            'idpScopes' => $idpScopes,
-            'redirectUrl' => $redirectUrl,
-            'refererUrl' => wp_get_referer(),
-        ]);
-        $this->session->save();
-
-        $idpScopes = array_map(
-            fn (string $idpScope): string => sprintf('idp_scoping:%s', $idpScope),
-            $idpScopes
-        );
-        $scopes = ['openid', ...$idpScopes];
-
-        if ($this->settings->get_setting('enable_simulator')) {
-            $scopes[] = 'idp_scoping:simulator';
+        $idp = $this->identityProviderService->getIdentityProvider($idpSlug);
+        if (null === $idp) {
+            return $userInfo;
         }
 
-        $scopes = array_intersect(
-            $scopes,
-            $this->oidc_client->getIssuer()->getMetadata()->getScopesSupported()
+        return $this->getUserInfo($idp);
+    }
+
+    public function getLoginUrl(IdentityProvider $identityProvider, string $redirectUrl = null, string $refererUrl = null): string
+    {
+        $args = array_filter(
+            [
+                'idp' => $identityProvider->getSlug(),
+                'redirectUrl' => $redirectUrl,
+                'refererUrl' => $refererUrl,
+            ]
         );
+
+        return add_query_arg(
+            $args,
+            get_site_url(null, $this->settings->getSetting('path_login'))
+        );
+    }
+
+    public function getLogoutUrl(IdentityProvider $identityProvider = null, string $redirectUrl = null, string $refererUrl = null): string
+    {
+        $args = array_filter(
+            [
+                'idp' => $identityProvider ? $identityProvider->getSlug() : null,
+                'redirectUrl' => $redirectUrl,
+                'refererUrl' => $refererUrl,
+            ]
+        );
+
+        return add_query_arg(
+            $args,
+            get_site_url(null, $this->settings->getSetting('path_logout'))
+        );
+    }
+
+    public function authenticate(IdentityProvider $identityProvider, string $redirectUrl, string $refererUrl = null): void
+    {
+        $stateID = $this->saveState(
+            [
+                'identityProvider' => $identityProvider,
+                'redirectUrl' => $redirectUrl,
+                'refererUrl' => $refererUrl ?? wp_get_referer(),
+            ]
+        );
+
+        if ($this->settings->getSetting('enable_simulator')) {
+            $idpScope = 'idp_scoping:simulator';
+        } else {
+            $idpScope = $identityProvider->getScope();
+        }
 
         $params = [
-            'scope' => implode(' ', $scopes),
+            'scope' => implode(' ', ['openid', $idpScope]),
             'state' => $stateID,
         ];
-        $redirect_authorization_uri = $this->authorization_service->getAuthorizationUri($this->oidc_client, $params);
+        $redirect_authorization_uri = $this->authorizationService->getAuthorizationUri($this->client, $params);
 
         header('Location: ' . $redirect_authorization_uri);
         exit();
     }
 
-    /**
-     * Handle the OpenID redirect.
-     *
-     * @since 0.0.1
-     *
-     * @throws RuntimeException Unauthorized;
-     */
-    public function handle_redirect(ServerRequestInterface $server_request): void
+
+    public function redirectToLogout(IdentityProvider $identityProvider, string $redirectUrl, string $refererUrl = null)
     {
+
+    }
+
+    // public function logout(IdentityProvider $identityProvider, string $redirectUrl): void
+    // {
+    //     $stateID = bin2hex(random_bytes(12));
+
+    //     $logoutUrl = $this->client->getIssuer()->getMetadata()->get('');
+    // }
+
+    public function handleCallback(ServerRequestInterface $server_request): void
+    {
+        $rawCallbackParams = parse_callback_params($server_request);
+        $stateId = sanitize_key($rawCallbackParams['state']) ?? null;
+
         try {
-            $callback_params = $this->authorization_service->getCallbackParams($server_request, $this->oidc_client);
-        } catch (OAuth2Exception $e) {
-            //throw $th;
+            $callback_params = $this->authorizationService->getCallbackParams($server_request, $this->client);
+        } catch (OAuth2Exception $exception) {
+            $this->session->getFlash()->add($exception->getError(), $exception->getDescription());
+            wp_safe_redirect(get_site_url());
+            exit;
         }
 
-        $this->session->start();
-        $state = $this->session->get('state');
-        $this->session->remove('state');
-        if ($callback_params['state'] !== $state['stateID']) {
-            throw new RuntimeException('Unauthorized');
-        }
+        $this->maybeStartSession();
 
-        $token_set = $this->authorization_service->callback($this->oidc_client, $callback_params);
+        $state = $this->popState($stateId);
+
+        $token_set = $this->authorizationService->callback($this->client, $callback_params);
         if (null === $token_set->getIdToken()) {
             throw new RuntimeException('Unauthorized');
         }
+        $identityProvider = $state['identityProvider'];
 
-        //TODO: check issuer/scope
-
-        $this->session->set('token_set', $token_set);
+        $this->session->set($identityProvider->getSlug(), $token_set);
         $this->session->save();
 
         wp_safe_redirect($state['redirectUrl']);
         exit;
     }
 
-    /**
-     * Refresh the tokens with the refresh token.
-     *
-     * @since 0.0.1
-     *
-     * @throws RuntimeException Unauthorized;
-     */
-    public function refresh(): void
+    public function refresh(IdentityProvider $identityProvider)
     {
-        if (! $this->session->isStarted()) {
-            $this->session->start();
+        $this->maybeStartSession();
+
+        if (! $this->session->has($identityProvider->getSlug()) || null === $this->session->get($identityProvider->getSlug())->getRefreshToken()) {
+            return new WP_Error('missing_refresh_token', 'Missing refresh token');
+        }
+        if ($this->hasActiveSession($identityProvider)) {
+            return true;
         }
 
-        if (! $this->session->has('token_set') || null === $this->session->get('token_set')->getRefreshToken()) {
-            wp_send_json_success(
-                [
-                    'message' => 'Missing refresh token',
-                ],
-                \WP_Http::INTERNAL_SERVER_ERROR
-            );
-        }
+        $tokenSet = $this->authorizationService->refresh($this->client, $this->session->get($identityProvider->getSlug())->getRefreshToken());
 
-        $service = (new IntrospectionServiceBuilder())->build();
-        // $params = $service->introspect($this->oidc_client, $this->session->get('token_set')->getAccessToken());
+        $this->session->set($identityProvider->getSlug(), $tokenSet);
 
-        // if ($params['active']) {
-        //     wp_send_json_success(
-        //         [
-        //             'message' => 'Session still active`',
-        //         ],
-        //         \WP_Http::OK
-        //     );
-        // }
-
-        $tokenSet = $this->authorization_service->refresh($this->oidc_client, $this->session->get('token_set')->getRefreshToken());
-
-        $this->session->set('token_set', $tokenSet);
         //$this->session->save();
-        wp_send_json_success(
-            [
-                'message' => 'Session refreshed',
-            ],
-            \WP_Http::OK
-        );
+        return true;
     }
 
-    /**
-     * Get user info.
-     *
-     * @since 0.0.1
-     *
-     * @return array
-     */
-    public function get_user_info(): array
+    public function getUserInfo(IdentityProvider $identityProvider): array
     {
-        if (! $this->session->isStarted()) {
-            $this->session->start();
-        }
-
-        $introspect = $this->introspect();
-        if (empty($introspect['active'])) {
+        $this->maybeStartSession();
+        if (! $this->hasActiveSession($identityProvider)) {
             return [];
         }
+        $userInfoService = (new UserInfoServiceBuilder())->build();
 
-        $user_info_service = (new UserInfoServiceBuilder())->build();
-
-        return $user_info_service->getUserInfo($this->oidc_client, $this->session->get('token_set'));
+        return $userInfoService->getUserInfo($this->client, $this->session->get($identityProvider->getSlug()));
     }
 
-    /**
-     * Logout and end the session.
-     *
-     * @since 0.0.1
-     *
-     * @throws RuntimeException You are not logged in
-     */
-    public function logout(): void
+    public function revoke(IdentityProvider $identityProvider): void
     {
-        if (! $this->session->isStarted()) {
-            $this->session->start();
-        }
-        if (! $this->session->has('token_set')) {
+        $this->maybeStartSession();
+        if (! $this->session->has($identityProvider->getSlug())) {
             throw new RuntimeException('You are not logged in');
         }
-        $revocation_service = (new RevocationServiceBuilder())->build();
-        $revocation_service->revoke($this->oidc_client, $this->session->get('token_set')->getAccessToken());
-        $this->session->destroy();
+        $revocationService = (new RevocationServiceBuilder())->build();
+        $revocationService->revoke($this->client, $this->session->get($identityProvider->getSlug())->getAccessToken());
+        $this->session->remove($identityProvider->getSlug());
     }
 
-    public function introspect(): array
+    public function introspect(IdentityProvider $identityProvider): array
     {
-        if (! $this->session->has('token_set')) {
+        if (! $this->session->has($identityProvider->getSlug())) {
             return [];
         }
-        $service = (new IntrospectionServiceBuilder())->build();
+        $introspectionService = (new IntrospectionServiceBuilder())->build();
 
-        return $service->introspect($this->oidc_client, $this->session->get('token_set')->getAccessToken());
+        return $introspectionService->introspect($this->client, $this->session->get($identityProvider->getSlug())->getAccessToken());
     }
+
+    public function hasActiveSession(IdentityProvider $identityProvider): bool
+    {
+        $this->maybeStartSession();
+        $introspect = $this->introspect($identityProvider);
+
+        return ! empty($introspect['active']);
+    }
+
+    private function maybeStartSession()
+    {
+        if (! $this->session->isStarted()) {
+            $this->session->start();
+        }
+    }
+
+    private function saveState(array $state): string
+    {
+        $stateID = bin2hex(random_bytes(12));
+        $this->maybeStartSession();
+        $this->session->set($stateID, $state);
+        $this->session->save();
+
+        return $stateID;
+    }
+
+    private function popState(string $stateID): array
+    {
+        if (! $this->session->has($stateID)) {
+            throw new RuntimeException('State not found');
+        }
+
+        $state = $this->session->get($stateID);
+        $this->session->remove($stateID);
+
+        return $state;
+    }
+
 }

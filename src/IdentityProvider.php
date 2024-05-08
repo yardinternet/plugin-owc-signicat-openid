@@ -8,11 +8,18 @@ class IdentityProvider implements JsonSerializable
 {
     protected string $slug;
     protected string $name;
+    protected array  $saveFields;
 
-    public function __construct(string $slug, string $name)
+    public function __construct(array $data)
     {
-        $this->slug = $slug;
-        $this->name = $name;
+        $class_vars = get_class_vars(static::class);
+
+        $data = wp_parse_args($data, $class_vars);
+        $data = wp_array_slice_assoc($data, array_keys($class_vars));
+
+        foreach ($data as $key => $value) {
+            $this->$key = $value;
+        }
     }
 
     public function jsonSerialize()
@@ -41,5 +48,10 @@ class IdentityProvider implements JsonSerializable
     public function getLogoUrl(): string
     {
         return OWC_SIGNICAT_OPENID_PLUGIN_URL . sprintf('resources/img/logo-%s.svg', $this->getSlug());
+    }
+
+    public function getSaveFields(): array
+    {
+        return $this->saveFields;
     }
 }

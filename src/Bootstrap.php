@@ -12,6 +12,7 @@
 namespace OWCSignicatOpenID;
 
 use OWCSignicatOpenID\Interfaces\Providers\AppServiceProviderInterface;
+use OWCSignicatOpenID\Interfaces\Providers\SettingsServiceProviderInterface;
 use Psr\Container\ContainerInterface;
 
 /**
@@ -32,8 +33,6 @@ final class Bootstrap
      * Dependency providers.
      *
      * @since 0.0.1
-     *
-     * @var array
      */
     private array $providers;
 
@@ -60,22 +59,21 @@ final class Bootstrap
     protected function get_providers(): array
     {
         $providers = [
+            SettingsServiceProviderInterface::class,
             AppServiceProviderInterface::class,
         ];
-        foreach ($providers as &$provider) {
-            $provider = $this->container->get($provider);
+        $registeredProviders = [];
+        foreach ($providers as $provider) {
+            try {
+                $registeredProviders[] = $this->container->get($provider);
+            } catch(\Exception $e) {
+
+            }
         }
 
-        return $providers;
+        return $registeredProviders;
     }
 
-    /**
-     * Registers all providers.
-     *
-     * @since 0.0.1
-     *
-     * @return void
-     */
     protected function register_providers(): void
     {
         foreach ($this->providers as $provider) {

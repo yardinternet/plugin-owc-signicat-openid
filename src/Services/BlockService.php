@@ -7,7 +7,6 @@ namespace OWCSignicatOpenID\Services;
 use OWCSignicatOpenID\Interfaces\Services\BlockServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\IdentityProviderServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\OpenIDServiceInterface;
-use OWCSignicatOpenID\Interfaces\Services\SettingsServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\ViewServiceInterface;
 
 class BlockService extends Service implements BlockServiceInterface
@@ -16,19 +15,16 @@ class BlockService extends Service implements BlockServiceInterface
 
     protected OpenIDServiceInterface $openIDClient;
     protected ViewServiceInterface $viewService;
-    protected SettingsServiceInterface $settings;
-    protected IdentityProviderServiceInterface $idpService;
+    protected IdentityProviderServiceInterface $identityProviderService;
 
     public function __construct(
         OpenIDServiceInterface $openIDClient,
         ViewServiceInterface $viewService,
-        SettingsServiceInterface $settings,
         IdentityProviderServiceInterface $idpService
     ) {
         $this->openIDClient = $openIDClient;
         $this->viewService = $viewService;
-        $this->settings = $settings;
-        $this->idpService = $idpService;
+        $this->identityProviderService = $idpService;
     }
 
     public function register()
@@ -39,17 +35,17 @@ class BlockService extends Service implements BlockServiceInterface
     public function registerBlocks()
     {
         $variations = [];
-        $firstVariation = true;
-        foreach($this->idpService->getActiveIdentityProviders() as $idp) {
+        $isFirstVariation = true;
+        foreach ($this->identityProviderService->getEnabledIdentityProviders() as $identityProvider) {
             $variations[] = [
-                'name' => $idp->getSlug(),
-                'title' => $idp->getName(),
-                'description' => sprintf('%s login knop', $idp->getName()),
-                'attributes' => ['idp' => $idp->getSlug()],
+                'name' => $identityProvider->getSlug(),
+                'title' => $identityProvider->getName(),
+                'description' => sprintf('%s login knop', $identityProvider->getName()),
+                'attributes' => ['idp' => $identityProvider->getSlug()],
                 'isActive' => ['idp'],
-                'isDefault' => $firstVariation,
+                'isDefault' => $isFirstVariation,
             ];
-            $firstVariation = false;
+            $isFirstVariation = false;
         }
 
         register_block_type_from_metadata(
@@ -74,17 +70,11 @@ class BlockService extends Service implements BlockServiceInterface
 
     public function renderBlock(array $attributes, string $block_content, \WP_Block $block): string
     {
-        $identityProvider = $this->idpService->getActiveIdentityProvider($attributes['idp']);
+        $identityProvider = $this->identityProviderService->getIdentityProvider($attributes['idp']);
         //TODO: afbreken als idp niet gevonden wordt?
         $image = $identityProvider->getLogoUrl();
-
-        $url = add_query_arg(
-            [
-                'idp' => $attributes['idp'],
-                'redirect_url' => $attributes['redirectUrl'] ?? wp_unslash($_SERVER['REQUEST_URI']),
-            ],
-            get_site_url(null, $this->settings->get_setting('path_login'))
-        );
+        $redirectUrl = $attributes['redirectUrl'] ?? wp_unslash($_SERVER['REQUEST_URI']);
+        $url = $this->openIDClient->getLoginUrl($identityProvider, $redirectUrl);
 
         return $this->viewService->render('block', ['url' => $url, 'image' => $image]);
     }
