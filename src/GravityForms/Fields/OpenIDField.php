@@ -4,38 +4,25 @@ declare(strict_types=1);
 
 namespace OWCSignicatOpenID\GravityForms\Fields;
 
-use GF_Field;
 use OWCSignicatOpenID\IdentityProvider;
-use OWCSignicatOpenID\Interfaces\Services\IdentityProviderServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\OpenIDServiceInterface;
-use OWCSignicatOpenID\Interfaces\Services\SettingsServiceInterface;
 
-class OpenIDField extends GF_Field
+class OpenIDField extends \GF_Field
 {
-    private const GROUP = 'owc-signicat-openid';
-
     protected OpenIDServiceInterface $openIDService;
-    protected SettingsServiceInterface $settings;
-    protected IdentityProviderServiceInterface $identityProviderService;
     public IdentityProvider $idp;
+    public string $idpSlug;
 
     public function __construct($data = [])
     {
         if (! is_a($data['idp'], IdentityProvider::class)) {
-            $data['idp'] = new IdentityProvider($data['idp']['slug'] ?? 'slug', $data['idp']['name'] ?? 'name');
+            unset($data['idp']);
         }
         if (empty($data['type'])) {
             $data['type'] = sprintf('owc-signicat-openid-%s', $data['idp']->getSlug());
         }
 
         parent::__construct($data);
-    }
-
-    public function setServices(OpenIDServiceInterface $openIDService, SettingsServiceInterface $settings, IdentityProviderServiceInterface $idpService)
-    {
-        $this->openIDService = $openIDService;
-        $this->settings = $settings;
-        $this->identityProviderService = $idpService;
     }
 
     public function get_form_editor_field_title()
@@ -45,10 +32,11 @@ class OpenIDField extends GF_Field
 
     public function get_field_input($form, $value = '', $entry = null)
     {
-        if ($this->openIDService->get_user_info() && ! $this->is_form_editor()) {
+        if ($this->openIDService->getUserInfo($this->idp) && ! $this->is_form_editor()) {
             return sprintf(
                 "<div class='ginput_container ginput_container_openid'>%s</div>",
-                'Je bent ingelogd'//print_r($this->openIDService->get_user_info(), true)
+                'Je bent ingelogd',
+                print_r($this->openIDService->getUserInfo($this->idp), true)
             );
         }
 
@@ -59,17 +47,11 @@ class OpenIDField extends GF_Field
 
         if (! $this->is_entry_detail() && ! $this->is_form_editor()) {
             //TODO: show login error
+
+            $resumeUrl = $this->getResumeUrl();
             $input = sprintf(
                 "<a href='%s'>%s</a>",
-                esc_url(
-                    add_query_arg(
-                        [
-                            'idp' => $this->idp->getSlug(),
-                            'redirect_url' => $this->getResumeUrl(),
-                        ],
-                        get_site_url(null, $this->settings->get_setting('path_login'))
-                    ),
-                ),
+                esc_url($this->openIDService->getLoginUrl($this->idp, $resumeUrl, $resumeUrl)),
                 $input
             );
         }
@@ -97,35 +79,39 @@ class OpenIDField extends GF_Field
 
     public function validate($value, $form)
     {
-        //TODO!
+        //TODO: waar moet op gecheckt worden?
         //$this->failed_validation = true;
-        //$this->validation_message = 'Je moeder';
+        //$this->validation_message = 'Foutmelding';
     }
 
     public function get_value_save_entry($value, $form, $input_name, $lead_id, $lead)
     {
-        $user_info = $this->openIDService->get_user_info();
+        $userInfo = $this->openIDService->getUserInfo($this->idp);
 
-        return 'test';
-        //TODO: encrypt + abstract get id-field
+        $saveFields = $this->idp->getSaveFields();
+        $value = wp_array_slice_assoc($userInfo, array_values($saveFields));
+
+        return maybe_serialize($value);
+    }
+
+    public function get_value_entry_list($value, $entry, $field_id, $columns, $form)
+    {
+        return $value;
+    }
+
+    public function get_value_entry_detail($value, $currency = '', $use_text = false, $format = 'html', $media = 'screen')
+    {
+        return $value;
     }
 
     public function is_value_submission_empty($formId)
     {
-        return empty($this->openIDService->get_user_info());
+        return empty($this->openIDService->getUserInfo($this->idp));
     }
 
     public function get_value_submission($field_values, $get_from_post_global_var = true)
     {
-        return $this->openIDService->get_user_info();
-    }
-
-    public function get_form_editor_button()
-    {
-        return [
-            'group' => self::GROUP,
-            'text'  => $this->get_form_editor_field_title(),
-        ];
+        return $this->openIDService->getUserInfo($this->idp);
     }
 
     public function get_form_editor_field_settings()
@@ -144,30 +130,5 @@ class OpenIDField extends GF_Field
     public function get_form_editor_field_icon()
     {
         return $this->idp->getLogoUrl();
-    }
-
-    public function add_button($field_groups): array
-    {
-        $field_groups = $this->maybe_add_field_group($field_groups);
-
-        return parent::add_button($field_groups);
-    }
-
-    public function maybe_add_field_group($field_groups)
-    {
-        foreach ($field_groups as $field_group) {
-            if (self::GROUP === $field_group['name']) {
-
-                return $field_groups;
-            }
-        }
-
-        $field_groups[] = [
-            'name'   => self::GROUP,
-            'label'  => __('Signicat OpenID', 'owc'),
-            'fields' => [],
-        ];
-
-        return $field_groups;
     }
 }

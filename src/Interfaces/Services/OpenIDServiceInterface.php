@@ -11,19 +11,28 @@
 
 namespace OWCSignicatOpenID\Interfaces\Services;
 
+use OWCSignicatOpenID\IdentityProvider;
 use Psr\Http\Message\ServerRequestInterface;
 
 interface OpenIDServiceInterface extends ServiceInterface
 {
-    public function get_user_info(): array;
+    public function getUserInfo(IdentityProvider $identityProvider): array;
 
-    public function logout(): void;
+    public function revoke(IdentityProvider $identityProvider): void;
 
-    public function authenticate(array $idpScopes = [], string $redirectUrl);
+    public function getLoginUrl(IdentityProvider $identityProvider, string $redirectUrl = null, string $refererUrl = null): string;
 
-    public function refresh(): void;
+    public function getLogoutUrl(IdentityProvider $identityProvider = null, string $redirectUrl = null, string $refererUrl = null): string;
 
-    public function introspect(): array;
+    public function authenticate(IdentityProvider $identityProvider, string $redirectUrl, string $refererUrl = null);
 
-    public function handle_redirect(ServerRequestInterface $server_request): void;
+    public function redirectToLogout(IdentityProvider $identityProvider, string $redirectUrl, string $refererUrl = null);
+
+    public function refresh(IdentityProvider $identityProvider);
+
+    public function introspect(IdentityProvider $identityProvider): array;
+
+    public function handleCallback(ServerRequestInterface $server_request): void;
+
+    public function hasActiveSession(IdentityProvider $identityProvider): bool;
 }

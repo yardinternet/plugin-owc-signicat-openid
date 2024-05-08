@@ -1,116 +1,126 @@
 import apiFetch from '@wordpress/api-fetch';
+import '../css/modal.css';
 
-/**
- * Initialize the countdown.
- *
- * @param number sessionTTL
- * @param string refreshUri
- * @param string logoutUri
- */
-function initCountdown(sessionTTL, refreshUri, logoutUri) {
-	const second = 1000;
-	const minute = 60 * second;
-	const sessionTTLInSeconds = sessionTTL * second;
+class OWC_Signicat_OIDC_Modal {
+	constructor(settings) {
+		this.second = 1000;
+		this.minute = 60 * this.second;
 
-	console.log(refreshUri);
+		this.sessionShouldEnd = settings.sessionTTL * this.minute;
+		this.modalShouldOpen = this.sessionShouldEnd - this.minute;
 
-	// Elements.
-	const elemModal = 'js-owc-signicat-openid-popup';
-	const elemResumeHandler = 'js-owc-signicat-resume-handler';
-	const elemLogoutHandler = 'js-owc-signicat-logout-handler';
-
-	// Classes.
-	const classModalShow = 'owc-signicat-openid-popup-show';
-
-	// Open the modal 1 minute before the session ends.
-	const modalShouldOpen = sessionTTLInSeconds / minute;
-
-	/**
-	 * Show or hide the modal.
-	 */
-	function toggleModal(show) {
-		const modal = document.getElementById(elemModal);
-
-		if (modal) {
-			if (show) {
-				modal.classList.add(classModalShow);
-			} else {
-				modal.classList.remove(classModalShow);
-			}
-		}
+		this.refreshUrl = settings.refreshUrl;
+		this.logoutUrl = settings.logoutUrl;
 	}
 
-	/**
-	 * Register event listeners.
-	 */
-	function registerEventListeners() {
-		const resume = document.getElementById(elemResumeHandler);
-		const abort = document.getElementById(elemLogoutHandler);
+	init() {
+		const modalWrapperId = 'owc-signicat-openid-modal-wrapper';
+		const refreshButtonId = 'owc-signicat-openid-refresh';
+		const logoutButtonId = 'owc-signicat-openid-logout';
 
-		if (resume) {
-			resume.addEventListener('click', sessionResume);
-			resume.addEventListener('keydown', a11yClick);
+		this.modalOpenClass = 'show';
+		this.modalIsOpen = false;
+		this.lastActivity = new Date();
+		this.lastActivityIsUpdated = false;
+
+		this.modalEl = document.getElementById(modalWrapperId);
+		this.refreshButtonEl = document.getElementById(refreshButtonId);
+		this.logoutButtonEl = document.getElementById(logoutButtonId);
+
+		if (!this.modalEl || !this.logoutButtonEl || !this.refreshButtonEl) {
+			return;
 		}
 
-		if (abort) {
-			abort.addEventListener('click', logout);
-			abort.addEventListener('keydown', a11yClick);
+		this.registerEventHandlers();
+		this.initTimer();
+	}
+
+	registerEventHandlers() {
+		this.refreshButtonEl.addEventListener('click', (e) =>
+			this.sessionResume(e)
+		);
+		this.refreshButtonEl.addEventListener('keydown', (e) =>
+			this.a11yClick(e)
+		);
+		this.logoutButtonEl.addEventListener('click', (e) =>
+			this.sessionEnd(e)
+		);
+		this.logoutButtonEl.addEventListener('keydown', (e) =>
+			this.a11yClick(e)
+		);
+		document.addEventListener('mousemove', () => this.updateLastActivity());
+		document.addEventListener('keydown', () => this.updateLastActivity());
+	}
+
+	initTimer() {
+		setInterval(this.checkSessionStatus, this.second);
+		setInterval(this.keepSessionAlive, this.minute);
+	}
+
+	checkSessionStatus = () => {
+		let inactivity = new Date().valueOf() - this.lastActivity;
+
+		if (inactivity > this.modalShouldOpen && !this.modalIsOpen) {
+			this.toggleModal(true);
 		}
 
-		document.addEventListener('keydown', (e) => {
-			const ESCAPE_KEY = 27;
-			const modal = document.getElementById(elemModal);
+		if (inactivity > this.sessionShouldEnd) {
+			this.logout();
+		}
+	};
 
-			if (e.keyCode === ESCAPE_KEY && modal.classList.contains(modalShow)) {
-				logout();
-			}
+	sessionResume() {
+		this.toggleModal(false);
+		this.keepSessionAlive();
+	}
+
+	sessionEnd() {
+		this.toggleModal(false);
+		this.logout();
+	}
+
+	toggleModal(open) {
+		if (open) {
+			this.modalEl.classList.add(this.modalOpenClass);
+			this.modalEl.setAttribute('aria-hidden', 'false');
+		} else {
+			this.modalEl.classList.remove(this.modalOpenClass);
+			this.modalEl.setAttribute('aria-hidden', 'truez');
+		}
+
+		this.modalIsOpen = open;
+	}
+
+	updateLastActivity = () => {
+		this.lastActivity = Date.now();
+		this.lastActivityIsUpdated = true;
+	};
+
+	logout = () => {
+		apiFetch({
+			path: 'owc-signicat-openid/v1/revoke',
+		}).then((res) => {
+			console.log(res);
+			window.location = this.logoutUrl;
 		});
-	}
+	};
 
-	/**
-	 * Check session status every second.
-	 */
-	function initTimer() {
-		setInterval(checkSessionStatus, second);
-	}
-
-	/**
-	 * Check if the expiration modal should open or the user should be logged out.
-	 */
-	function checkSessionStatus() {
-		console.log('test');
-		if (Date.now() > modalShouldOpen) {
-			toggleModal(true);
-		}
-
-		if (Date.now() > sessionTTLInSeconds) {
-			logout();
-		}
-	}
-
-	async function sessionResume() {
-		try {
-			const response = await apiFetch({
-				url: refreshUri,
-				method: 'GET',
-				headers: {
-					'Content-Type': 'application/json',
-				},
+	keepSessionAlive = () => {
+		if (this.lastActivityIsUpdated) {
+			apiFetch({
+				path: 'owc-signicat-openid/v1/refresh',
+			}).then((res) => {
+				this.lastActivityIsUpdated = false;
 			});
-
-			// Handle success
-			console.log(response);
-		} catch (error) {
-			// Handle error
-			console.error('Error:', error);
 		}
-	}
+	};
 
-	function logout() {
-		window.location = logoutUri;
-	}
-
-	function a11yClick(e) {
+	/**
+	 * Add keypress event to modal buttons.
+	 *
+	 * @param {Object} e
+	 */
+	a11yClick = (e) => {
 		const SPACE_KEY = 32;
 
 		if (e.type !== 'click' || e.type !== 'keypress') return false;
@@ -120,19 +130,7 @@ function initCountdown(sessionTTL, refreshUri, logoutUri) {
 		}
 
 		return true;
-	}
-
-	// Initialize Countdown
-	document.addEventListener('DOMContentLoaded', () => {
-		initTimer();
-		registerEventListeners();
-	});
+	};
 }
 
-const sessionTTL = Date.now() + 1000; // TODO: should be sopendIdSettings.exp
-const refreshUri = sopenidSettings.refresh_uri;
-const logoutUri = sopenidSettings.logout_uri;
-
-if (sessionTTL > 0) {
-	initCountdown(sessionTTL, refreshUri, logoutUri);
-}
+new OWC_Signicat_OIDC_Modal(owcSignicatOIDCModalSettings).init();

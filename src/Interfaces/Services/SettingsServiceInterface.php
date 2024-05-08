@@ -6,5 +6,5 @@ namespace OWCSignicatOpenID\Interfaces\Services;
 
 interface SettingsServiceInterface extends ServiceInterface
 {
-    public function get_setting(string $setting);
+    public function getSetting(string $setting);
 }

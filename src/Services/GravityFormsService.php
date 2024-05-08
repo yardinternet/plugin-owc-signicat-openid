@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace OWCSignicatOpenID\Services;
 
-use GF_Field;
-use GF_Fields;
-use GFCommon;
 use OWCSignicatOpenID\GravityForms\Fields\OpenIDField;
 use OWCSignicatOpenID\Interfaces\Services\GravityFormsServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\IdentityProviderServiceInterface;
@@ -15,6 +12,8 @@ use OWCSignicatOpenID\Interfaces\Services\SettingsServiceInterface;
 
 class GravityFormsService extends Service implements GravityFormsServiceInterface
 {
+    private const FIELD_GROUP = 'owc-signicat-openid';
+
     protected OpenIDServiceInterface $openIDService;
     protected SettingsServiceInterface $settings;
     protected IdentityProviderServiceInterface $idpService;
@@ -35,35 +34,36 @@ class GravityFormsService extends Service implements GravityFormsServiceInterfac
         add_filter('gform_gf_field_create', [$this, 'setOpenIDService'], 10, 2);
         add_filter('gform_incomplete_submission_pre_save', [$this, 'setPageNumber'], 10, 3);
         add_action('gform_editor_js_set_default_values', [$this, 'setDefaults']);
-
+        add_filter('gform_field_groups_form_editor', [$this, 'addFieldGroup']);
         add_filter('gform_get_input_value', [$this, 'decrypt'], 10, 4);
         add_filter('gform_save_field_value', [$this, 'encrypt'], 10, 5);
     }
 
     public function decrypt(string $value, array $entry, \GF_Field $field, $input_id): string
     {
-        if (! is_a($field, OpenIDField::class)) {
+        if (! is_a($field, OpenIDField::class) || empty($value)) {
             return $value;
         }
 
-        return GFCommon::openssl_decrypt($value);
+        //TODO: optie/filter om decryption te onderdrukken
+        return \GFCommon::openssl_decrypt($value);
     }
 
     public function encrypt($value, $entry, $field, $form, $input_id)
     {
-        if (! is_a($field, OpenIDField::class)) {
+        if (! is_a($field, OpenIDField::class) || empty($value)) {
             return $value;
         }
 
-        return GFCommon::openssl_encrypt($value);
+        return \GFCommon::openssl_encrypt($value);
     }
 
     public function setDefaults()
     {
-        foreach ($this->idpService->getActiveIdentityProviders() as $idp) {
+        foreach (array_keys($this->idpService->getEnabledIdentityProviders()) as $idpSlug) {
             ?>
-			case "<?php echo sprintf('owc-signicat-openid-%s', $idp->getSlug());?>":
-				field.idp = <?php echo wp_json_encode($idp);?>;
+			case "<?php echo sprintf('owc-signicat-openid-%s', $idpSlug);?>":
+				field.idpSlug = "<?php echo $idpSlug;?>";
 				break;
 			<?php
         }
@@ -73,22 +73,27 @@ class GravityFormsService extends Service implements GravityFormsServiceInterfac
     {
         $services = [
             'openIdService' => $this->openIDService,
-            'settings' => $this->settings,
-            'idpService' => $this->idpService,
         ];
 
-        foreach ($this->idpService->getActiveIdentityProviders() as $idp) {
+        foreach ($this->idpService->getEnabledIdentityProviders() as $idp) {
             $data = ['idp' => $idp ] + $services;
-            GF_Fields::register(new OpenIDField($data));
+            \GF_Fields::register(new OpenIDField($data));
         }
     }
 
-    public function setOpenIDService(GF_Field $field, array $properties): GF_Field
+    public function setOpenIDService(\GF_Field $field, $properties): \GF_Field
     {
         if (! is_a($field, OpenIDField::class)) {
             return $field;
         }
-        $field->setServices($this->openIDService, $this->settings, $this->idpService);
+        $field->__set('openIDService', $this->openIDService);
+        if (! $field->__isset('idp') && $field->__isset('idpSlug')) {
+            $idpSlug = $field->__get('idpSlug');
+            $idp = $this->idpService->getIdentityProvider($idpSlug);
+            if (null !== $idp) {
+                $field->__set('idp', $idp);
+            }
+        }
 
         return $field;
     }
@@ -99,5 +104,25 @@ class GravityFormsService extends Service implements GravityFormsServiceInterfac
         $submissionData->page_number = \GFFormDisplay::get_current_page($form['id']);
 
         return \json_encode($submissionData);
+    }
+
+    public function addFieldGroup(array $fieldGroups): array
+    {
+        $fields = [];
+        foreach (array_keys($this->idpService->getEnabledIdentityProviders()) as $idpSlug) {
+            $fieldType = sprintf('owc-signicat-openid-%s', $idpSlug);
+            $fields[] = [
+                'data-type' => $fieldType,
+                'value' => \GFCommon::get_field_type_title($fieldType),
+            ];
+        }
+
+        $fieldGroups[] = [
+            'name'   => self::FIELD_GROUP,
+            'label'  => __('Signicat OpenID', 'owc'),
+            'fields' => $fields,
+        ];
+
+        return $fieldGroups;
     }
 }

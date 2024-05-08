@@ -9,7 +9,7 @@ use OWCSignicatOpenID\IdentityProvider;
 interface IdentityProviderServiceInterface extends ServiceInterface
 {
     /** @var IdentityProvider[] */
-    public function getActiveIdentityProviders(): array;
+    public function getEnabledIdentityProviders(): array;
 
-    public function getActiveIdentityProvider(string $slug): ?IdentityProvider;
+    public function getIdentityProvider(string $slug): ?IdentityProvider;
 }

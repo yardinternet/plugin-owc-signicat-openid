@@ -13,26 +13,27 @@ use Facile\OpenIDClient\Service\Builder\AuthorizationServiceBuilder;
 use Odan\Session\PhpSession;
 use Odan\Session\SessionInterface;
 use OWCSignicatOpenID\Interfaces\Providers\AppServiceProviderInterface;
+use OWCSignicatOpenID\Interfaces\Providers\SettingsServiceProviderInterface;
 use OWCSignicatOpenID\Interfaces\Services\BlockServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\CacheServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\GravityFormsServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\IdentityProviderServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\LifeCycleServiceInterface;
+use OWCSignicatOpenID\Interfaces\Services\ModalServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\OpenIDServiceInterface;
-use OWCSignicatOpenID\Interfaces\Services\ResourceServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\RouteServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\SettingsServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\ViewServiceInterface;
 use OWCSignicatOpenID\Logger;
-use OWCSignicatOpenID\Modal;
 use OWCSignicatOpenID\Providers\AppServiceProvider;
+use OWCSignicatOpenID\Providers\SettingsServiceProvider;
 use OWCSignicatOpenID\Services\BlockService;
 use OWCSignicatOpenID\Services\CacheService;
 use OWCSignicatOpenID\Services\GravityFormsService;
 use OWCSignicatOpenID\Services\IdentityProviderService;
 use OWCSignicatOpenID\Services\LifeCycleService;
+use OWCSignicatOpenID\Services\ModalService;
 use OWCSignicatOpenID\Services\OpenIDService;
-use OWCSignicatOpenID\Services\ResourceService;
 use OWCSignicatOpenID\Services\RouteService;
 use OWCSignicatOpenID\Services\SettingsService;
 use OWCSignicatOpenID\Services\ViewService;
@@ -45,15 +46,20 @@ return [
         [
             'slug' => 'digid',
             'name' => 'DigiD',
+            'saveFields' => [
+                'sub',
+            ],
         ],
         [
             'slug' => 'eherkenning',
             'name' => 'eHerkenning',
+            'saveFields' => [
+                'urn:etoegang:1.9:EntityConcernedID:KvKnr',
+            ],
         ],
     ],
     LoggerInterface::class             => fn (ContainerInterface $container): LoggerInterface => new Logger($container->get('logger.level')),
     'logger.level'                     => fn (): string => (defined('WP_DEBUG') && WP_DEBUG) ? LogLevel::WARNING : '',
-    Modal::class                       => fn (ContainerInterface $container): Modal => new Modal($container->get(SessionInterface::class)),
     MetadataProviderBuilder::class     => fn (ContainerInterface $container): MetadataProviderBuilder => (new MetadataProviderBuilder)->setCache($container->get(CacheServiceInterface::class))->setCacheTtl(MONTH_IN_SECONDS),
     JwksProviderBuilder::class         => fn (ContainerInterface $container): JwksProviderBuilder => (new JwksProviderBuilder())->setCache($container->get(CacheServiceInterface::class))->setCacheTtl(DAY_IN_SECONDS),
     ClientMetadataInterface::class     => function (ContainerInterface $container): ClientMetadata {
@@ -61,10 +67,10 @@ return [
 
         return ClientMetadata::fromArray(
             [
-                'client_id'     => sanitize_text_field($settings->get_setting('client_id')),
-                'client_secret' => sanitize_text_field($settings->get_setting('client_secret')),
+                'client_id'     => sanitize_text_field($settings->getSetting('client_id')),
+                'client_secret' => sanitize_text_field($settings->getSetting('client_secret')),
                 'redirect_uris' => [
-                    sanitize_text_field(get_site_url(null, $settings->get_setting('path_redirect'))),
+                    sanitize_text_field(get_site_url(null, $settings->getSetting('path_redirect'))),
                 ],
             ]
         );
@@ -73,7 +79,7 @@ return [
         return (new IssuerBuilder())
             ->setMetadataProviderBuilder($container->get(MetadataProviderBuilder::class))
             ->setJwksProviderBuilder($container->get(JwksProviderBuilder::class))
-            ->build($container->get(SettingsServiceInterface::class)->get_setting('configuration_url'));
+            ->build($container->get(SettingsServiceInterface::class)->getSetting('configuration_url'));
     },
     ClientInterface::class             => fn (ContainerInterface $container): ClientInterface => (new ClientBuilder())
         ->setIssuer($container->get(IssuerInterface::class))
@@ -94,10 +100,10 @@ return [
 
     // Providers.
     AppServiceProviderInterface::class => \DI\autowire(AppServiceProvider::class),
+    SettingsServiceProviderInterface::class => \DI\autowire(SettingsServiceProvider::class),
 
     // Services.
     LifeCycleServiceInterface::class   => \DI\autowire(LifeCycleService::class),
-    ResourceServiceInterface::class    => \DI\autowire(ResourceService::class),
     SettingsServiceInterface::class    => \DI\autowire(SettingsService::class),
     BlockServiceInterface::class       => \DI\autowire(BlockService::class),
     CacheServiceInterface::class       => \DI\autowire(CacheService::class),
@@ -105,5 +111,6 @@ return [
     RouteServiceInterface::class       => \DI\autowire(RouteService::class),
     OpenIDServiceInterface::class      => \DI\autowire(OpenIDService::class),
     GravityFormsServiceInterface::class => \DI\autowire(GravityFormsService::class),
-    IdentityProviderServiceInterface::class          => \DI\autowire(IdentityProviderService::class)->method('setIdps', DI\get('idps')),
+    ModalServiceInterface::class        => \DI\autowire(ModalService::class),
+    IdentityProviderServiceInterface::class  => \DI\autowire(IdentityProviderService::class)->method('setIdps', DI\get('idps')),
 ];
