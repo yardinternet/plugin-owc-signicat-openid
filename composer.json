@@ -34,7 +34,7 @@
 		"doctrine/annotations": "^1.13",
 		"facile-it/php-openid-client": "^0.3.4",
 		"guzzlehttp/guzzle": "^7.8",
-		"guzzlehttp/psr7": "^1.7",
+		"guzzlehttp/psr7": "^1.9.1 || ^2.5.1",
 		"http-interop/http-factory-guzzle": "^1.2",
 		"monolog/monolog": "^2.0",
 		"odan/session": "^5.1",
