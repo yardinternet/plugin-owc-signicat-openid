@@ -21,6 +21,7 @@ use Facile\OpenIDClient\Service\AuthorizationService;
 use Facile\OpenIDClient\Service\Builder\IntrospectionServiceBuilder;
 use Facile\OpenIDClient\Service\Builder\RevocationServiceBuilder;
 use Facile\OpenIDClient\Service\Builder\UserInfoServiceBuilder;
+use Facile\OpenIDClient\Token\TokenSet;
 use Odan\Session\SessionInterface;
 use OWCSignicatOpenID\IdentityProvider;
 use OWCSignicatOpenID\Interfaces\Services\IdentityProviderServiceInterface;
@@ -55,6 +56,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 
     public function register(): void
     {
+        add_filter('owc_siginicat_openid_is_user_logged_in', [$this, 'isUserLoggedIn'], 10, 2);
         add_filter('owc_signicat_openid_user_info', [$this, 'retrieveUserInfo'], 10, 2);
     }
 
@@ -66,6 +68,16 @@ class OpenIDService extends Service implements OpenIDServiceInterface
         }
 
         return $this->getUserInfo($idp);
+    }
+
+    public function isUserLoggedIn(bool $isUserLoggedIn, string $idpSlug): bool
+    {
+        $idp = $this->identityProviderService->getIdentityProvider($idpSlug);
+        if (null === $idp) {
+            return $isUserLoggedIn;
+        }
+
+        return $this->hasActiveSession($idp);
     }
 
     public function getLoginUrl(IdentityProvider $identityProvider, string $redirectUrl = null, string $refererUrl = null): string
@@ -156,13 +168,13 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 
         $state = $this->popState($stateId);
 
-        $token_set = $this->authorizationService->callback($this->client, $callback_params);
-        if (null === $token_set->getIdToken()) {
+        $tokenSet = $this->authorizationService->callback($this->client, $callback_params);
+        if (null === $tokenSet->getIdToken()) {
             throw new RuntimeException('Unauthorized');
         }
         $identityProvider = $state['identityProvider'];
 
-        $this->session->set($identityProvider->getSlug(), $token_set);
+        $this->setIdpTokenSet($identityProvider, $tokenSet);
         $this->session->save();
 
         wp_safe_redirect($state['redirectUrl']);
@@ -173,16 +185,15 @@ class OpenIDService extends Service implements OpenIDServiceInterface
     {
         $this->maybeStartSession();
 
-        if (! $this->session->has($identityProvider->getSlug()) || null === $this->session->get($identityProvider->getSlug())->getRefreshToken()) {
+        if (! $this->hasIdpTokenSet($identityProvider) || null === $this->getIdpTokenSet($identityProvider)->getRefreshToken()) {
             return new WP_Error('missing_refresh_token', 'Missing refresh token');
         }
         if ($this->hasActiveSession($identityProvider)) {
             return true;
         }
 
-        $tokenSet = $this->authorizationService->refresh($this->client, $this->session->get($identityProvider->getSlug())->getRefreshToken());
-
-        $this->session->set($identityProvider->getSlug(), $tokenSet);
+        $tokenSet = $this->authorizationService->refresh($this->client, $this->getIdpTokenSet($identityProvider)->getRefreshToken());
+        $this->setIdpTokenSet($identityProvider, $tokenSet);
 
         //$this->session->save();
         return true;
@@ -196,28 +207,28 @@ class OpenIDService extends Service implements OpenIDServiceInterface
         }
         $userInfoService = (new UserInfoServiceBuilder())->build();
 
-        return $userInfoService->getUserInfo($this->client, $this->session->get($identityProvider->getSlug()));
+        return $userInfoService->getUserInfo($this->client, $this->getIdpTokenSet(($identityProvider)));
     }
 
     public function revoke(IdentityProvider $identityProvider): void
     {
         $this->maybeStartSession();
-        if (! $this->session->has($identityProvider->getSlug())) {
+        if (! $this->hasIdpTokenSet($identityProvider)) {
             throw new RuntimeException('You are not logged in');
         }
         $revocationService = (new RevocationServiceBuilder())->build();
-        $revocationService->revoke($this->client, $this->session->get($identityProvider->getSlug())->getAccessToken());
-        $this->session->remove($identityProvider->getSlug());
+        $revocationService->revoke($this->client, $this->getIdpTokenSet($identityProvider)->getAccessToken());
+        $this->removeIdpTokenSet($identityProvider);
     }
 
     public function introspect(IdentityProvider $identityProvider): array
     {
-        if (! $this->session->has($identityProvider->getSlug())) {
+        if (! $this->hasIdpTokenSet($identityProvider)) {
             return [];
         }
         $introspectionService = (new IntrospectionServiceBuilder())->build();
 
-        return $introspectionService->introspect($this->client, $this->session->get($identityProvider->getSlug())->getAccessToken());
+        return $introspectionService->introspect($this->client, $this->getIdpTokenSet($identityProvider)->getAccessToken());
     }
 
     public function hasActiveSession(IdentityProvider $identityProvider): bool
@@ -232,6 +243,9 @@ class OpenIDService extends Service implements OpenIDServiceInterface
     {
         if (! $this->session->isStarted()) {
             $this->session->start();
+        } elseif (empty($this->session->all()) && ! empty($_SESSION)) {
+            // Dit is nodig voor het geval dat er al door een andere plugin een sessie gestart is.
+            $this->session->replace($_SESSION);
         }
     }
 
@@ -257,4 +271,24 @@ class OpenIDService extends Service implements OpenIDServiceInterface
         return $state;
     }
 
+    private function hasIdpTokenSet(IdentityProvider $identityProvider): bool
+    {
+        return $this->session->has('owc_openid_' . $identityProvider->getSlug()) && is_a($this->session->get('owc_openid_' . $identityProvider->getSlug()), TokenSet::class);
+    }
+
+    private function getIdpTokenSet(IdentityProvider $identityProvider): ?TokenSet
+    {
+        return $this->session->get('owc_openid_' . $identityProvider->getSlug());
+    }
+
+    private function setIdpTokenSet(IdentityProvider $identityProvider, TokenSet $tokenSet)
+    {
+        $this->session->set('owc_openid_' . $identityProvider->getSlug(), $tokenSet);
+    }
+
+
+    private function removeIdpTokenSet(IdentityProvider $identityProvider)
+    {
+        $this->session->remove('owc_openid_' . $identityProvider->getSlug());
+    }
 }
