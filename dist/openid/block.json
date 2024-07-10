@@ -11,6 +11,10 @@
     },
     "idp": {
       "type": "string"
+    },
+    "buttonText": {
+      "type": "string",
+      "default": "Inloggen"
     }
   },
   "supports": {
