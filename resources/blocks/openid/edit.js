@@ -4,6 +4,7 @@
 import { InspectorControls, useBlockProps } from '@wordpress/block-editor';
 import {
 	TextControl,
+	ToggleControl,
 	PanelBody,
 	PanelRow,
 	Disabled,
@@ -14,25 +15,37 @@ import metadata from './block.json';
 import './editor.css';
 
 export default function Edit({ attributes, setAttributes }) {
-	const { redirectUrl } = attributes;
-	const blockProps = useBlockProps();
+	const { redirectUrl, buttonText } = attributes;
+
+	const handleRedirectUrlChange = (url) => {
+		setAttributes({ redirectUrl: url });
+	};
+
+	const handleButtonTextChange = (value) => {
+		setAttributes({ buttonText: value });
+	};
 
 	return (
 		<>
 			<InspectorControls>
 				<PanelBody
 					title={__('Settings', 'owc-signicat-openid')}
-					initialOpen={false}
+					initialOpen={true}
 				>
 					<PanelRow>
 						<TextControl
 							label={__('Redirect URL', 'owc-signicat-openid')}
-							onChange={(url) =>
-								setAttributes({ redirectUrl: url })
-							}
 							value={redirectUrl}
+							onChange={handleRedirectUrlChange}
 						/>
 					</PanelRow>
+					<PanelRow>
+							<TextControl
+								label={__('Button text', 'owc-signicat-openid')}
+								value={buttonText}
+								onChange={handleButtonTextChange}
+							/>
+						</PanelRow>
 				</PanelBody>
 			</InspectorControls>
 			<div {...useBlockProps()}>
