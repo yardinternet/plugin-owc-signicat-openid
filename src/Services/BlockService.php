@@ -73,8 +73,8 @@ class BlockService extends Service implements BlockServiceInterface
         $identityProvider = $this->identityProviderService->getIdentityProvider($attributes['idp']);
         //TODO: afbreken als idp niet gevonden wordt?
         $image = $identityProvider->getLogoUrl();
-		$redirectUrl = isset($attributes['redirectUrl']) ?? wp_unslash($_SERVER['REQUEST_URI']);
-        $buttonText = isset($attributes['buttonText']) ?? '';
+		$redirectUrl = $attributes['redirectUrl'] ?? wp_unslash($_SERVER['REQUEST_URI']);
+        $buttonText = $attributes['buttonText'] ?? '';
         $url = $this->openIDClient->getLoginUrl($identityProvider, $redirectUrl);
 
         return $this->viewService->render('block', ['url' => $url, 'image' => $image, 'buttonText' => $buttonText]);
