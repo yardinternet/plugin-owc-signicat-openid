@@ -4,7 +4,6 @@
 import { InspectorControls, useBlockProps } from '@wordpress/block-editor';
 import {
 	TextControl,
-	ToggleControl,
 	PanelBody,
 	PanelRow,
 	Disabled,
