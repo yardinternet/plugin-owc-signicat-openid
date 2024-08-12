@@ -11,7 +11,7 @@
  * Plugin Name:       OWC | Signicat OpenID
  * Plugin URI:        https://github.com/yardinternet/plugin-signicat-openid
  * Description:       Log into the Signicat Broker with OpenID
- * Version:           0.0.1
+ * Version:           1.0.0
  * Author:            Yard | Digital Agency
  * Author URI:        https://www.yard.nl
  * License:           EUPL
@@ -20,7 +20,7 @@
  * Domain Path:       /languages
  */
 
-declare (strict_types = 1);
+declare (strict_types=1);
 
 /**
  * If this file is called directly, abort.
@@ -30,7 +30,7 @@ if (! defined('WPINC')) {
 }
 
 // Define constants.
-define('OWC_SIGNICAT_OPENID_VERSION', '0.0.1');
+define('OWC_SIGNICAT_OPENID_VERSION', '1.0.0');
 define('OWC_SIGNICAT_OPENID_REQUIRED_WP_VERSION', '6.0');
 define('OWC_SIGNICAT_OPENID_FILE', __FILE__);
 define('OWC_SIGNICAT_OPENID_SLUG', basename(OWC_SIGNICAT_OPENID_FILE, '.php'));

@@ -36,14 +36,14 @@ class OWC_Signicat_OIDC_Modal {
 	}
 
 	registerEventHandlers() {
-		this.refreshButtonEl.addEventListener('click', (e) =>
-			this.sessionResume(e)
+		this.refreshButtonEl.addEventListener('click', () =>
+			this.sessionResume()
 		);
 		this.refreshButtonEl.addEventListener('keydown', (e) =>
 			this.a11yClick(e)
 		);
-		this.logoutButtonEl.addEventListener('click', (e) =>
-			this.sessionEnd(e)
+		this.logoutButtonEl.addEventListener('click', () =>
+			this.sessionEnd()
 		);
 		this.logoutButtonEl.addEventListener('keydown', (e) =>
 			this.a11yClick(e)
@@ -100,7 +100,6 @@ class OWC_Signicat_OIDC_Modal {
 		apiFetch({
 			path: 'owc-signicat-openid/v1/revoke',
 		}).then((res) => {
-			console.log(res);
 			window.location = this.logoutUrl;
 		});
 	};
