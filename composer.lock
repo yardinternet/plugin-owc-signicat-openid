@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5edf0f0ff5bdd050ac8c941986663ca3",
+    "content-hash": "93469b72dc68429283aaf8078f5d785d",
     "packages": [
         {
             "name": "brick/math",
@@ -1250,6 +1250,42 @@
                 "source": "https://github.com/odan/session/tree/5.1.0"
             },
             "time": "2020-12-23T18:09:07+00:00"
+        },
+        {
+            "name": "owc/idp-userdata",
+            "version": "v1.0.0",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:OpenWebconcept/idp-userdata.git",
+                "reference": "4b5f58f66a4031b932c9d10073b96b33d62c9492"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/OpenWebconcept/idp-userdata/zipball/4b5f58f66a4031b932c9d10073b96b33d62c9492",
+                "reference": "4b5f58f66a4031b932c9d10073b96b33d62c9492",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.4"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "OWC\\IdpUserdata\\": "src/"
+                }
+            },
+            "authors": [
+                {
+                    "name": "Yard | Digital Agency",
+                    "email": "info@yard.nl"
+                }
+            ],
+            "description": "Common interfaces for IDP userdata (DigiD, eHerkenning)",
+            "support": {
+                "source": "https://github.com/OpenWebconcept/idp-userdata/tree/v1.0.0",
+                "issues": "https://github.com/OpenWebconcept/idp-userdata/issues"
+            },
+            "time": "2024-09-02T11:54:28+00:00"
         },
         {
             "name": "php-di/invoker",
