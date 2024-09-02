@@ -29,14 +29,14 @@ class ModalService extends Service implements ModalServiceInterface
 
     public function register()
     {
-        add_action('wp_body_open', [$this, 'addModalHtml']);
+		add_action('wp_body_open', [$this, 'addModalHtml']);
         add_action('wp_enqueue_scripts', [$this, 'enqueueScripts']);
     }
 
     public function addModalHtml()
     {
         if (! $this->shouldLoadModal()) {
-            return;
+			return;
         }
 
         echo $this->viewService->render(
@@ -72,8 +72,7 @@ class ModalService extends Service implements ModalServiceInterface
             self::ASSETS_HANDLE,
             'owcSignicatOIDCModalSettings',
             [
-                'sessionTTL' => 15,
-                'logoutUrl' => get_site_url(),
+                'sessionTTL' => 0.2,
             ]
         );
 

@@ -3,19 +3,21 @@
 }
 
 .owc-signicat-openid-modal-wrapper.show {
-	display: block;
 	position: fixed;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	top: 0;
 	bottom: 0;
 	left: 0;
 	right: 0;
-	background-color: #666;
+	background-color: rgba(0,0,0,0.8);
 	opacity: 1;
 	z-index: 1272;
 }
 
 .modal-dialog {
-	max-width: 500px;
+	max-width: 550px;
 	margin: 5rem auto;
 	background-color: #ffffff;
 	padding: 2rem;
