@@ -11,6 +11,9 @@ class OWC_Signicat_OIDC_Modal {
 
 		this.refreshUrl = settings.refreshUrl;
 		this.logoutUrl = settings.logoutUrl;
+
+		this.countdownInterval = null;
+		this.countdownTime = this.sessionShouldEnd - this.modalShouldOpen;
 	}
 
 	init() {
@@ -26,8 +29,14 @@ class OWC_Signicat_OIDC_Modal {
 		this.modalEl = document.getElementById(modalWrapperId);
 		this.refreshButtonEl = document.getElementById(refreshButtonId);
 		this.logoutButtonEl = document.getElementById(logoutButtonId);
+		this.timerEl = document.getElementById('owc-signicat-openid-modal-timer');
 
-		if (!this.modalEl || !this.logoutButtonEl || !this.refreshButtonEl) {
+		if (
+			!this.modalEl ||
+			!this.logoutButtonEl ||
+			!this.refreshButtonEl ||
+			!this.timerEl
+		) {
 			return;
 		}
 
@@ -36,18 +45,10 @@ class OWC_Signicat_OIDC_Modal {
 	}
 
 	registerEventHandlers() {
-		this.refreshButtonEl.addEventListener('click', () =>
-			this.sessionResume()
-		);
-		this.refreshButtonEl.addEventListener('keydown', (e) =>
-			this.a11yClick(e)
-		);
-		this.logoutButtonEl.addEventListener('click', () =>
-			this.sessionEnd()
-		);
-		this.logoutButtonEl.addEventListener('keydown', (e) =>
-			this.a11yClick(e)
-		);
+		this.refreshButtonEl.addEventListener('click', () => this.sessionResume());
+		this.refreshButtonEl.addEventListener('keydown', (e) => this.a11yClick(e));
+		this.logoutButtonEl.addEventListener('click', () => this.sessionEnd());
+		this.logoutButtonEl.addEventListener('keydown', (e) => this.a11yClick(e));
 		document.addEventListener('mousemove', () => this.updateLastActivity());
 		document.addEventListener('keydown', () => this.updateLastActivity());
 	}
@@ -58,7 +59,7 @@ class OWC_Signicat_OIDC_Modal {
 	}
 
 	checkSessionStatus = () => {
-		let inactivity = new Date().valueOf() - this.lastActivity;
+		const inactivity = new Date().valueOf() - this.lastActivity;
 
 		if (inactivity > this.modalShouldOpen && !this.modalIsOpen) {
 			this.toggleModal(true);
@@ -75,7 +76,7 @@ class OWC_Signicat_OIDC_Modal {
 	}
 
 	sessionEnd() {
-		this.toggleModal(false);
+		this.clearCountdown();
 		this.logout();
 	}
 
@@ -83,12 +84,41 @@ class OWC_Signicat_OIDC_Modal {
 		if (open) {
 			this.modalEl.classList.add(this.modalOpenClass);
 			this.modalEl.setAttribute('aria-hidden', 'false');
+			this.startCountdown();
 		} else {
 			this.modalEl.classList.remove(this.modalOpenClass);
-			this.modalEl.setAttribute('aria-hidden', 'truez');
+			this.modalEl.setAttribute('aria-hidden', 'true');
+			this.clearCountdown();
 		}
 
 		this.modalIsOpen = open;
+	}
+
+	startCountdown() {
+		let timeRemaining = this.countdownTime / 1000;
+
+		this.updateTimerDisplay(timeRemaining);
+
+		this.countdownInterval = setInterval(() => {
+			timeRemaining--;
+
+			if (timeRemaining >= 0) {
+				this.updateTimerDisplay(timeRemaining);
+			} else {
+				this.sessionEnd();
+			}
+		}, this.second);
+	}
+
+	clearCountdown() {
+		clearInterval(this.countdownInterval);
+	}
+
+	updateTimerDisplay(time) {
+		const minutes = Math.floor(time / 60);
+		const seconds = time % 60;
+		const formattedTime = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+		this.timerEl.textContent = `${formattedTime}`;
 	}
 
 	updateLastActivity = () => {
@@ -99,7 +129,7 @@ class OWC_Signicat_OIDC_Modal {
 	logout = () => {
 		apiFetch({
 			path: 'owc-signicat-openid/v1/revoke',
-		}).then((res) => {
+		}).then(() => {
 			window.location = this.logoutUrl;
 		});
 	};
@@ -108,17 +138,12 @@ class OWC_Signicat_OIDC_Modal {
 		if (this.lastActivityIsUpdated) {
 			apiFetch({
 				path: 'owc-signicat-openid/v1/refresh',
-			}).then((res) => {
+			}).then(() => {
 				this.lastActivityIsUpdated = false;
 			});
 		}
 	};
 
-	/**
-	 * Add keypress event to modal buttons.
-	 *
-	 * @param {Object} e
-	 */
 	a11yClick = (e) => {
 		const SPACE_KEY = 32;
 
@@ -132,4 +157,4 @@ class OWC_Signicat_OIDC_Modal {
 	};
 }
 
-new OWC_Signicat_OIDC_Modal(owcSignicatOIDCModalSettings).init();
+new OWC_Signicat_OIDC_Modal(window.owcSignicatOIDCModalSettings).init();
