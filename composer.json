@@ -32,7 +32,7 @@
 	"repositories": [
 		{
 			"type": "vcs",
-			"url": "https://github.com/OpenWebconcept/idp-userdata"
+			"url": "git@github.com:OpenWebconcept/idp-userdata"
 		}
 	],
 	"require": {
