@@ -9,28 +9,28 @@
  * @since   0.0.1
  */
 
-declare (strict_types = 1);
+declare (strict_types=1);
 
 namespace OWCSignicatOpenID\Services;
 
 use Facile\OpenIDClient\Client\ClientInterface;
 use Facile\OpenIDClient\Exception\OAuth2Exception;
-
-use function Facile\OpenIDClient\parse_callback_params;
 use Facile\OpenIDClient\Service\AuthorizationService;
 use Facile\OpenIDClient\Service\Builder\IntrospectionServiceBuilder;
 use Facile\OpenIDClient\Service\Builder\RevocationServiceBuilder;
 use Facile\OpenIDClient\Service\Builder\UserInfoServiceBuilder;
 use Facile\OpenIDClient\Token\TokenSet;
 use Odan\Session\SessionInterface;
+use OWC\IdpUserData\UserDataInterface;
 use OWCSignicatOpenID\IdentityProvider;
 use OWCSignicatOpenID\Interfaces\Services\IdentityProviderServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\OpenIDServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\SettingsServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
-
 use RuntimeException;
 use WP_Error;
+
+use function Facile\OpenIDClient\parse_callback_params;
 
 class OpenIDService extends Service implements OpenIDServiceInterface
 {
@@ -52,22 +52,20 @@ class OpenIDService extends Service implements OpenIDServiceInterface
         $this->session = $session;
         $this->settings = $settings;
         $this->identityProviderService = $identityProviderService;
+
+        add_filter('owc_idp_is_user_logged_in', [$this, 'isUserLoggedIn'], 10, 2);
+        add_filter('owc_idp_userdata', [$this, 'retrieveUserInfo'], 10, 2);
     }
 
-    public function register(): void
-    {
-        add_filter('owc_siginicat_openid_is_user_logged_in', [$this, 'isUserLoggedIn'], 10, 2);
-        add_filter('owc_signicat_openid_user_info', [$this, 'retrieveUserInfo'], 10, 2);
-    }
-
-    public function retrieveUserInfo(array $userInfo, string $idpSlug): array
+    public function retrieveUserInfo(array $userInfo, string $idpSlug): UserDataInterface
     {
         $idp = $this->identityProviderService->getIdentityProvider($idpSlug);
         if (null === $idp) {
             return $userInfo;
         }
 
-        return $this->getUserInfo($idp);
+		$userDataClass = $idp->getUserDataClass();
+        return new $userDataClass($this->getUserInfo($idp));
     }
 
     public function isUserLoggedIn(bool $isUserLoggedIn, string $idpSlug): bool
