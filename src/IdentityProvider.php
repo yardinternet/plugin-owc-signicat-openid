@@ -10,6 +10,8 @@ class IdentityProvider implements JsonSerializable
     protected string $name;
     protected array  $saveFields;
 
+    protected string $userDataClass;
+
     public function __construct(array $data)
     {
         $class_vars = get_class_vars(static::class);
@@ -22,7 +24,7 @@ class IdentityProvider implements JsonSerializable
         }
     }
 
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         return [
             'slug' => $this->slug,
@@ -54,4 +56,9 @@ class IdentityProvider implements JsonSerializable
     {
         return $this->saveFields;
     }
+
+	public function getUserDataClass(): string {
+		return $this->userDataClass;
+	}
+
 }

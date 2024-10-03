@@ -37,6 +37,8 @@ use OWCSignicatOpenID\Services\OpenIDService;
 use OWCSignicatOpenID\Services\RouteService;
 use OWCSignicatOpenID\Services\SettingsService;
 use OWCSignicatOpenID\Services\ViewService;
+use OWCSignicatOpenID\UserData\DigiDUserData;
+use OWCSignicatOpenID\UserData\eHerkenningUserData;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
@@ -49,6 +51,7 @@ return [
             'saveFields' => [
                 'sub',
             ],
+            'userDataClass' => DigiDUserData::class,
         ],
         [
             'slug' => 'eherkenning',
@@ -56,11 +59,12 @@ return [
             'saveFields' => [
                 'urn:etoegang:1.9:EntityConcernedID:KvKnr',
             ],
+            'userDataClass' => eHerkenningUserData::class,
         ],
     ],
     LoggerInterface::class             => fn (ContainerInterface $container): LoggerInterface => new Logger($container->get('logger.level')),
     'logger.level'                     => fn (): string => (defined('WP_DEBUG') && WP_DEBUG) ? LogLevel::WARNING : '',
-    MetadataProviderBuilder::class     => fn (ContainerInterface $container): MetadataProviderBuilder => (new MetadataProviderBuilder)->setCache($container->get(CacheServiceInterface::class))->setCacheTtl(MONTH_IN_SECONDS),
+    MetadataProviderBuilder::class     => fn (ContainerInterface $container): MetadataProviderBuilder => (new MetadataProviderBuilder())->setCache($container->get(CacheServiceInterface::class))->setCacheTtl(MONTH_IN_SECONDS),
     JwksProviderBuilder::class         => fn (ContainerInterface $container): JwksProviderBuilder => (new JwksProviderBuilder())->setCache($container->get(CacheServiceInterface::class))->setCacheTtl(DAY_IN_SECONDS),
     ClientMetadataInterface::class     => function (ContainerInterface $container): ClientMetadata {
         $settings = $container->get(SettingsServiceInterface::class);
