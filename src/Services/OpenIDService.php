@@ -53,8 +53,10 @@ class OpenIDService extends Service implements OpenIDServiceInterface
         $this->settings = $settings;
         $this->identityProviderService = $identityProviderService;
 
-        add_filter('owc_idp_is_user_logged_in', [$this, 'isUserLoggedIn'], 10, 2);
-        add_filter('owc_idp_userdata', [$this, 'retrieveUserInfo'], 10, 2);
+        foreach ($this->identityProviderService->getEnabledIdentityProviders() as $identityProvider) {
+            add_filter('owc_' . $identityProvider->getSlug() . '_is_user_logged_in', fn (bool $isLoggedIn): bool => $this->isUserLoggedIn($isLoggedIn, $identityProvider->getSlug()));
+            add_filter('owc_' . $identityProvider->getSlug() . '_userdata', [$this, 'retrieveUserInfo'], 10, 2);
+        }
     }
 
     public function retrieveUserInfo(array $userInfo, string $idpSlug): UserDataInterface
@@ -64,7 +66,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
             return $userInfo;
         }
 
-		$userDataClass = $idp->getUserDataClass();
+        $userDataClass = $idp->getUserDataClass();
         return new $userDataClass($this->getUserInfo($idp));
     }
 
