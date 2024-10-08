@@ -54,12 +54,12 @@ class OpenIDService extends Service implements OpenIDServiceInterface
         $this->identityProviderService = $identityProviderService;
 
         foreach ($this->identityProviderService->getEnabledIdentityProviders() as $identityProvider) {
-            add_filter('owc_' . $identityProvider->getSlug() . '_is_user_logged_in', fn (bool $isLoggedIn): bool => $this->isUserLoggedIn($isLoggedIn, $identityProvider->getSlug()));
-            add_filter('owc_' . $identityProvider->getSlug() . '_userdata', [$this, 'retrieveUserInfo'], 10, 2);
+            add_filter('owc_' . $identityProvider->getSlug() . '_is_logged_in', fn (bool $isLoggedIn): bool => $this->isUserLoggedIn($isLoggedIn, $identityProvider->getSlug()));
+            add_filter('owc_' . $identityProvider->getSlug() . '_userdata', fn (?UserDataInterface $userData): ?UserDataInterface => $this->retrieveUserInfo($userData, $identityProvider->getSlug()));
         }
     }
 
-    public function retrieveUserInfo(array $userInfo, string $idpSlug): UserDataInterface
+    public function retrieveUserInfo(?UserDataInterface $userInfo, string $idpSlug): ?UserDataInterface
     {
         $idp = $this->identityProviderService->getIdentityProvider($idpSlug);
         if (null === $idp) {
