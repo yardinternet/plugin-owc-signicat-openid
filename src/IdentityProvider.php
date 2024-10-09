@@ -24,7 +24,7 @@ class IdentityProvider implements JsonSerializable
         }
     }
 
-    public function jsonSerialize(): mixed
+    public function jsonSerialize()
     {
         return [
             'slug' => $this->slug,
@@ -57,8 +57,9 @@ class IdentityProvider implements JsonSerializable
         return $this->saveFields;
     }
 
-	public function getUserDataClass(): string {
-		return $this->userDataClass;
-	}
+    public function getUserDataClass(): string
+    {
+        return $this->userDataClass;
+    }
 
 }
