@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace OWCSignicatOpenID\Services;
 
+use Exception;
 use GuzzleHttp\Psr7\ServerRequest;
+use OWCSignicatOpenID\IdentityProvider;
 use OWCSignicatOpenID\Interfaces\Services\IdentityProviderServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\OpenIDServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\RouteServiceInterface;
@@ -42,15 +44,14 @@ class RouteService extends Service implements RouteServiceInterface
     {
         switch ($wp->request) {
             case $this->settings->getSetting('path_login'):
-                $server_request = ServerRequest::fromGlobals();
-                $queryParams = $server_request->getQueryParams();
+                $serverRequest = ServerRequest::fromGlobals();
+                $queryParams = $serverRequest->getQueryParams();
                 $idp = $queryParams['idp'] ?? '';
                 $redirectUrl = $queryParams['redirectUrl'] ?? wp_get_referer();
                 $refererUrl = $queryParams['refererUrl'] ?? wp_get_referer();
                 $identityProvider = $this->identityProviderService->getIdentityProvider($idp);
-                //TODO: check of idp gevonden is
 
-                if (! $this->openIDService->hasActiveSession($identityProvider)) {
+                if ($identityProvider instanceof IdentityProvider && ! $this->openIDService->hasActiveSession($identityProvider)) {
                     $this->openIDService->authenticate($identityProvider, esc_url($redirectUrl), esc_url($refererUrl));
                 } else {
                     wp_safe_redirect(esc_url($redirectUrl));
@@ -59,25 +60,36 @@ class RouteService extends Service implements RouteServiceInterface
 
                 break;
             case $this->settings->getSetting('path_redirect'):
-                $server_request = ServerRequest::fromGlobals();
-                $this->openIDService->handleCallback($server_request);
+                $serverRequest = ServerRequest::fromGlobals();
+                $this->openIDService->handleCallback($serverRequest);
 
                 break;
 
             case $this->settings->getSetting('path_logout'):
-                $server_request = ServerRequest::fromGlobals();
-                $queryParams = $server_request->getQueryParams();
+                $serverRequest = ServerRequest::fromGlobals();
+                $queryParams = $serverRequest->getQueryParams();
                 $idp = $queryParams['idp'] ?? '';
-                $identityProvider = $this->identityProviderService->getIdentityProvider($idp);
-                //TODO: Add IDP parameter or rewrite rule
-                //FIXME: dit is eigenlijk revoke (ipv logout)
-                $this->openIDService->revoke($identityProvider);
+                $redirectUrl = $queryParams['redirectUrl'] ?? ''; // Maybe always redirect to home?
+                $refererUrl = $queryParams['refererUrl'] ?? wp_get_referer(); // Do we need to validate if the referer is from this site?
 
-                break;
+                try {
+                    $identityProvider = $this->identityProviderService->getIdentityProvider($idp);
+
+                    if (! $identityProvider instanceof IdentityProvider) {
+                        throw new Exception();
+                    }
+
+                    $this->openIDService->revoke($identityProvider);
+                } catch (Exception $e) {
+                    // Fail gracefully.
+                } finally {
+                    wp_safe_redirect(esc_url($redirectUrl ?: get_site_url()));
+                    exit;
+                }
         }
     }
 
-    public function registerRestRoutes()
+    public function registerRestRoutes(): void
     {
         //TODO: rest routes naar eigen class?
         register_rest_route(
@@ -101,9 +113,9 @@ class RouteService extends Service implements RouteServiceInterface
         );
     }
 
-    public function revoke()
+    public function revoke(): WP_REST_Response
     {
-        foreach($this->identityProviderService->getEnabledIdentityProviders() as $identityProvider) {
+        foreach ($this->identityProviderService->getEnabledIdentityProviders() as $identityProvider) {
             if ($this->openIDService->hasActiveSession($identityProvider)) {
                 $result = $this->openIDService->revoke($identityProvider);
             }
@@ -117,9 +129,9 @@ class RouteService extends Service implements RouteServiceInterface
         );
     }
 
-    public function refresh()
+    public function refresh(): WP_REST_Response
     {
-        foreach($this->identityProviderService->getEnabledIdentityProviders() as $identityProvider) {
+        foreach ($this->identityProviderService->getEnabledIdentityProviders() as $identityProvider) {
             if ($this->openIDService->hasActiveSession($identityProvider)) {
                 $result = $this->openIDService->refresh($identityProvider);
                 if (is_wp_error($result)) {
