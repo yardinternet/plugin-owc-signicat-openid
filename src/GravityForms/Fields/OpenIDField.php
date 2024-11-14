@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace OWCSignicatOpenID\GravityForms\Fields;
 
+use GF_Field;
+use GFAPI;
+use GFFormsModel;
 use OWCSignicatOpenID\IdentityProvider;
 use OWCSignicatOpenID\Interfaces\Services\OpenIDServiceInterface;
 
-class OpenIDField extends \GF_Field
+class OpenIDField extends GF_Field
 {
     protected OpenIDServiceInterface $openIDService;
     public IdentityProvider $idp;
@@ -46,42 +49,72 @@ class OpenIDField extends \GF_Field
         );
 
         if (! $this->is_entry_detail() && ! $this->is_form_editor()) {
-            //TODO: show login error
-
             $resumeUrl = $this->getResumeUrl();
             $input = sprintf(
                 "<a href='%s'>%s</a>",
                 esc_url($this->openIDService->getLoginUrl($this->idp, $resumeUrl, $resumeUrl)),
                 $input
             );
+
+            $input = $this->addPossibleErrorsToInput($input);
         }
 
         return sprintf("<div class='ginput_container ginput_container_openid'>%s</div>", $input);
     }
 
+    protected function addPossibleErrorsToInput(string $input): string
+    {
+        $errors = $this->openIDService->flashErrors();
+
+        if (! count($errors)) {
+            return $input;
+        }
+
+        $errorItems = implode('', array_map(fn ($error) => sprintf('<li>%s</li>', esc_html($error)), $errors));
+
+        $html = sprintf('
+		<div class="alert alert-danger">
+			<strong>Er zijn problemen met de inlogpoging:</strong>
+			<ul>%s</ul>
+		</div>', $errorItems);
+
+        return $html . $input;
+    }
+
     protected function getResumeUrl(): string
     {
-        $resume = \GFAPI::submit_form(
+        $currentPageURL = GFFormsModel::get_current_page_url(true);
+
+        $resume = GFAPI::submit_form(
             $this->formId,
             [
                 'gf_submitting_' . $this->formId => true,
-                'saved_for_later'                => true,
-                'gform_save'                     => true,
+                'saved_for_later' => true,
+                'gform_save' => true,
             ]
         );
 
-        //TODO: check resume result voor WP_Error
+        if (is_wp_error($resume)) {
+            return $currentPageURL;
+        }
 
         $resumeToken = $resume['resume_token'] ?? null;
 
-        return \add_query_arg('gf_token', $resumeToken, \GFFormsModel::get_current_page_url(true));
+        if (! is_string($resumeToken) || 1 > strlen($resumeToken)) {
+            return $currentPageURL;
+        }
+
+        return \add_query_arg('gf_token', $resumeToken, $currentPageURL);
     }
 
     public function validate($value, $form)
     {
-        //TODO: waar moet op gecheckt worden?
-        //$this->failed_validation = true;
-        //$this->validation_message = 'Foutmelding';
+        $userInfo = $this->openIDService->getUserInfo($this->idp);
+
+        if (! is_array($userInfo) || ! count($userInfo)) {
+            $this->failed_validation = true;
+            $this->validation_message = 'Je bent niet ingelogd';
+        }
     }
 
     public function get_value_save_entry($value, $form, $input_name, $lead_id, $lead)
