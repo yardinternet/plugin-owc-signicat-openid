@@ -15,6 +15,7 @@ namespace OWCSignicatOpenID\Services;
 
 use Facile\OpenIDClient\Client\ClientInterface;
 use Facile\OpenIDClient\Exception\OAuth2Exception;
+use function Facile\OpenIDClient\parse_callback_params;
 use Facile\OpenIDClient\Service\AuthorizationService;
 use Facile\OpenIDClient\Service\Builder\IntrospectionServiceBuilder;
 use Facile\OpenIDClient\Service\Builder\RevocationServiceBuilder;
@@ -28,9 +29,8 @@ use OWCSignicatOpenID\Interfaces\Services\OpenIDServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\SettingsServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
-use WP_Error;
 
-use function Facile\OpenIDClient\parse_callback_params;
+use WP_Error;
 
 class OpenIDService extends Service implements OpenIDServiceInterface
 {
@@ -67,6 +67,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
         }
 
         $userDataClass = $idp->getUserDataClass();
+
         return new $userDataClass($this->getUserInfo($idp));
     }
 
@@ -181,6 +182,9 @@ class OpenIDService extends Service implements OpenIDServiceInterface
         exit;
     }
 
+    /**
+     * @return WP_Error|bool
+     */
     public function refresh(IdentityProvider $identityProvider)
     {
         $this->maybeStartSession();
@@ -239,12 +243,22 @@ class OpenIDService extends Service implements OpenIDServiceInterface
         return ! empty($introspect['active']);
     }
 
+    public function flashErrors(): array
+    {
+        return $this->session->getFlash()->all();
+    }
+
+    public function setFlashError(string $error, string $description): void
+    {
+        $this->session->getFlash()->add($error, $description);
+    }
+
     private function maybeStartSession()
     {
         if (! $this->session->isStarted()) {
             $this->session->start();
         } elseif (empty($this->session->all()) && ! empty($_SESSION)) {
-            // Dit is nodig voor het geval dat er al door een andere plugin een sessie gestart is.
+            // Replace the current session with an existing session already started by another plugin.
             $this->session->replace($_SESSION);
         }
     }
@@ -285,7 +299,6 @@ class OpenIDService extends Service implements OpenIDServiceInterface
     {
         $this->session->set('owc_openid_' . $identityProvider->getSlug(), $tokenSet);
     }
-
 
     private function removeIdpTokenSet(IdentityProvider $identityProvider)
     {
