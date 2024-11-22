@@ -15,7 +15,6 @@ namespace OWCSignicatOpenID\Services;
 
 use Facile\OpenIDClient\Client\ClientInterface;
 use Facile\OpenIDClient\Exception\OAuth2Exception;
-use function Facile\OpenIDClient\parse_callback_params;
 use Facile\OpenIDClient\Service\AuthorizationService;
 use Facile\OpenIDClient\Service\Builder\IntrospectionServiceBuilder;
 use Facile\OpenIDClient\Service\Builder\RevocationServiceBuilder;
@@ -29,8 +28,9 @@ use OWCSignicatOpenID\Interfaces\Services\OpenIDServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\SettingsServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
-
 use WP_Error;
+
+use function Facile\OpenIDClient\parse_callback_params;
 
 class OpenIDService extends Service implements OpenIDServiceInterface
 {
@@ -66,9 +66,11 @@ class OpenIDService extends Service implements OpenIDServiceInterface
             return $userInfo;
         }
 
-        $userDataClass = $idp->getUserDataClass();
-
-        return new $userDataClass($this->getUserInfo($idp));
+        if ($this->hasActiveSession($idp)) {
+            $userDataClass = $idp->getUserDataClass();
+            $userInfo = new $userDataClass($this->getUserInfo($idp));
+        }
+        return $userInfo;
     }
 
     public function isUserLoggedIn(bool $isUserLoggedIn, string $idpSlug): bool
@@ -78,7 +80,11 @@ class OpenIDService extends Service implements OpenIDServiceInterface
             return $isUserLoggedIn;
         }
 
-        return $this->hasActiveSession($idp);
+        if ($this->hasActiveSession($idp)) {
+            $isUserLoggedIn = true;
+        }
+
+        return $isUserLoggedIn;
     }
 
     public function getLoginUrl(IdentityProvider $identityProvider, string $redirectUrl = null, string $refererUrl = null): string
