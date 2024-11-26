@@ -35,4 +35,6 @@ interface OpenIDServiceInterface extends ServiceInterface
     public function handleCallback(ServerRequestInterface $server_request): void;
 
     public function hasActiveSession(IdentityProvider $identityProvider): bool;
+
+    public function flashErrors(): array;
 }
