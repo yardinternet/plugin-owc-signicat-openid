@@ -7,7 +7,9 @@
 			<strong>Er zijn problemen met de inlogpoging:</strong>
 			<ul>
 				<?php foreach ($errors as $error): ?>
-					<li><?php echo esc_html($error); ?></li>
+					<?php foreach ($error as $message): ?>
+						<li><?php echo esc_html($message); ?></li>
+					<?php endforeach; ?>
 				<?php endforeach; ?>
 			</ul>
 		</div>
