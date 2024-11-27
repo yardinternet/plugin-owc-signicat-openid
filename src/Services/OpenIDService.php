@@ -166,7 +166,9 @@ class OpenIDService extends Service implements OpenIDServiceInterface
         try {
             $callback_params = $this->authorizationService->getCallbackParams($server_request, $this->client);
         } catch (OAuth2Exception $exception) {
+            $this->maybeStartSession();
             $this->session->getFlash()->add($exception->getError(), $exception->getDescription());
+            $this->session->save();
             wp_safe_redirect(get_site_url());
             exit;
         }
