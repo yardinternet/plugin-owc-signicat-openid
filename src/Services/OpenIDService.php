@@ -253,7 +253,10 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 
     public function flashErrors(): array
     {
-        return $this->session->getFlash()->all();
+        $errors = $this->session->getFlash()->all();
+        $this->session->save();
+
+        return $errors;
     }
 
     public function setFlashError(string $error, string $description): void
