@@ -1,0 +1,89 @@
+# Copyright (C) 2024 Yard | Digital Agency
+# This file is distributed under the EUPL.
+msgid ""
+msgstr ""
+"Project-Id-Version: OWC | Signicat OpenID 1.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/owc-signicat-openid\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2024-12-05T07:15:07+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.10.0\n"
+"X-Domain: owc-signicat-openid\n"
+
+#. Plugin Name of the plugin
+#: owc-signicat-openid.php
+msgid "OWC | Signicat OpenID"
+msgstr "OWC | Signicat OpenI"
+
+#. Plugin URI of the plugin
+#: owc-signicat-openid.php
+msgid "https://github.com/yardinternet/plugin-signicat-openid"
+msgstr "https://github.com/yardinternet/plugin-signicat-openid"
+
+#. Description of the plugin
+#: owc-signicat-openid.php
+msgid "Log into the Signicat Broker with OpenID"
+msgstr "Log in bij de Signicat broker met OpenID"
+
+#. Author of the plugin
+#: owc-signicat-openid.php
+msgid "Yard | Digital Agency"
+msgstr "Yard | Digital Agency"
+
+#. Author URI of the plugin
+#: owc-signicat-openid.php
+msgid "https://www.yard.nl"
+msgstr "https://www.yard.nl"
+
+#: resources/views/settings.php:19
+#: src/Services/SettingsService.php:39
+msgid "Signicat OpenID"
+msgstr "Signicat OpenID"
+
+#: resources/views/settings.php:28
+msgid "Configuration URL"
+msgstr "Configuratie URL"
+
+#: resources/views/settings.php:34
+msgid "Example: https://example.com/.well-known/openid-configuration"
+msgstr "Voorbeeld: https://example.com/.well-known/openid-configuration"
+
+#: resources/views/settings.php:41
+msgid "Client ID"
+msgstr "Client ID"
+
+#: resources/views/settings.php:51
+msgid "Client Secret"
+msgstr "Client Secret"
+
+#: resources/views/settings.php:61
+msgid "Login path"
+msgstr "Login pad"
+
+#: resources/views/settings.php:67
+msgid "Example: sso-login"
+msgstr "Voorbeeld: sso-login"
+
+#: resources/views/settings.php:74
+msgid "Logout path"
+msgstr "Logout pad"
+
+#: resources/views/settings.php:80
+msgid "Example: sso-logout"
+msgstr "Voorbeeld: sso-logout"
+
+#: resources/views/settings.php:87
+msgid "Redirect path"
+msgstr "Redirect pad"
+
+#: resources/views/settings.php:93
+msgid "Example: redirect"
+msgstr "Voorbeeld: redirect"
+
+#: resources/views/settings.php:100
+msgid "Enable simulator"
+msgstr "Simulator inschakelen"
