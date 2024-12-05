@@ -1,4 +1,5 @@
 <?php
+
 /**
  * OWC Signicat OpenID
  *
@@ -11,6 +12,7 @@
 
 namespace OWCSignicatOpenID;
 
+use Exception;
 use OWCSignicatOpenID\Interfaces\Providers\AppServiceProviderInterface;
 use OWCSignicatOpenID\Interfaces\Providers\SettingsServiceProviderInterface;
 use Psr\Container\ContainerInterface;
@@ -47,6 +49,27 @@ final class Bootstrap
         $this->providers = $this->get_providers();
         $this->register_providers();
         $this->boot_providers();
+        $this->register_plugin_text_domain();
+    }
+
+    /**
+     * Builds the container and stores it inside the container manager.
+     *
+     * @since 0.0.1
+     *
+     * @return ContainerInterface
+     */
+    protected function build_container(): ContainerInterface
+    {
+        $builder = new \DI\ContainerBuilder();
+        $builder->addDefinitions(OWC_SIGNICAT_OPENID_DIR_PATH . 'config/php-di.php');
+        $builder->useAnnotations(true);
+        $container = $builder->build();
+
+        // Allows access to container inside other files within the plugin.
+        ContainerManager::setContainer($container);
+
+        return $container;
     }
 
     /**
@@ -66,7 +89,7 @@ final class Bootstrap
         foreach ($providers as $provider) {
             try {
                 $registeredProviders[] = $this->container->get($provider);
-            } catch(\Exception $e) {
+            } catch (Exception $e) {
 
             }
         }
@@ -96,19 +119,10 @@ final class Bootstrap
     }
 
     /**
-     * Builds the container.
-     *
      * @since 0.0.1
-     *
-     * @return ContainerInterface
      */
-    protected function build_container(): ContainerInterface
+    protected function register_plugin_text_domain(): void
     {
-        $builder = new \DI\ContainerBuilder();
-        $builder->addDefinitions(__DIR__ . './../config/php-di.php');
-        $builder->useAnnotations(true);
-        $container = $builder->build();
-
-        return $container;
+        load_plugin_textdomain(OWC_SIGNICAT_OPENID_SLUG, false, OWC_SIGNICAT_OPENID_SLUG . '/languages/');
     }
 }
