@@ -44,7 +44,7 @@ class OpenIDField extends GF_Field
         }
 
         $input = sprintf(
-            "<img src='%s' width='auto' height='60px' class='gform-theme__disable-reset'>",
+            "<img src='%s' width='90px' height='90px' class='gform-theme__disable-reset'>",
             $this->idp->getLogoUrl(),
         );
 
