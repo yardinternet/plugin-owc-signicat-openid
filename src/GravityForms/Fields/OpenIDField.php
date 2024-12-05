@@ -70,7 +70,7 @@ class OpenIDField extends GF_Field
             return $input;
         }
 
-        $errorItems = implode('', array_map(fn ($error) => sprintf('<li>%s</li>', esc_html($error)), $errors));
+        $errorItems = $this->formatErrors($errors);
 
         $html = sprintf('
 		<div class="alert alert-danger">
@@ -79,6 +79,26 @@ class OpenIDField extends GF_Field
 		</div>', $errorItems);
 
         return $html . $input;
+    }
+
+    /**
+     * The errors array is double nested, implode to string.
+     */
+    private function formatErrors(array $errors): string
+    {
+        return implode(
+            '',
+            array_map(
+                fn ($errorGroup) => implode(
+                    '',
+                    array_map(
+                        fn ($message) => sprintf('<li>%s</li>', esc_html($message)),
+                        $errorGroup
+                    )
+                ),
+                $errors
+            )
+        );
     }
 
     protected function getResumeUrl(): string
