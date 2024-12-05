@@ -1,0 +1,93 @@
+# Copyright (C) 2024 Yard | Digital Agency
+# This file is distributed under the EUPL.
+msgid ""
+msgstr ""
+"Project-Id-Version: OWC | Signicat OpenID 1.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/owc-signicat-openid\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2024-12-05T07:15:07+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.10.0\n"
+"X-Domain: owc-signicat-openid\n"
+
+#. Plugin Name of the plugin
+#: owc-signicat-openid.php
+msgid "OWC | Signicat OpenID"
+msgstr ""
+
+#. Plugin URI of the plugin
+#: owc-signicat-openid.php
+msgid "https://github.com/yardinternet/plugin-signicat-openid"
+msgstr ""
+
+#. Description of the plugin
+#: owc-signicat-openid.php
+msgid "Log into the Signicat Broker with OpenID"
+msgstr ""
+
+#. Author of the plugin
+#: owc-signicat-openid.php
+msgid "Yard | Digital Agency"
+msgstr ""
+
+#. Author URI of the plugin
+#: owc-signicat-openid.php
+msgid "https://www.yard.nl"
+msgstr ""
+
+#: resources/views/settings.php:19
+#: src/Services/SettingsService.php:39
+msgid "Signicat OpenID"
+msgstr ""
+
+#: resources/views/settings.php:28
+msgid "Configuration URL"
+msgstr ""
+
+#: resources/views/settings.php:34
+msgid "Example: https://example.com/.well-known/openid-configuration"
+msgstr ""
+
+#: resources/views/settings.php:41
+msgid "Client ID"
+msgstr ""
+
+#: resources/views/settings.php:51
+msgid "Client Secret"
+msgstr ""
+
+#: resources/views/settings.php:61
+msgid "Login path"
+msgstr ""
+
+#: resources/views/settings.php:67
+msgid "Example: sso-login"
+msgstr ""
+
+#: resources/views/settings.php:74
+msgid "Logout path"
+msgstr ""
+
+#: resources/views/settings.php:80
+msgid "Example: sso-logout"
+msgstr ""
+
+#: resources/views/settings.php:87
+msgid "Redirect path"
+msgstr ""
+
+#: resources/views/settings.php:93
+msgid "Example: redirect"
+msgstr ""
+
+#: resources/views/settings.php:100
+msgid "Enable simulator"
+msgstr ""
+
+#: src/Services/OpenIDService.php:172
+msgid ""
+msgstr ""
