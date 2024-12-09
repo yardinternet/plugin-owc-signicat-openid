@@ -68,7 +68,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 
         if ($this->hasActiveSession($idp)) {
             $userDataClass = $idp->getUserDataClass();
-            $userInfo = new $userDataClass($this->getUserInfo($idp));
+            $userInfo = new $userDataClass($this->getUserInfo($idp), $idp->getMapping());
         }
         return $userInfo;
     }

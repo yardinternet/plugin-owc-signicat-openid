@@ -141,8 +141,8 @@ class OpenIDField extends GF_Field
     {
         $userInfo = $this->openIDService->getUserInfo($this->idp);
 
-        $saveFields = $this->idp->getSaveFields();
-        $value = wp_array_slice_assoc($userInfo, array_values($saveFields));
+        $saveFields = array_keys($this->idp->getMapping());
+        $value = wp_array_slice_assoc($userInfo, $saveFields);
 
         return maybe_serialize($value);
     }

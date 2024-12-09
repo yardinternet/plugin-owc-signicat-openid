@@ -48,16 +48,17 @@ return [
         [
             'slug' => 'digid',
             'name' => 'DigiD',
-            'saveFields' => [
-                'sub',
+            'mapping' => [
+                'sub' => 'bsn',
             ],
             'userDataClass' => DigiDUserData::class,
         ],
         [
             'slug' => 'eherkenning',
             'name' => 'eHerkenning',
-            'saveFields' => [
-                'urn:etoegang:1.9:EntityConcernedID:KvKnr',
+            'mapping' => [
+                'urn:etoegang:1.9:EntityConcernedID:KvKnr' => 'kvk',
+                'urn:etoegang:1.9:EntityConcernedID:RSIN' => 'rsin',
             ],
             'userDataClass' => eHerkenningUserData::class,
         ],

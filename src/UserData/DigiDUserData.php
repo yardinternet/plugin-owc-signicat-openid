@@ -8,10 +8,10 @@ use OWC\IdpUserData\DigiDUserDataInterface;
 
 class DigiDUserData extends UserData implements DigiDUserDataInterface
 {
-    protected string $sub;
+    protected string $bsn;
 
     public function getBsn(): string
     {
-        return $this->sub;
+        return $this->bsn;
     }
 }
