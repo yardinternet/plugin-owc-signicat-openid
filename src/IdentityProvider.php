@@ -8,7 +8,7 @@ class IdentityProvider implements JsonSerializable
 {
     protected string $slug;
     protected string $name;
-    protected array  $saveFields;
+    protected array $mapping;
 
     protected string $userDataClass;
 
@@ -52,9 +52,9 @@ class IdentityProvider implements JsonSerializable
         return OWC_SIGNICAT_OPENID_PLUGIN_URL . sprintf('resources/img/logo-%s.svg', $this->getSlug());
     }
 
-    public function getSaveFields(): array
+    public function getMapping(): array
     {
-        return $this->saveFields;
+        return $this->mapping;
     }
 
     public function getUserDataClass(): string
