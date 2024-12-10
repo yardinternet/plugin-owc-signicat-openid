@@ -45,11 +45,11 @@ final class Bootstrap
      */
     public function __construct()
     {
+        $this->register_plugin_text_domain();
         $this->container = $this->build_container();
         $this->providers = $this->get_providers();
         $this->register_providers();
         $this->boot_providers();
-        $this->register_plugin_text_domain();
     }
 
     /**
