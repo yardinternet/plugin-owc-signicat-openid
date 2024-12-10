@@ -139,12 +139,7 @@ class OpenIDField extends GF_Field
 
     public function get_value_save_entry($value, $form, $input_name, $lead_id, $lead)
     {
-        $userInfo = $this->openIDService->getUserInfo($this->idp);
-
-        $saveFields = array_keys($this->idp->getMapping());
-        $value = wp_array_slice_assoc($userInfo, $saveFields);
-
-        return maybe_serialize($value);
+        return sprintf('Ingelogd (%s)', $this->idp->getName());
     }
 
     public function get_value_entry_list($value, $entry, $field_id, $columns, $form)
