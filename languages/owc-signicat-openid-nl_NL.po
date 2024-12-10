@@ -39,6 +39,10 @@ msgstr "Yard | Digital Agency"
 msgid "https://www.yard.nl"
 msgstr "https://www.yard.nl"
 
+#: resources/config/idps_errors.php:4
+msgid "The user cancelled"
+msgstr "De gebruiker heeft geannuleerd"
+
 #: resources/views/settings.php:19
 #: src/Services/SettingsService.php:39
 msgid "Signicat OpenID"

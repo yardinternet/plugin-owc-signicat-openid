@@ -10,8 +10,6 @@ use Facile\OpenIDClient\Issuer\IssuerInterface;
 use Facile\OpenIDClient\Issuer\Metadata\Provider\MetadataProviderBuilder;
 use Facile\OpenIDClient\Service\AuthorizationService;
 use Facile\OpenIDClient\Service\Builder\AuthorizationServiceBuilder;
-use Odan\Session\PhpSession;
-use Odan\Session\SessionInterface;
 use OWCSignicatOpenID\Interfaces\Providers\AppServiceProviderInterface;
 use OWCSignicatOpenID\Interfaces\Providers\SettingsServiceProviderInterface;
 use OWCSignicatOpenID\Interfaces\Services\BlockServiceInterface;
@@ -39,9 +37,11 @@ use OWCSignicatOpenID\Services\SettingsService;
 use OWCSignicatOpenID\Services\ViewService;
 use OWCSignicatOpenID\UserData\DigiDUserData;
 use OWCSignicatOpenID\UserData\eHerkenningUserData;
+use Odan\Session\PhpSession;
+use Odan\Session\SessionInterface;
 use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
+use Psr\Log\LoggerInterface;
 
 return [
     'idps' => [
@@ -63,16 +63,17 @@ return [
             'userDataClass' => eHerkenningUserData::class,
         ],
     ],
-    LoggerInterface::class             => fn (ContainerInterface $container): LoggerInterface => new Logger($container->get('logger.level')),
-    'logger.level'                     => fn (): string => (defined('WP_DEBUG') && WP_DEBUG) ? LogLevel::WARNING : '',
-    MetadataProviderBuilder::class     => fn (ContainerInterface $container): MetadataProviderBuilder => (new MetadataProviderBuilder())->setCache($container->get(CacheServiceInterface::class))->setCacheTtl(MONTH_IN_SECONDS),
-    JwksProviderBuilder::class         => fn (ContainerInterface $container): JwksProviderBuilder => (new JwksProviderBuilder())->setCache($container->get(CacheServiceInterface::class))->setCacheTtl(DAY_IN_SECONDS),
-    ClientMetadataInterface::class     => function (ContainerInterface $container): ClientMetadata {
+    'idps_errors' => file_exists(sprintf('%s/idps_errors.php', __DIR__)) ? require_once sprintf('%s/idps_errors.php', __DIR__) : [],
+    LoggerInterface::class => fn (ContainerInterface $container): LoggerInterface => new Logger($container->get('logger.level')),
+    'logger.level' => fn (): string => (defined('WP_DEBUG') && WP_DEBUG) ? LogLevel::WARNING : '',
+    MetadataProviderBuilder::class => fn (ContainerInterface $container): MetadataProviderBuilder => (new MetadataProviderBuilder())->setCache($container->get(CacheServiceInterface::class))->setCacheTtl(MONTH_IN_SECONDS),
+    JwksProviderBuilder::class => fn (ContainerInterface $container): JwksProviderBuilder => (new JwksProviderBuilder())->setCache($container->get(CacheServiceInterface::class))->setCacheTtl(DAY_IN_SECONDS),
+    ClientMetadataInterface::class => function (ContainerInterface $container): ClientMetadata {
         $settings = $container->get(SettingsServiceInterface::class);
 
         return ClientMetadata::fromArray(
             [
-                'client_id'     => sanitize_text_field($settings->getSetting('client_id')),
+                'client_id' => sanitize_text_field($settings->getSetting('client_id')),
                 'client_secret' => sanitize_text_field($settings->getSetting('client_secret')),
                 'redirect_uris' => [
                     sanitize_text_field(get_site_url(null, $settings->getSetting('path_redirect'))),
@@ -80,23 +81,23 @@ return [
             ]
         );
     },
-    IssuerInterface::class             => function (ContainerInterface $container): IssuerInterface {
+    IssuerInterface::class => function (ContainerInterface $container): IssuerInterface {
         return (new IssuerBuilder())
             ->setMetadataProviderBuilder($container->get(MetadataProviderBuilder::class))
             ->setJwksProviderBuilder($container->get(JwksProviderBuilder::class))
             ->build($container->get(SettingsServiceInterface::class)->getSetting('configuration_url'));
     },
-    ClientInterface::class             => fn (ContainerInterface $container): ClientInterface => (new ClientBuilder())
+    ClientInterface::class => fn (ContainerInterface $container): ClientInterface => (new ClientBuilder())
         ->setIssuer($container->get(IssuerInterface::class))
         ->setClientMetadata($container->get(ClientMetadataInterface::class))
         ->build(),
-    AuthorizationService::class                     => fn (): AuthorizationService => (new AuthorizationServiceBuilder())->build(),
+    AuthorizationService::class => fn (): AuthorizationService => (new AuthorizationServiceBuilder())->build(),
     'session_options' => [
-        'name'            => 'OWC_Signicat_OpenID',
-        'cookie_secure'   => true,
+        'name' => 'OWC_Signicat_OpenID',
+        'cookie_secure' => true,
         'cookie_httponly' => true,
     ],
-    SessionInterface::class                         => function (ContainerInterface $container): PhpSession {
+    SessionInterface::class => function (ContainerInterface $container): PhpSession {
         $session = new PhpSession();
         $session->setOptions($container->get('session_options'));
 
@@ -108,14 +109,14 @@ return [
     SettingsServiceProviderInterface::class => \DI\autowire(SettingsServiceProvider::class),
 
     // Services.
-    LifeCycleServiceInterface::class   => \DI\autowire(LifeCycleService::class),
-    SettingsServiceInterface::class    => \DI\autowire(SettingsService::class),
-    BlockServiceInterface::class       => \DI\autowire(BlockService::class),
-    CacheServiceInterface::class       => \DI\autowire(CacheService::class),
-    ViewServiceInterface::class        => \DI\autowire(ViewService::class),
-    RouteServiceInterface::class       => \DI\autowire(RouteService::class),
-    OpenIDServiceInterface::class      => \DI\autowire(OpenIDService::class),
+    LifeCycleServiceInterface::class => \DI\autowire(LifeCycleService::class),
+    SettingsServiceInterface::class => \DI\autowire(SettingsService::class),
+    BlockServiceInterface::class => \DI\autowire(BlockService::class),
+    CacheServiceInterface::class => \DI\autowire(CacheService::class),
+    ViewServiceInterface::class => \DI\autowire(ViewService::class),
+    RouteServiceInterface::class => \DI\autowire(RouteService::class),
+    OpenIDServiceInterface::class => \DI\autowire(OpenIDService::class),
     GravityFormsServiceInterface::class => \DI\autowire(GravityFormsService::class),
-    ModalServiceInterface::class        => \DI\autowire(ModalService::class),
-    IdentityProviderServiceInterface::class  => \DI\autowire(IdentityProviderService::class)->method('setIdps', DI\get('idps')),
+    ModalServiceInterface::class => \DI\autowire(ModalService::class),
+    IdentityProviderServiceInterface::class => \DI\autowire(IdentityProviderService::class)->method('setIdps', DI\get('idps')),
 ];

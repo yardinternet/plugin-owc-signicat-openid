@@ -39,6 +39,10 @@ msgstr ""
 msgid "https://www.yard.nl"
 msgstr ""
 
+#: resources/config/idps_errors.php:4
+msgid "The user cancelled"
+msgstr ""
+
 #: resources/views/settings.php:19
 #: src/Services/SettingsService.php:39
 msgid "Signicat OpenID"

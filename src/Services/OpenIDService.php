@@ -1,4 +1,5 @@
 <?php
+
 /**
  * OpenID provider.
  *
@@ -20,12 +21,13 @@ use Facile\OpenIDClient\Service\Builder\IntrospectionServiceBuilder;
 use Facile\OpenIDClient\Service\Builder\RevocationServiceBuilder;
 use Facile\OpenIDClient\Service\Builder\UserInfoServiceBuilder;
 use Facile\OpenIDClient\Token\TokenSet;
-use Odan\Session\SessionInterface;
-use OWC\IdpUserData\UserDataInterface;
+use OWCSignicatOpenID\ContainerManager;
 use OWCSignicatOpenID\IdentityProvider;
 use OWCSignicatOpenID\Interfaces\Services\IdentityProviderServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\OpenIDServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\SettingsServiceInterface;
+use OWC\IdpUserData\UserDataInterface;
+use Odan\Session\SessionInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
 use WP_Error;
@@ -70,6 +72,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
             $userDataClass = $idp->getUserDataClass();
             $userInfo = new $userDataClass($this->getUserInfo($idp), $idp->getMapping());
         }
+
         return $userInfo;
     }
 
@@ -167,7 +170,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
             $callback_params = $this->authorizationService->getCallbackParams($server_request, $this->client);
         } catch (OAuth2Exception $exception) {
             $this->maybeStartSession();
-            $this->session->getFlash()->add($exception->getError(), $exception->getDescription());
+            $this->session->getFlash()->add($exception->getError(), ContainerManager::getContainer()->get('idps_errors')[$exception->getError()] ?? $exception->getDescription());
             $this->session->save();
             wp_safe_redirect(get_site_url());
             exit;
