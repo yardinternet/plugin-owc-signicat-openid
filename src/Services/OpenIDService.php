@@ -164,7 +164,8 @@ class OpenIDService extends Service implements OpenIDServiceInterface
     public function handleCallback(ServerRequestInterface $server_request): void
     {
         $rawCallbackParams = parse_callback_params($server_request);
-        $stateId = sanitize_key($rawCallbackParams['state']) ?? null;
+        $stateId = sanitize_key($rawCallbackParams['state'] ?? '');
+        $state = $this->popState($stateId);
 
         try {
             $callback_params = $this->authorizationService->getCallbackParams($server_request, $this->client);
@@ -172,13 +173,11 @@ class OpenIDService extends Service implements OpenIDServiceInterface
             $this->maybeStartSession();
             $this->session->getFlash()->add($exception->getError(), ContainerManager::getContainer()->get('idps_errors')[$exception->getError()] ?? $exception->getDescription());
             $this->session->save();
-            wp_safe_redirect(get_site_url());
+            wp_safe_redirect($state['refererUrl'] ?? get_site_url());
             exit;
         }
 
         $this->maybeStartSession();
-
-        $state = $this->popState($stateId);
 
         $tokenSet = $this->authorizationService->callback($this->client, $callback_params);
         if (null === $tokenSet->getIdToken()) {
