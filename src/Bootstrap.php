@@ -15,6 +15,7 @@ namespace OWCSignicatOpenID;
 use Exception;
 use OWCSignicatOpenID\Interfaces\Providers\AppServiceProviderInterface;
 use OWCSignicatOpenID\Interfaces\Providers\SettingsServiceProviderInterface;
+use OWCSignicatOpenID\Providers\SpoofServiceProvider;
 use Psr\Container\ContainerInterface;
 
 /**
@@ -84,6 +85,7 @@ final class Bootstrap
         $providers = [
             SettingsServiceProviderInterface::class,
             AppServiceProviderInterface::class,
+            SpoofServiceProvider::class,
         ];
         $registeredProviders = [];
         foreach ($providers as $provider) {

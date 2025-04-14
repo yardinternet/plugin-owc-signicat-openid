@@ -25,7 +25,6 @@ use OWCSignicatOpenID\Interfaces\Services\GravityFormsServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\LifeCycleServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\ModalServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\RouteServiceInterface;
-use OWCSignicatOpenID\Services\SpoofService;
 
 /**
  * App service provider (registers general plugins functionality).
@@ -39,8 +38,7 @@ class AppServiceProvider extends ServiceProvider implements AppServiceProviderIn
         BlockServiceInterface $blockService,
         RouteServiceInterface $routeService,
         GravityFormsServiceInterface $gravityFormsService,
-        ModalServiceInterface $modalService,
-        SpoofService $spoofService
+        ModalServiceInterface $modalService
     ) {
         $this->services = [
             'life_cycle' => $lifeCycleService,
@@ -48,7 +46,6 @@ class AppServiceProvider extends ServiceProvider implements AppServiceProviderIn
             'route'      => $routeService,
             'gravity_forms' => $gravityFormsService,
             'modal'     => $modalService,
-            'spoof'     => $spoofService,
         ];
 
         $this->register_hooks();

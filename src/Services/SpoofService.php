@@ -6,24 +6,35 @@ namespace OWCSignicatOpenID\Services;
 
 use OWC\IdpUserData\UserDataInterface;
 use OWCSignicatOpenID\UserData\SpoofDigiDUserData;
-use OWCSignicatOpenID\Interfaces\Services\IdentityProviderServiceInterface;
+use OWCSignicatOpenID\Services\SpoofSettingsService;
 
 class SpoofService extends Service
 {
-    protected IdentityProviderServiceInterface $identityProviderService;
+    protected SpoofSettingsService $settings;
 
     public function __construct(
-        IdentityProviderServiceInterface $identityProviderService
+        SpoofSettingsService $settings
     ) {
-        $this->identityProviderService = $identityProviderService;
+        $this->settings = $settings;
     }
 
     public function register()
     {
+        if ($this->settings->getSetting('enable_simulator') !== '1') {
+            return;
+        }
+
+        $bsn = $this->settings->getSetting('bsn');
+        $levelOfAssurance = $this->settings->getSetting('levelOfAssurance');
+
+        if (! is_numeric($bsn)) {
+            return;
+        }
+
         add_filter('owc_digid_is_logged_in', fn (bool $isLoggedIn): bool => true, 999);
 
-        add_filter('owc_digid_userdata', function (?UserDataInterface $userData) {
-            return new SpoofDigiDUserData([]);
+        add_filter('owc_digid_userdata', function (?UserDataInterface $userData) use ($bsn, $levelOfAssurance) {
+            return new SpoofDigiDUserData(compact('bsn', 'levelOfAssurance'));
         }, 999);
     }
 }
