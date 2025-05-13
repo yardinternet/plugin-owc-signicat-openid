@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OWCSignicatOpenID\Services;
 
 use OWCSignicatOpenID\GravityForms\Fields\OpenIDField;
+use OWCSignicatOpenID\GravityForms\FieldSettings;
 use OWCSignicatOpenID\Interfaces\Services\GravityFormsServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\IdentityProviderServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\OpenIDServiceInterface;
@@ -37,6 +38,8 @@ class GravityFormsService extends Service implements GravityFormsServiceInterfac
 		add_filter( 'gform_field_groups_form_editor', array( $this, 'addFieldGroup' ) );
 		add_filter( 'gform_get_input_value', array( $this, 'decrypt' ), 10, 4 );
 		add_filter( 'gform_save_field_value', array( $this, 'encrypt' ), 10, 5 );
+		add_action( 'gform_field_standard_settings', array( new FieldSettings(), 'addFieldSettings' ), 10, 2 );
+		add_action( 'gform_editor_js', array( new FieldSettings(), 'addFieldSettingsSelectScript' ), 10, 2 );
 	}
 
 	public function decrypt(string $value, array $entry, \GF_Field $field, $input_id ): string
@@ -60,10 +63,11 @@ class GravityFormsService extends Service implements GravityFormsServiceInterfac
 
 	public function setDefaults()
 	{
-		foreach (array_keys( $this->idpService->getEnabledIdentityProviders() ) as $idpSlug) {
+		foreach ($this->idpService->getEnabledIdentityProviders() as $idp) {
 			?>
-			case "<?php printf( 'owc-signicat-openid-%s', $idpSlug ); ?>":
-				field.idpSlug = "<?php echo $idpSlug; ?>";
+			case "<?php printf( 'owc-signicat-openid-%s', $idp->getSlug() ); ?>":
+				field.label = "<?php echo $idp->getName(); ?>";
+				field.idpSlug = "<?php echo $idp->getSlug(); ?>";
 				break;
 			<?php
 		}

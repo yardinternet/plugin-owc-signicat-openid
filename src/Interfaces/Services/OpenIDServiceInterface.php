@@ -1,4 +1,5 @@
 <?php
+
 /**
  * OpenID service interface.
  *
@@ -16,6 +17,8 @@ use Psr\Http\Message\ServerRequestInterface;
 
 interface OpenIDServiceInterface extends ServiceInterface
 {
+	public function getScopesSupported(): ?array;
+
 	public function getUserInfo(IdentityProvider $identityProvider ): array;
 
 	public function revoke(IdentityProvider $identityProvider ): void;
