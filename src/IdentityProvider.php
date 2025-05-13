@@ -9,6 +9,7 @@ class IdentityProvider implements JsonSerializable
 	protected string $slug;
 	protected string $name;
 	protected array $mapping;
+	protected string $scope;
 
 	protected string $userDataClass;
 
@@ -22,6 +23,8 @@ class IdentityProvider implements JsonSerializable
 		foreach ($data as $key => $value) {
 			$this->$key = $value;
 		}
+
+		$this->scope = sprintf( 'idp_scoping:%s', $this->slug );
 	}
 
 	public function jsonSerialize()
@@ -44,7 +47,14 @@ class IdentityProvider implements JsonSerializable
 
 	public function getScope(): string
 	{
-		return sprintf( 'idp_scoping:%s', $this->slug );
+		return $this->scope;
+	}
+
+	public function setScope(string $scope ): self
+	{
+		$this->scope = $scope;
+
+		return $this;
 	}
 
 	public function getLogoUrl(): string

@@ -18,12 +18,15 @@ class OpenIDField extends GF_Field
     protected OpenIDServiceInterface $openIDService;
     public IdentityProvider $idp;
     public string $idpSlug;
+    public string $label;
+    public array $selectableScopes = [];
 
     public function __construct($data = [])
     {
-        if (! is_a($data['idp'], IdentityProvider::class)) {
+        if (isset($data['idp']) && ! is_a($data['idp'], IdentityProvider::class)) {
             unset($data['idp']);
         }
+
         if (empty($data['type'])) {
             $data['type'] = sprintf('owc-signicat-openid-%s', $data['idp']->getSlug());
         }
@@ -38,6 +41,10 @@ class OpenIDField extends GF_Field
 
     public function get_field_input($form, $value = '', $entry = null)
     {
+        if (isset($this->openIdSelectedScopeValue) && null !== $this->openIdSelectedScopeValue) {
+            $this->idp->setScope($this->openIdSelectedScopeValue);
+        }
+
         if ($this->openIDService->getUserInfo($this->idp) && ! $this->is_form_editor()) {
             return sprintf(
                 "<div class='ginput_container ginput_container_openid'>%s</div>",
@@ -51,11 +58,16 @@ class OpenIDField extends GF_Field
             $this->idp->getLogoUrl(),
         );
 
+        if ($this->is_form_editor()) {
+            // Set the field property used for the scope select in the form editor.
+            $this->selectableScopes = $this->prepareScopeSelectOptions();
+        }
+
         if (! $this->is_entry_detail() && ! $this->is_form_editor() && ! $this->has_active_idp_session()) {
             $resumeUrl = $this->getResumeUrl();
             $input = sprintf(
                 "<a href='%s'>%s</a>",
-                esc_url($this->openIDService->getLoginUrl($this->idp, $resumeUrl, $resumeUrl)),
+                esc_url($this->openIDService->getLoginUrl($this->idp, $resumeUrl, $resumeUrl, $this->idp->getScope())),
                 $input
             );
 
@@ -63,6 +75,23 @@ class OpenIDField extends GF_Field
         }
 
         return sprintf("<div class='ginput_container ginput_container_openid'>%s</div>", $input);
+    }
+
+    private function prepareScopeSelectOptions(): array
+    {
+        $default = [
+            'value' => '',
+            'label' => __('Selecteer een Service Index', 'owc-signicat-openid'),
+        ];
+
+        $supportedScopes = array_map(function ($scope) {
+            return [
+                'value' => $scope,
+                'label' => $scope,
+            ];
+        }, $this->openIDService->getScopesSupported() ?? []);
+
+        return array_merge([$default], array_filter($supportedScopes));
     }
 
     protected function addPossibleErrorsToInput(string $input): string
@@ -198,6 +227,7 @@ class OpenIDField extends GF_Field
             'conditional_logic_field_setting',
             'css_class_setting',
             'rules_setting',
+            'open_id_select_scope_setting',
         ];
     }
 

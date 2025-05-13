@@ -47,12 +47,13 @@ class RouteService extends Service implements RouteServiceInterface
 				$serverRequest    = ServerRequest::fromGlobals();
 				$queryParams      = $serverRequest->getQueryParams();
 				$idp              = $queryParams['idp'] ?? '';
-				$redirectUrl      = rawurldecode( $queryParams['redirectUrl'] ?? wp_get_referer() );
-				$refererUrl       = rawurldecode( $queryParams['refererUrl'] ?? wp_get_referer() );
+				$scope            = $queryParams['scope'] ?? '';
+				$redirectUrl      = $queryParams['redirectUrl'] ?? wp_get_referer();
+				$refererUrl       = $queryParams['refererUrl'] ?? wp_get_referer();
 				$identityProvider = $this->identityProviderService->getIdentityProvider( $idp );
 
 				if ($identityProvider instanceof IdentityProvider && ! $this->openIDService->hasActiveSession( $identityProvider )) {
-					$this->openIDService->authenticate( $identityProvider, $redirectUrl, $refererUrl );
+					$this->openIDService->authenticate( $identityProvider->setScope( $scope ), esc_url( $redirectUrl ), esc_url( $refererUrl ) );
 				} else {
 					wp_safe_redirect( esc_url( $redirectUrl ) );
 					exit;
