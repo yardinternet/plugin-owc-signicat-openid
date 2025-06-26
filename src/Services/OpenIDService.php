@@ -95,8 +95,8 @@ class OpenIDService extends Service implements OpenIDServiceInterface
         $args = array_filter(
             [
                 'idp' => $identityProvider->getSlug(),
-                'redirectUrl' => $redirectUrl,
-                'refererUrl' => $refererUrl,
+                'redirectUrl' => $redirectUrl ? rawurlencode($redirectUrl) : null,
+                'refererUrl' => $refererUrl ? rawurlencode($refererUrl) : null,
             ]
         );
 
@@ -111,9 +111,8 @@ class OpenIDService extends Service implements OpenIDServiceInterface
         $args = array_filter(
             [
                 'idp' => $identityProvider ? $identityProvider->getSlug() : null,
-                'redirectUrl' => $redirectUrl,
-                'refererUrl' => $refererUrl,
-            ]
+                'redirectUrl' => $redirectUrl ? rawurlencode($redirectUrl) : null,
+				'refererUrl' => $refererUrl ? rawurlencode($refererUrl) : null,]
         );
 
         return add_query_arg(
@@ -288,6 +287,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 
     private function popState(string $stateID): array
     {
+		$this->maybeStartSession();
         if (! $this->session->has($stateID)) {
             throw new RuntimeException('State not found');
         }
