@@ -47,12 +47,12 @@ class RouteService extends Service implements RouteServiceInterface
                 $serverRequest = ServerRequest::fromGlobals();
                 $queryParams = $serverRequest->getQueryParams();
                 $idp = $queryParams['idp'] ?? '';
-                $redirectUrl = $queryParams['redirectUrl'] ?? wp_get_referer();
-                $refererUrl = $queryParams['refererUrl'] ?? wp_get_referer();
+                $redirectUrl = rawurldecode($queryParams['redirectUrl'] ?? wp_get_referer());
+                $refererUrl = rawurldecode($queryParams['refererUrl'] ?? wp_get_referer());
                 $identityProvider = $this->identityProviderService->getIdentityProvider($idp);
 
                 if ($identityProvider instanceof IdentityProvider && ! $this->openIDService->hasActiveSession($identityProvider)) {
-                    $this->openIDService->authenticate($identityProvider, esc_url($redirectUrl), esc_url($refererUrl));
+                    $this->openIDService->authenticate($identityProvider, $redirectUrl, $refererUrl);
                 } else {
                     wp_safe_redirect(esc_url($redirectUrl));
                     exit;
@@ -69,8 +69,8 @@ class RouteService extends Service implements RouteServiceInterface
                 $serverRequest = ServerRequest::fromGlobals();
                 $queryParams = $serverRequest->getQueryParams();
                 $idp = $queryParams['idp'] ?? '';
-                $redirectUrl = $queryParams['redirectUrl'] ?? ''; // Maybe always redirect to home?
-                $refererUrl = $queryParams['refererUrl'] ?? wp_get_referer(); // Do we need to validate if the referer is from this site?
+                $redirectUrl = isset($queryParams['redirectUrl']) ? rawurldecode($queryParams['redirectUrl']) : get_site_url(); // Maybe always redirect to home?
+                $refererUrl = isset($queryParams['refererUrl']) ? rawurldecode($queryParams['refererUrl']) : wp_get_referer(); // Do we need to validate if the referer is from this site?
 
                 try {
                     $identityProvider = $this->identityProviderService->getIdentityProvider($idp);
@@ -83,7 +83,7 @@ class RouteService extends Service implements RouteServiceInterface
                 } catch (Exception $e) {
                     // Fail gracefully.
                 } finally {
-                    wp_safe_redirect(esc_url($redirectUrl ?: get_site_url()));
+                    wp_safe_redirect(esc_url($redirectUrl));
                     exit;
                 }
         }
