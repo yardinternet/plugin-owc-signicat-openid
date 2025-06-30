@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace OWCSignicatOpenID\Services;
 
-use OWCSignicatOpenID\GravityForms\Fields\OpenIDField;
 use OWCSignicatOpenID\GravityForms\FieldSettings;
+use OWCSignicatOpenID\GravityForms\Fields\OpenIDField;
 use OWCSignicatOpenID\Interfaces\Services\GravityFormsServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\IdentityProviderServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\OpenIDServiceInterface;
