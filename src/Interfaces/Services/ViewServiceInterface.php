@@ -6,5 +6,5 @@ namespace OWCSignicatOpenID\Interfaces\Services;
 
 interface ViewServiceInterface extends ServiceInterface
 {
-    public function render(string $template, array $args = []): string;
+	public function render(string $template, array $args = array() ): string;
 }
