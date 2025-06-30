@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Facile\JoseVerifier\JWK\JwksProviderBuilder;
 use Facile\OpenIDClient\Client\ClientBuilder;
 use Facile\OpenIDClient\Client\ClientInterface;

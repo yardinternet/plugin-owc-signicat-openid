@@ -28,8 +28,8 @@ class SettingsService extends Service implements SettingsServiceInterface
 
 	public function register()
 	{
-		add_action( 'admin_init', array( $this, 'register_settings' ) );
-		add_action( 'admin_menu', array( $this, 'add_settings_page' ) );
+		add_action( 'admin_init', $this->register_settings( ... ) );
+		add_action( 'admin_menu', $this->add_settings_page( ... ) );
 	}
 
 	public function add_settings_page(): void
@@ -39,7 +39,7 @@ class SettingsService extends Service implements SettingsServiceInterface
 			esc_html__( 'Signicat OpenID', 'owc-signicat-openid' ),
 			'manage_options',
 			'owc-signicat-openid',
-			array( $this, 'render_settings_page' )
+			$this->render_settings_page( ... )
 		);
 	}
 

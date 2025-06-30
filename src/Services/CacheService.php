@@ -1,9 +1,13 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Register cache service.
  *
  * @package OWC_Signicat_OpenID
+ *
  * @author  Yard | Digital Agency
+ *
  * @since   0.0.1
  */
 
@@ -29,12 +33,13 @@ class CacheService implements CacheServiceInterface
 	 * Fetches a value from the cache.
 	 *
 	 * @since 0.0.1
+	 *
 	 * @param string $key
-	 * @param mixed  $standard
+	 * @param mixed  $default
 	 *
 	 * @return mixed | false
 	 */
-	public function get( $key, $standard = null )
+	public function get(string $key, mixed $default = null ): mixed
 	{
 		if (get_transient( $key )) {
 			return get_transient( $key );
@@ -47,11 +52,12 @@ class CacheService implements CacheServiceInterface
 	 * Persists data in the cache, uniquely referenced by a key with an optional expiration TTL time.
 	 *
 	 * @since 0.0.1
+	 *
 	 * @param string                 $key
 	 * @param mixed                  $value
 	 * @param null|int|\DateInterval $ttl
 	 */
-	public function set( $key, $value, $ttl = null ): bool
+	public function set($key, $value, $ttl = null ): bool
 	{
 		return set_transient( $key, $value, $ttl );
 	}
@@ -60,9 +66,10 @@ class CacheService implements CacheServiceInterface
 	 * Delete an item from the cache by its unique key.
 	 *
 	 * @since 0.0.1
+	 *
 	 * @param string $key
 	 */
-	public function delete( $key ): bool
+	public function delete($key ): bool
 	{
 		return delete_transient( $key );
 	}
@@ -82,10 +89,11 @@ class CacheService implements CacheServiceInterface
 	 * Obtains multiple cache items by their unique keys.
 	 *
 	 * @since 0.0.1
+	 *
 	 * @param iterable $keys
 	 * @param mixed    $standard
 	 */
-	public function getMultiple( $keys, $standard = null ): iterable
+	public function getMultiple($keys, $standard = null ): iterable
 	{
 		$values = array();
 
@@ -100,10 +108,11 @@ class CacheService implements CacheServiceInterface
 	 * Persists a set of key => value pairs in the cache, with an optional TTL.
 	 *
 	 * @since 0.0.1
+	 *
 	 * @param iterable               $values
 	 * @param null|int|\DateInterval $ttl
 	 */
-	public function setMultiple( $values, $ttl = null ): bool
+	public function setMultiple($values, $ttl = null ): bool
 	{
 		foreach ($values as $key => $value) {
 			$this->set( $key, $value, $ttl );
@@ -116,9 +125,10 @@ class CacheService implements CacheServiceInterface
 	 * Deletes multiple cache items in a single operation.
 	 *
 	 * @since 0.0.1
+	 *
 	 * @param iterable $keys
 	 */
-	public function deleteMultiple( $keys ): bool
+	public function deleteMultiple($keys ): bool
 	{
 		foreach ($keys as $key) {
 			$this->delete( $key );
@@ -131,9 +141,10 @@ class CacheService implements CacheServiceInterface
 	 * Determines whether an item is present in the cache.
 	 *
 	 * @since 0.0.1
+	 *
 	 * @param string $key
 	 */
-	public function has( $key ): bool
+	public function has($key ): bool
 	{
 		return (bool) $this->get( $key );
 	}
