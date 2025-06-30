@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Facile\JoseVerifier\JWK\JwksProviderBuilder;
 use Facile\OpenIDClient\Client\ClientBuilder;
 use Facile\OpenIDClient\Client\ClientInterface;
@@ -10,6 +12,8 @@ use Facile\OpenIDClient\Issuer\IssuerInterface;
 use Facile\OpenIDClient\Issuer\Metadata\Provider\MetadataProviderBuilder;
 use Facile\OpenIDClient\Service\AuthorizationService;
 use Facile\OpenIDClient\Service\Builder\AuthorizationServiceBuilder;
+use Odan\Session\PhpSession;
+use Odan\Session\SessionInterface;
 use OWCSignicatOpenID\Interfaces\Providers\AppServiceProviderInterface;
 use OWCSignicatOpenID\Interfaces\Providers\SettingsServiceProviderInterface;
 use OWCSignicatOpenID\Interfaces\Services\BlockServiceInterface;
@@ -37,11 +41,9 @@ use OWCSignicatOpenID\Services\SettingsService;
 use OWCSignicatOpenID\Services\ViewService;
 use OWCSignicatOpenID\UserData\DigiDUserData;
 use OWCSignicatOpenID\UserData\eHerkenningUserData;
-use Odan\Session\PhpSession;
-use Odan\Session\SessionInterface;
 use Psr\Container\ContainerInterface;
-use Psr\Log\LogLevel;
 use Psr\Log\LoggerInterface;
+use Psr\Log\LogLevel;
 
 return array(
 	'idps'                                  => array(
@@ -67,7 +69,7 @@ return array(
 	LoggerInterface::class                  => fn (ContainerInterface $container ): LoggerInterface => new Logger( $container->get( 'logger.level' ) ),
 	'logger.level'                          => fn (): string => ( defined( 'WP_DEBUG' ) && WP_DEBUG ) ? LogLevel::WARNING : '',
 	MetadataProviderBuilder::class          => fn (ContainerInterface $container ): MetadataProviderBuilder => ( new MetadataProviderBuilder() )->setCache( $container->get( CacheServiceInterface::class ) )->setCacheTtl( MONTH_IN_SECONDS ),
-	JwksProviderBuilder::class              => fn (ContainerInterface $container ): JwksProviderBuilder => ( new JwksProviderBuilder() )->setCache( $container->get( CacheServiceInterface::class ) )->setCacheTtl( DAY_IN_SECONDS ),
+	JwksProviderBuilder::class              => fn (ContainerInterface $container ): JwksProviderBuilder => ( new JwksProviderBuilder() )->withCache( $container->get( CacheServiceInterface::class ) )->withCacheTtl( DAY_IN_SECONDS ),
 	ClientMetadataInterface::class          => function (ContainerInterface $container ): ClientMetadata {
 		$settings = $container->get( SettingsServiceInterface::class );
 

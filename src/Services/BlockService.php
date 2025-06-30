@@ -29,8 +29,8 @@ class BlockService extends Service implements BlockServiceInterface
 
 	public function register()
 	{
-		add_action( 'init', array( $this, 'registerBlocks' ) );
-		add_filter( 'block_categories_all', array( $this, 'registerBlockCategory' ), 10, 2 );
+		add_action( 'init', $this->registerBlocks( ... ) );
+		add_filter( 'block_categories_all', $this->registerBlockCategory( ... ), 10, 2 );
 	}
 	public function registerBlocks()
 	{

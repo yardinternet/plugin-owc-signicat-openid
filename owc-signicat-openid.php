@@ -1,4 +1,5 @@
 <?php
+
 /**
  * OWC Signicat OpenID
  *
@@ -41,4 +42,9 @@ if (file_exists( OWC_SIGNICAT_OPENID_DIR_PATH . '/vendor/autoload.php' )) {
 	require_once OWC_SIGNICAT_OPENID_DIR_PATH . '/vendor/autoload.php';
 }
 
-$init = new OWCSignicatOpenID\Bootstrap();
+add_action(
+	'after_setup_theme',
+	function () {
+		$init = new OWCSignicatOpenID\Bootstrap();
+	}
+);

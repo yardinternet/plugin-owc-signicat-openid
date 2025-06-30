@@ -29,8 +29,8 @@ class ModalService extends Service implements ModalServiceInterface
 
 	public function register()
 	{
-		add_action( 'wp_body_open', array( $this, 'addModalHtml' ) );
-		add_action( 'wp_enqueue_scripts', array( $this, 'enqueueScripts' ) );
+		add_action( 'wp_body_open', $this->addModalHtml( ... ) );
+		add_action( 'wp_enqueue_scripts', $this->enqueueScripts( ... ) );
 	}
 
 	public function addModalHtml()

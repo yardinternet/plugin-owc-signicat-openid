@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Default logger.
  *
@@ -18,6 +19,7 @@ namespace OWCSignicatOpenID;
 use Exception;
 use Psr\Log\AbstractLogger;
 use Psr\Log\LogLevel;
+use Stringable;
 
 /**
  * Default logger class.
@@ -74,18 +76,18 @@ final class Logger extends AbstractLogger
 	 * @param string $message Log message.
 	 * @param array  $context Additional data.
 	 */
-	public function log($level, $message, array $context = array() )
+	public function log($level, string|Stringable $message, array $context = array() ): void
 	{
 		if ( ! $this->handle_level( $level )) {
 			return;
 		}
 
-        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 		error_log(
 			sprintf(
 				'OWC_SIGNICAT_OPENID.%s: %s',
 				strtoupper( $level ),
-				$this->format( $message, $context )
+				$this->format( (string) $message, $context )
 			)
 		);
 	}

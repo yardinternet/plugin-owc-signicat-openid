@@ -16,23 +16,23 @@ namespace OWCSignicatOpenID\Services;
 
 use Facile\OpenIDClient\Client\ClientInterface;
 use Facile\OpenIDClient\Exception\OAuth2Exception;
+use function Facile\OpenIDClient\parse_callback_params;
 use Facile\OpenIDClient\Service\AuthorizationService;
 use Facile\OpenIDClient\Service\Builder\IntrospectionServiceBuilder;
 use Facile\OpenIDClient\Service\Builder\RevocationServiceBuilder;
 use Facile\OpenIDClient\Service\Builder\UserInfoServiceBuilder;
 use Facile\OpenIDClient\Token\TokenSet;
+use Odan\Session\SessionInterface;
+use OWC\IdpUserData\UserDataInterface;
 use OWCSignicatOpenID\ContainerManager;
 use OWCSignicatOpenID\IdentityProvider;
 use OWCSignicatOpenID\Interfaces\Services\IdentityProviderServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\OpenIDServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\SettingsServiceInterface;
-use OWC\IdpUserData\UserDataInterface;
-use Odan\Session\SessionInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
-use WP_Error;
 
-use function Facile\OpenIDClient\parse_callback_params;
+use WP_Error;
 
 class OpenIDService extends Service implements OpenIDServiceInterface
 {
@@ -102,7 +102,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 
 		return add_query_arg(
 			$args,
-			get_site_url( null, $this->settings->getSetting( 'path_login' ) )
+			get_home_url( null, $this->settings->getSetting( 'path_login' ) )
 		);
 	}
 
@@ -147,7 +147,6 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 		header( 'Location: ' . $redirect_authorization_uri );
 		exit();
 	}
-
 
 	public function redirectToLogout(IdentityProvider $identityProvider, string $redirectUrl, string $refererUrl = null )
 	{
