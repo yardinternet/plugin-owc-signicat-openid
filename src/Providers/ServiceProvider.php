@@ -14,8 +14,8 @@ namespace OWCSignicatOpenID\Providers;
 /**
  * Exit when accessed directly.
  */
-if (! defined('ABSPATH')) {
-    exit;
+if ( ! defined( 'ABSPATH' )) {
+	exit;
 }
 
 use OWCSignicatOpenID\Interfaces\Providers\ServiceProviderInterface;
@@ -28,22 +28,22 @@ use OWCSignicatOpenID\Interfaces\Services\ServiceInterface;
  */
 class ServiceProvider implements ServiceProviderInterface
 {
-    protected array $services = [];
+	protected array $services = array();
 
-    public function register(): void
-    {
-        foreach ($this->services as $service) {
-            $service->register();
-        }
-    }
+	public function register(): void
+	{
+		foreach ($this->services as $service) {
+			$service->register();
+		}
+	}
 
-    public function boot(): void
-    {
-        foreach ($this->services as $service) {
-            if (false === $service instanceof ServiceInterface) {
-                continue;
-            }
-            $service->boot();
-        }
-    }
+	public function boot(): void
+	{
+		foreach ($this->services as $service) {
+			if (false === $service instanceof ServiceInterface) {
+				continue;
+			}
+			$service->boot();
+		}
+	}
 }
