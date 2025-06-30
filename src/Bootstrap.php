@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * OWC Signicat OpenID
  *
@@ -63,7 +65,6 @@ final class Bootstrap
 	{
 		$builder = new \DI\ContainerBuilder();
 		$builder->addDefinitions( OWC_SIGNICAT_OPENID_DIR_PATH . 'config/php-di.php' );
-		$builder->useAnnotations( true );
 		$container = $builder->build();
 
 		// Allows access to container inside other files within the plugin.
@@ -90,7 +91,6 @@ final class Bootstrap
 			try {
 				$registeredProviders[] = $this->container->get( $provider );
 			} catch (Exception $e) {
-
 			}
 		}
 

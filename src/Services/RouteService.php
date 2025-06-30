@@ -35,8 +35,8 @@ class RouteService extends Service implements RouteServiceInterface
 
 	public function register()
 	{
-		add_action( 'parse_request', array( $this, 'registerRoutes' ) );
-		add_action( 'rest_api_init', array( $this, 'registerRestRoutes' ) );
+		add_action( 'parse_request', $this->registerRoutes( ... ) );
+		add_action( 'rest_api_init', $this->registerRestRoutes( ... ) );
 	}
 
 	public function registerRoutes(\WP $wp ): void

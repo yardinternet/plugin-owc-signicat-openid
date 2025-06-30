@@ -29,6 +29,7 @@
 			"OWCSignicatOpenID\\": "src/"
 		}
 	},
+	"minimum-stability": "dev",
 	"repositories": [
 		{
 			"type": "vcs",
@@ -36,18 +37,18 @@
 		}
 	],
 	"require": {
-		"cmdisp/monolog-microsoft-teams": "1.3.0",
 		"doctrine/annotations": "^1.13",
-		"facile-it/php-openid-client": "^0.3.4",
+		"facile-it/php-openid-client": "0.4.0-beta1",
 		"guzzlehttp/guzzle": "^7.8",
 		"guzzlehttp/psr7": "^1.9.1 || ^2.5.1",
 		"http-interop/http-factory-guzzle": "^1.2",
-		"monolog/monolog": "^2.0",
+		"monolog/monolog": "^3.0",
 		"odan/session": "^5.1",
 		"owc/idp-userdata": "^1.0",
-		"php-di/php-di": "^6.4",
+		"php": "^8.0",
+		"php-di/php-di": "^7.0",
 		"psr/container": "^1.1",
-		"symfony/http-client": "^5.4",
+		"symfony/http-client": "^6.0",
 		"vlucas/phpdotenv": "^5.5"
 	},
 	"require-dev": {

@@ -31,15 +31,15 @@ class GravityFormsService extends Service implements GravityFormsServiceInterfac
 
 	public function register()
 	{
-		add_action( 'gform_loaded', array( $this, 'registerFields' ) );
-		add_filter( 'gform_gf_field_create', array( $this, 'setOpenIDService' ), 10, 2 );
-		add_filter( 'gform_incomplete_submission_pre_save', array( $this, 'setPageNumber' ), 10, 3 );
-		add_action( 'gform_editor_js_set_default_values', array( $this, 'setDefaults' ) );
-		add_filter( 'gform_field_groups_form_editor', array( $this, 'addFieldGroup' ) );
-		add_filter( 'gform_get_input_value', array( $this, 'decrypt' ), 10, 4 );
-		add_filter( 'gform_save_field_value', array( $this, 'encrypt' ), 10, 5 );
-		add_action( 'gform_field_standard_settings', array( new FieldSettings(), 'addFieldSettings' ), 10, 2 );
-		add_action( 'gform_editor_js', array( new FieldSettings(), 'addFieldSettingsSelectScript' ), 10, 2 );
+		$this->registerFields();
+		add_filter( 'gform_gf_field_create', $this->setOpenIDService( ... ), 10, 2 );
+		add_filter( 'gform_incomplete_submission_pre_save', $this->setPageNumber( ... ), 10, 3 );
+		add_action( 'gform_editor_js_set_default_values', $this->setDefaults( ... ) );
+		add_filter( 'gform_field_groups_form_editor', $this->addFieldGroup( ... ) );
+		add_filter( 'gform_get_input_value', $this->decrypt( ... ), 10, 4 );
+		add_filter( 'gform_save_field_value', $this->encrypt( ... ), 10, 5 );
+		add_action('gform_field_standard_settings', array( (new FieldSettings())->addFieldSettings(...) ), 10, 2);
+        add_action('gform_editor_js', array( (new FieldSettings())->addFieldSettingsSelectScript(...) ), 10, 2);
 	}
 
 	public function decrypt(string $value, array $entry, \GF_Field $field, $input_id ): string
