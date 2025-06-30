@@ -17,7 +17,6 @@ use WP_REST_Server;
 
 class RouteService extends Service implements RouteServiceInterface
 {
-
 	private const REST_NAMESPACE = 'owc-signicat-openid/v1';
 
 	protected SettingsServiceInterface $settings;

@@ -10,8 +10,6 @@ use Facile\OpenIDClient\Issuer\IssuerInterface;
 use Facile\OpenIDClient\Issuer\Metadata\Provider\MetadataProviderBuilder;
 use Facile\OpenIDClient\Service\AuthorizationService;
 use Facile\OpenIDClient\Service\Builder\AuthorizationServiceBuilder;
-use Odan\Session\PhpSession;
-use Odan\Session\SessionInterface;
 use OWCSignicatOpenID\Interfaces\Providers\AppServiceProviderInterface;
 use OWCSignicatOpenID\Interfaces\Providers\SettingsServiceProviderInterface;
 use OWCSignicatOpenID\Interfaces\Services\BlockServiceInterface;
@@ -39,9 +37,11 @@ use OWCSignicatOpenID\Services\SettingsService;
 use OWCSignicatOpenID\Services\ViewService;
 use OWCSignicatOpenID\UserData\DigiDUserData;
 use OWCSignicatOpenID\UserData\eHerkenningUserData;
+use Odan\Session\PhpSession;
+use Odan\Session\SessionInterface;
 use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
+use Psr\Log\LoggerInterface;
 
 return array(
 	'idps'                                  => array(
