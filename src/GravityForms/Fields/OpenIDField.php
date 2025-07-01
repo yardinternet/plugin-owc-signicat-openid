@@ -7,6 +7,8 @@ namespace OWCSignicatOpenID\GravityForms\Fields;
 use GF_Field;
 use GFAPI;
 use GFFormsModel;
+use OWC\IdpUserData\DigiDSession;
+use OWC\IdpUserData\eHerkenningSession;
 use OWCSignicatOpenID\IdentityProvider;
 use OWCSignicatOpenID\Interfaces\Services\OpenIDServiceInterface;
 
@@ -127,14 +129,29 @@ class OpenIDField extends GF_Field
         return \add_query_arg('gf_token', $resumeToken, $currentPageURL);
     }
 
+    /**
+     * If a different IDP session is already active like DigiD or eHerkenning, another field with a different IDP will pass the validation.
+     * This enables form editors to use multiple IDP fields in the same form.
+     * If there is only one IDP field in the form, this validation will also pass.
+     */
     public function validate($value, $form)
     {
-        $userInfo = $this->openIDService->getUserInfo($this->idp);
+        if ($this->has_active_idp_session()) {
+            $this->failed_validation = false;
 
-        if (! is_array($userInfo) || ! count($userInfo)) {
-            $this->failed_validation = true;
-            $this->validation_message = 'Je bent niet ingelogd';
+            return;
         }
+
+        $this->failed_validation = true;
+        $this->validation_message = 'Je bent niet ingelogd';
+    }
+
+    private function has_active_idp_session(): bool
+    {
+        $digidSession = DigiDSession::isLoggedIn() && ! is_null(DigiDSession::getUserData());
+        $eHerkenningSession = eHerkenningSession::isLoggedIn() && ! is_null(eHerkenningSession::getUserData());
+
+        return $digidSession || $eHerkenningSession;
     }
 
     public function get_value_save_entry($value, $form, $input_name, $lead_id, $lead)
