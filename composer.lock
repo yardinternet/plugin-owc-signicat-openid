@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "933925efe7db9a75395bf830486f9e96",
+    "content-hash": "354f4abcaf12add1509432a75f442e61",
     "packages": [
         {
             "name": "brick/math",
@@ -1255,16 +1255,16 @@
         },
         {
             "name": "owc/idp-userdata",
-            "version": "v1.1.0",
+            "version": "dev-feat/eherkenning",
             "source": {
                 "type": "git",
                 "url": "https://github.com/OpenWebconcept/idp-userdata.git",
-                "reference": "a95986c390ab59356922fd12b995c26dc9e88bf9"
+                "reference": "c6478456e3b4e81edb263313c85830103ab5e94d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/OpenWebconcept/idp-userdata/zipball/a95986c390ab59356922fd12b995c26dc9e88bf9",
-                "reference": "a95986c390ab59356922fd12b995c26dc9e88bf9",
+                "url": "https://api.github.com/repos/OpenWebconcept/idp-userdata/zipball/c6478456e3b4e81edb263313c85830103ab5e94d",
+                "reference": "c6478456e3b4e81edb263313c85830103ab5e94d",
                 "shasum": ""
             },
             "require": {
@@ -1284,10 +1284,10 @@
             ],
             "description": "Common interfaces for IDP userdata (DigiD, eHerkenning)",
             "support": {
-                "source": "https://github.com/OpenWebconcept/idp-userdata/tree/v1.1.0",
+                "source": "https://github.com/OpenWebconcept/idp-userdata/tree/feat/eherkenning",
                 "issues": "https://github.com/OpenWebconcept/idp-userdata/issues"
             },
-            "time": "2024-11-06T10:20:58+00:00"
+            "time": "2025-07-02T12:43:39+00:00"
         },
         {
             "name": "php-di/invoker",
@@ -3900,9 +3900,18 @@
             "time": "2024-03-25T16:39:00+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "owc/idp-userdata",
+            "version": "dev-feat/eherkenning",
+            "alias": "1.2.0",
+            "alias_normalized": "1.2.0.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "owc/idp-userdata": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {},

@@ -10,8 +10,29 @@ class eHerkenningUserData extends UserData implements eHerkenningUserDataInterfa
 {
     protected string $kvk;
 
+    protected ?string $rsin = null;
+
+    protected ?string $bsn = null;
+
+    protected ?string $vestigingsNummer = null;
+
     public function getKvk(): string
     {
         return $this->kvk;
+    }
+
+    public function getBsn(): ?string
+    {
+        return $this->bsn;
+    }
+
+    public function getVestigingsNummer(): ?string
+    {
+        return $this->vestigingsNummer;
+    }
+
+    public function getRsin(): ?string
+    {
+        return $this->rsin;
     }
 }
