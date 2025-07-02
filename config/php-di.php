@@ -59,6 +59,8 @@ return [
             'mapping' => [
                 'urn:etoegang:1.9:EntityConcernedID:KvKnr' => 'kvk',
                 'urn:etoegang:1.9:EntityConcernedID:RSIN' => 'rsin',
+                'urn:etoegang:1.9:ServiceRestriction:Vestigingsnr' => 'vestigingsNummer',
+                'urn:etoegang:1.12:EntityConcernedID:BSN' => 'bsn',
             ],
             'userDataClass' => eHerkenningUserData::class,
         ],
