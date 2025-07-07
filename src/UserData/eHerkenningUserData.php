@@ -8,10 +8,10 @@ use OWC\IdpUserData\eHerkenningUserDataInterface;
 
 class eHerkenningUserData extends UserData implements eHerkenningUserDataInterface
 {
-    protected string $kvk;
+	protected string $kvk;
 
-    public function getKvk(): string
-    {
-        return $this->kvk;
-    }
+	public function getKvk(): string
+	{
+		return $this->kvk;
+	}
 }

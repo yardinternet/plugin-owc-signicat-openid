@@ -14,8 +14,8 @@ namespace OWCSignicatOpenID\Providers;
 /**
  * Exit when accessed directly.
  */
-if (! defined('ABSPATH')) {
-    exit;
+if ( ! defined( 'ABSPATH' )) {
+	exit;
 }
 
 use OWCSignicatOpenID\Interfaces\Providers\AppServiceProviderInterface;
@@ -32,25 +32,25 @@ use OWCSignicatOpenID\Interfaces\Services\RouteServiceInterface;
  */
 class AppServiceProvider extends ServiceProvider implements AppServiceProviderInterface
 {
-    public function __construct(
-        LifeCycleServiceInterface $lifeCycleService,
-        BlockServiceInterface $blockService,
-        RouteServiceInterface $routeService,
-        GravityFormsServiceInterface $gravityFormsService,
-        ModalServiceInterface $modalService
-    ) {
-        $this->services = [
-            'life_cycle' => $lifeCycleService,
-            'block'      => $blockService,
-            'route'      => $routeService,
-            'gravity_forms' => $gravityFormsService,
-            'modal'     => $modalService,
-        ];
+	public function __construct(
+		LifeCycleServiceInterface $lifeCycleService,
+		BlockServiceInterface $blockService,
+		RouteServiceInterface $routeService,
+		GravityFormsServiceInterface $gravityFormsService,
+		ModalServiceInterface $modalService
+	) {
+		$this->services = array(
+			'life_cycle'    => $lifeCycleService,
+			'block'         => $blockService,
+			'route'         => $routeService,
+			'gravity_forms' => $gravityFormsService,
+			'modal'         => $modalService,
+		);
 
-        $this->register_hooks();
-    }
+		$this->register_hooks();
+	}
 
-    protected function register_hooks()
-    {
-    }
+	protected function register_hooks()
+	{
+	}
 }
