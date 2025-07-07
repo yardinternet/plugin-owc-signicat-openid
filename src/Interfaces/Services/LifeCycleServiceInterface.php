@@ -13,7 +13,7 @@ namespace OWCSignicatOpenID\Interfaces\Services;
 
 interface LifeCycleServiceInterface extends ServiceInterface
 {
-    public function install();
-    public function deactivate();
-    public static function uninstall();
+	public function install();
+	public function deactivate();
+	public static function uninstall();
 }

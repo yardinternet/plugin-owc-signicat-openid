@@ -8,8 +8,8 @@ use OWCSignicatOpenID\IdentityProvider;
 
 interface IdentityProviderServiceInterface extends ServiceInterface
 {
-    /** @var IdentityProvider[] */
-    public function getEnabledIdentityProviders(): array;
+	/** @var IdentityProvider[] */
+	public function getEnabledIdentityProviders(): array;
 
-    public function getIdentityProvider(string $slug): ?IdentityProvider;
+	public function getIdentityProvider(string $slug ): ?IdentityProvider;
 }

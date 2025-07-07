@@ -14,8 +14,8 @@ namespace OWCSignicatOpenID\Providers;
 /**
  * Exit when accessed directly.
  */
-if (! defined('ABSPATH')) {
-    exit;
+if ( ! defined( 'ABSPATH' )) {
+	exit;
 }
 
 use OWCSignicatOpenID\Interfaces\Providers\SettingsServiceProviderInterface;
@@ -28,11 +28,11 @@ use OWCSignicatOpenID\Interfaces\Services\SettingsServiceInterface;
  */
 class SettingsServiceProvider extends ServiceProvider implements SettingsServiceProviderInterface
 {
-    public function __construct(
-        SettingsServiceInterFace $settingsService
-    ) {
-        $this->services = [
-            'settings'   => $settingsService,
-        ];
-    }
+	public function __construct(
+		SettingsServiceInterFace $settingsService
+	) {
+		$this->services = array(
+			'settings' => $settingsService,
+		);
+	}
 }
