@@ -6,6 +6,7 @@ namespace OWCSignicatOpenID\GravityForms\Fields;
 
 use GF_Field;
 use GFAPI;
+use GFFormDisplay;
 use GFFormsModel;
 use OWC\IdpUserData\DigiDSession;
 use OWC\IdpUserData\eHerkenningSession;
@@ -50,7 +51,7 @@ class OpenIDField extends GF_Field
             $this->idp->getLogoUrl(),
         );
 
-        if (! $this->is_entry_detail() && ! $this->is_form_editor()) {
+        if (! $this->is_entry_detail() && ! $this->is_form_editor() && ! $this->has_active_idp_session()) {
             $resumeUrl = $this->getResumeUrl();
             $input = sprintf(
                 "<a href='%s'>%s</a>",
@@ -105,6 +106,14 @@ class OpenIDField extends GF_Field
 
     protected function getResumeUrl(): string
     {
+        add_filter('gform_incomplete_submission_pre_save', function ($submissionJSON, $resumeToken, $form) {
+            $submissionData = json_decode($submissionJSON);
+            $submissionData->page_number = GFFormDisplay::get_current_page($this->formId);
+            $submissionJSON = json_encode($submissionData);
+
+            return $submissionJSON;
+        }, 10, 3);
+
         $currentPageURL = GFFormsModel::get_current_page_url(true);
 
         $resume = GFAPI::submit_form(
@@ -126,7 +135,7 @@ class OpenIDField extends GF_Field
             return $currentPageURL;
         }
 
-        return \add_query_arg('gf_token', $resumeToken, $currentPageURL);
+        return add_query_arg('gf_token', $resumeToken, $currentPageURL);
     }
 
     /**
