@@ -63,7 +63,12 @@ return array(
 			'userDataClass' => eHerkenningUserData::class,
 		),
 	),
-	'idps_errors'                           => file_exists( sprintf( '%s/idps_errors.php', __DIR__ ) ) ? require_once sprintf( '%s/idps_errors.php', __DIR__ ) : array(),
+	'idps_errors' => function () {
+		add_action('init', function () {
+			$file = sprintf('%s/idps_errors.php', __DIR__);
+			return file_exists($file) ? require_once $file : array();
+		});
+	},
 	LoggerInterface::class                  => fn (ContainerInterface $container ): LoggerInterface => new Logger( $container->get( 'logger.level' ) ),
 	'logger.level'                          => fn (): string => ( defined( 'WP_DEBUG' ) && WP_DEBUG ) ? LogLevel::WARNING : '',
 	MetadataProviderBuilder::class          => fn (ContainerInterface $container ): MetadataProviderBuilder => ( new MetadataProviderBuilder() )->setCache( $container->get( CacheServiceInterface::class ) )->setCacheTtl( MONTH_IN_SECONDS ),
