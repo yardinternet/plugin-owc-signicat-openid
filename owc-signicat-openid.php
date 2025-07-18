@@ -16,7 +16,7 @@
  * Author:            Yard | Digital Agency
  * Author URI:        https://www.yard.nl
  * License:           EUPL
- * License URI:       https://github.com/yardinternet/plugin-signicat-openid/LICENSE.txt
+ * License URI:       https://github.com/yardinternet/plugin-owc-signicat-openid/blob/main/LICENSE.txt
  * Text Domain:       owc-signicat-openid
  * Domain Path:       /languages
  */
