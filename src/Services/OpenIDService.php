@@ -16,23 +16,22 @@ namespace OWCSignicatOpenID\Services;
 
 use Facile\OpenIDClient\Client\ClientInterface;
 use Facile\OpenIDClient\Exception\OAuth2Exception;
+use function Facile\OpenIDClient\parse_callback_params;
 use Facile\OpenIDClient\Service\AuthorizationService;
 use Facile\OpenIDClient\Service\Builder\IntrospectionServiceBuilder;
 use Facile\OpenIDClient\Service\Builder\RevocationServiceBuilder;
 use Facile\OpenIDClient\Service\Builder\UserInfoServiceBuilder;
 use Facile\OpenIDClient\Token\TokenSet;
+use Odan\Session\SessionInterface;
+use OWC\IdpUserData\UserDataInterface;
 use OWCSignicatOpenID\ContainerManager;
 use OWCSignicatOpenID\IdentityProvider;
 use OWCSignicatOpenID\Interfaces\Services\IdentityProviderServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\OpenIDServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\SettingsServiceInterface;
-use OWC\IdpUserData\UserDataInterface;
-use Odan\Session\SessionInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
 use WP_Error;
-
-use function Facile\OpenIDClient\parse_callback_params;
 
 class OpenIDService extends Service implements OpenIDServiceInterface
 {
@@ -267,12 +266,21 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 
 	private function maybeStartSession()
 	{
-		if ( ! $this->session->isStarted()) {
+		if ( ! $this->session->isStarted() && ! headers_sent()) {
 			$this->session->start();
-		} elseif (empty( $this->session->all() ) && ! empty( $_SESSION )) {
+		} elseif (count( $this->session->all() ) === 0 && $this->isNativeSessionValid()) {
 			// Replace the current session with an existing session already started by another plugin.
 			$this->session->replace( $_SESSION );
 		}
+	}
+
+	private function isNativeSessionValid(): bool
+	{
+		if (session_status() !== PHP_SESSION_ACTIVE) {
+			return false;
+		}
+
+		return is_array( $_SESSION ) && 0 < count( $_SESSION );
 	}
 
 	private function saveState(array $state ): string
