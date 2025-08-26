@@ -63,11 +63,14 @@ return array(
 			'userDataClass' => eHerkenningUserData::class,
 		),
 	),
-	'idps_errors' => function () {
-		add_action('init', function () {
-			$file = sprintf('%s/idps_errors.php', __DIR__);
-			return file_exists($file) ? require_once $file : array();
-		});
+	'idps_errors'                           => function () {
+		add_action(
+			'init',
+			function () {
+				$file = sprintf( '%s/idps_errors.php', __DIR__ );
+				return file_exists( $file ) ? require_once $file : array();
+			}
+		);
 	},
 	LoggerInterface::class                  => fn (ContainerInterface $container ): LoggerInterface => new Logger( $container->get( 'logger.level' ) ),
 	'logger.level'                          => fn (): string => ( defined( 'WP_DEBUG' ) && WP_DEBUG ) ? LogLevel::WARNING : '',
