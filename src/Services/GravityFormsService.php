@@ -49,7 +49,7 @@ class GravityFormsService extends Service implements GravityFormsServiceInterfac
 		}
 
 		// TODO: optie/filter om decryption te onderdrukken
-		return \GFCommon::openssl_decrypt( $value );
+		return \GFCommon::openssl_decrypt( $value ) ?: $value;
 	}
 
 	public function encrypt($value, $entry, $field, $form, $input_id )
