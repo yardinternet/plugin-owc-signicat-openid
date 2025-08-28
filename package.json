@@ -1,6 +1,6 @@
 {
 	"name": "plugin-owc-signicat-openid",
-	"version": "1.2.0",
+	"version": "1.2.1",
 	"description": "Log into the Signicat Broker with OpenID.",
 	"main": "tailwind.js",
 	"scripts": {

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.1
+
+- Fix: redirectUrl and refererUrl can not be false
+- Fix: return value of GravityFormsService::decrypt() must be of the type string, bool is returned
+
 ## 1.2.0
 
 - Add: selectable scope via form field settings
