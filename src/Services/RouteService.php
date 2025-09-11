@@ -52,8 +52,12 @@ class RouteService extends Service implements RouteServiceInterface
 				$refererUrl       = $queryParams['refererUrl'] ?? ( wp_get_referer() ?: '' );
 				$identityProvider = $this->identityProviderService->getIdentityProvider( $idp );
 
-				if ($identityProvider instanceof IdentityProvider && ! $this->openIDService->hasActiveSession( $identityProvider )) {
-					$this->openIDService->authenticate( $identityProvider->setScope( $scope ), esc_url( $redirectUrl ), esc_url( $refererUrl ) );
+				if ($identityProvider instanceof IdentityProvider && ! $this->openIDService->hasActiveSession($identityProvider)) {
+					if (strlen($scope) > 0) {
+						$identityProvider->setScope($scope);
+					}
+
+					$this->openIDService->authenticate($identityProvider, esc_url($redirectUrl), esc_url($refererUrl));
 				} else {
 					wp_safe_redirect( esc_url( $redirectUrl ) );
 					exit;
@@ -110,7 +114,7 @@ class RouteService extends Service implements RouteServiceInterface
 				'methods'             => WP_REST_Server::READABLE,
 				'callback'            => array( $this, 'revoke' ),
 				'permission_callback' => '__return_true',
-			)
+			]
 		);
 	}
 
