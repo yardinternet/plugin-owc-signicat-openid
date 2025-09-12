@@ -114,7 +114,7 @@ class RouteService extends Service implements RouteServiceInterface
 				'methods'             => WP_REST_Server::READABLE,
 				'callback'            => array( $this, 'revoke' ),
 				'permission_callback' => '__return_true',
-			]
+			)
 		);
 	}
 
