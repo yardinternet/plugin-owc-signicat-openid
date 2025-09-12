@@ -137,23 +137,15 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 			)
 		);
 
-		$simulator_enabled = (bool) $this->settings->getSetting('enable_simulator');
+		$simulatorEnabled = (bool) $this->settings->getSetting('enable_simulator');
 
 		$scope = ['openid'];
 		$acrValues = [];
 
 		if ($this->isLegacyImplementation()) {
-			if ($simulator_enabled) {
-				$scope[] = 'idp_scoping:simulator';
-			} else {
-				$scope[] = $identityProvider->getScope();
-			}
+			$scope[] = $simulatorEnabled ? 'idp_scoping:simulator' : $identityProvider->getScope();
 		} else {
-			if ($simulator_enabled) {
-				$acrValues[] = 'idp:simulator';
-			} else {
-				$acrValues[] = 'idp:' . $identityProvider->getSlug();
-			}
+			$acrValues[] = $simulatorEnabled ? 'idp:simulator' : 'idp:' . $identityProvider->getSlug();
 		}
 
 		$params = array_filter([
@@ -170,7 +162,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 
 	protected function isLegacyImplementation(): bool
 	{
-		return strpos($this->settings->getSetting('configuration_url'), 'broker/sp/oidc/') !== 0;
+		return strpos($this->settings->getSetting('configuration_url'), 'broker/sp/oidc/') !== false;
 	}
 
 	public function redirectToLogout(IdentityProvider $identityProvider, string $redirectUrl, string $refererUrl = null )

@@ -61,6 +61,7 @@ class IdentityProviderService extends Service implements IdentityProviderService
 		if (is_wp_error($response) || 200 !== wp_remote_retrieve_response_code($response)) {
 			return [];
 		}
+
 		$body = wp_remote_retrieve_body($response);
 
 		$enabledIdps = json_decode($body, true);
@@ -74,6 +75,10 @@ class IdentityProviderService extends Service implements IdentityProviderService
 			$this->idps,
 			fn (IdentityProvider $idp): bool => in_array($idp->getSlug(), $enabledIdps, true)
 		);
+		if (count($enabledIdps) === 0) {
+			return [];
+		}
+
 		$this->cache->set(self::CACHE_KEY, $enabledIdps, self::CACHE_TTL);
 
 		return $enabledIdps;
