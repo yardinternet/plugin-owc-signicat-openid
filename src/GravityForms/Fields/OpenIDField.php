@@ -42,7 +42,7 @@ class OpenIDField extends GF_Field
     public function get_field_input($form, $value = '', $entry = null)
     {
         if (isset($this->openIdSelectedScopeValue) && null !== $this->openIdSelectedScopeValue) {
-            $this->idp->setScope($this->openIdSelectedScopeValue);
+            $this->idp->addIdpScope($this->openIdSelectedScopeValue);
         }
 
         if ($this->openIDService->getUserInfo($this->idp) && ! $this->is_form_editor()) {
@@ -67,7 +67,7 @@ class OpenIDField extends GF_Field
             $resumeUrl = $this->getResumeUrl();
             $input = sprintf(
                 "<a href='%s'>%s</a>",
-                esc_url($this->openIDService->getLoginUrl($this->idp, $resumeUrl, $resumeUrl, $this->idp->getScope())),
+                esc_url($this->openIDService->getLoginUrl($this->idp, $resumeUrl, $resumeUrl, $this->idp->getIdpScopes())),
                 $input
             );
 
@@ -77,6 +77,11 @@ class OpenIDField extends GF_Field
         return sprintf("<div class='ginput_container ginput_container_openid'>%s</div>", $input);
     }
 
+    /**
+     * Prepare the scope options for the select field in the form editor.
+     *
+     * @return array<int, array{value: string, label: string}>
+     */
     private function prepareScopeSelectOptions(): array
     {
         $default = [
@@ -85,13 +90,17 @@ class OpenIDField extends GF_Field
         ];
 
         $supportedScopes = array_map(function ($scope) {
+            if (strpos($scope, $this->idp->getSlug()) === false) {
+                return null; // Skip scopes that do not match the IDP's slug.
+            }
+
             return [
                 'value' => $scope,
                 'label' => $scope,
             ];
         }, $this->openIDService->getScopesSupported() ?? []);
 
-        return array_merge([$default], array_filter($supportedScopes));
+        return [$default, ...array_filter($supportedScopes)];
     }
 
     protected function addPossibleErrorsToInput(string $input): string

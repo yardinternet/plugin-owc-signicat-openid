@@ -10,6 +10,7 @@ class IdentityProvider implements JsonSerializable
 	protected string $name;
 	protected array $mapping;
 	protected string $scope;
+	protected array $idpScopes = array();
 
 	protected string $userDataClass;
 
@@ -53,6 +54,41 @@ class IdentityProvider implements JsonSerializable
 	public function setScope(string $scope ): self
 	{
 		$this->scope = $scope;
+
+		return $this;
+	}
+
+	public function getIdpScopes(): array
+	{
+		return $this->idpScopes;
+	}
+
+	/**
+	 * Add a single IDP scope if it doesn't already exist.
+	 */
+	public function addIdpScope(string $idpScope ): self
+	{
+		if (in_array( $idpScope, $this->idpScopes, true )) {
+			return $this;
+		}
+
+		$this->idpScopes[] = $idpScope;
+
+		return $this;
+	}
+
+	/**
+	 * Add multiple IDP scopes, ignoring any that already exist.
+	 */
+	public function addIdpScopes(array $idpScopes ): self
+	{
+		foreach ($idpScopes as $idpScope) {
+			if (in_array( $idpScope, $this->idpScopes, true )) {
+				continue;
+			}
+
+			$this->idpScopes[] = $idpScope;
+		}
 
 		return $this;
 	}
