@@ -1,11 +1,14 @@
 <li class="open_id_select_scope_setting field_setting" id="openIdScopeSelectWrapper">
 	<label for="openIdSelectedScope" class="section_label">
-		<?php _e( 'Service Catalog - Service Index', 'owc-signicat-openid' ); ?>
+		<?php _e( 'OIDC-scopes', 'owc-signicat-openid' ); ?>
 	</label>
 
 	<select id="openIdSelectedScope" onchange="SetFieldProperty('openIdSelectedScopeValue', this.value);">
 		<!-- Options will be populated by JavaScript -->
 	</select>
+	<small>
+		<?php _e( 'Het selecteren van een scope geeft toegang tot extra gegevens van een gebruiker.', 'owc-signicat-openid' ); ?>
+	</small>
 </li>
 
 <script type="text/javascript">

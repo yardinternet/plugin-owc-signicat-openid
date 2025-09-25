@@ -54,7 +54,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 		$this->settings                = $settings;
 		$this->identityProviderService = $identityProviderService;
 
-		foreach ($this->identityProviderService->getEnabledIdentityProviders() as $identityProvider) {
+		foreach ($this->getEnabledIdentityProviders() as $identityProvider) {
 			add_filter( 'owc_' . $identityProvider->getSlug() . '_is_logged_in', fn (bool $isLoggedIn ): bool => $this->isUserLoggedIn( $isLoggedIn, $identityProvider->getSlug() ) );
 			add_filter( 'owc_' . $identityProvider->getSlug() . '_userdata', fn (?UserDataInterface $userData ): ?UserDataInterface => $this->retrieveUserInfo( $userData, $identityProvider->getSlug() ) );
 		}
@@ -63,6 +63,11 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 	public function getScopesSupported(): ?array
 	{
 		return $this->client->getIssuer()->getMetadata()->getScopesSupported();
+	}
+
+	public function getEnabledIdentityProviders(): array
+	{
+		return $this->identityProviderService->getEnabledIdentityProviders();
 	}
 
 	public function retrieveUserInfo(?UserDataInterface $userInfo, string $idpSlug ): ?UserDataInterface
@@ -94,14 +99,14 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 		return $isUserLoggedIn;
 	}
 
-	public function getLoginUrl(IdentityProvider $identityProvider, string $redirectUrl = null, string $refererUrl = null, string $selectedScope = null ): string
+	public function getLoginUrl(IdentityProvider $identityProvider, ?string $redirectUrl = null, ?string $refererUrl = null, array $selectedIdpScopes = array() ): string
 	{
 		$args = array_filter(
 			array(
 				'idp'         => $identityProvider->getSlug(),
 				'redirectUrl' => $redirectUrl,
 				'refererUrl'  => $refererUrl,
-				'scope'       => $selectedScope,
+				'idpScopes'   => $selectedIdpScopes ? implode( ' ', $selectedIdpScopes ) : null,
 			)
 		);
 
@@ -111,7 +116,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 		);
 	}
 
-	public function getLogoutUrl(IdentityProvider $identityProvider = null, string $redirectUrl = null, string $refererUrl = null ): string
+	public function getLogoutUrl(?IdentityProvider $identityProvider = null, ?string $redirectUrl = null, ?string $refererUrl = null ): string
 	{
 		$args = array_filter(
 			array(
@@ -127,7 +132,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 		);
 	}
 
-	public function authenticate(IdentityProvider $identityProvider, string $redirectUrl, string $refererUrl = null ): void
+	public function authenticate(IdentityProvider $identityProvider, ?string $redirectUrl, ?string $refererUrl = null ): void
 	{
 		$stateID = $this->saveState(
 			array(
@@ -137,10 +142,10 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 			)
 		);
 
-		$simulatorEnabled = (bool) $this->settings->getSetting('enable_simulator');
+		$simulatorEnabled = (bool) $this->settings->getSetting( 'enable_simulator' );
 
-		$scope = ['openid'];
-		$acrValues = [];
+		$scope     = array( 'openid' );
+		$acrValues = array();
 
 		if ($this->isLegacyImplementation()) {
 			$scope[] = $simulatorEnabled ? 'idp_scoping:simulator' : $identityProvider->getScope();
@@ -148,11 +153,15 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 			$acrValues[] = $simulatorEnabled ? 'idp:simulator' : 'idp:' . $identityProvider->getSlug();
 		}
 
-		$params = array_filter([
-			'scope' => implode(' ', $scope),
-			'state' => $stateID,
-			'acr_values' => implode(',', $acrValues),
-		]);
+		$scope = array_merge( $scope, $identityProvider->getIdpScopes() );
+
+		$params = array_filter(
+			array(
+				'scope'      => implode( ' ', array_unique( array_filter( $scope ) ) ),
+				'state'      => $stateID,
+				'acr_values' => implode( ',', $acrValues ),
+			)
+		);
 
 		$redirect_authorization_uri = $this->authorizationService->getAuthorizationUri( $this->client, $params );
 
@@ -162,10 +171,10 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 
 	protected function isLegacyImplementation(): bool
 	{
-		return strpos($this->settings->getSetting('configuration_url'), 'broker/sp/oidc/') !== false;
+		return strpos( $this->settings->getSetting( 'configuration_url' ), 'broker/sp/oidc/' ) !== false;
 	}
 
-	public function redirectToLogout(IdentityProvider $identityProvider, string $redirectUrl, string $refererUrl = null )
+	public function redirectToLogout(IdentityProvider $identityProvider, string $redirectUrl, ?string $refererUrl = null )
 	{
 	}
 

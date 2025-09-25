@@ -19,11 +19,13 @@ interface OpenIDServiceInterface extends ServiceInterface
 {
 	public function getScopesSupported(): ?array;
 
+	public function getEnabledIdentityProviders(): array;
+
 	public function getUserInfo(IdentityProvider $identityProvider ): array;
 
 	public function revoke(IdentityProvider $identityProvider ): void;
 
-	public function getLoginUrl(IdentityProvider $identityProvider, string $redirectUrl = null, string $refererUrl = null ): string;
+	public function getLoginUrl(IdentityProvider $identityProvider, string $redirectUrl = null, string $refererUrl = null, array $selectedIdpScopes = array() ): string;
 
 	public function getLogoutUrl(IdentityProvider $identityProvider = null, string $redirectUrl = null, string $refererUrl = null ): string;
 
