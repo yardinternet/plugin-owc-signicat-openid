@@ -10,6 +10,8 @@ use Facile\OpenIDClient\Issuer\IssuerInterface;
 use Facile\OpenIDClient\Issuer\Metadata\Provider\MetadataProviderBuilder;
 use Facile\OpenIDClient\Service\AuthorizationService;
 use Facile\OpenIDClient\Service\Builder\AuthorizationServiceBuilder;
+use Odan\Session\PhpSession;
+use Odan\Session\SessionInterface;
 use OWCSignicatOpenID\Interfaces\Providers\AppServiceProviderInterface;
 use OWCSignicatOpenID\Interfaces\Providers\SettingsServiceProviderInterface;
 use OWCSignicatOpenID\Interfaces\Services\BlockServiceInterface;
@@ -37,11 +39,9 @@ use OWCSignicatOpenID\Services\SettingsService;
 use OWCSignicatOpenID\Services\ViewService;
 use OWCSignicatOpenID\UserData\DigiDUserData;
 use OWCSignicatOpenID\UserData\eHerkenningUserData;
-use Odan\Session\PhpSession;
-use Odan\Session\SessionInterface;
 use Psr\Container\ContainerInterface;
-use Psr\Log\LogLevel;
 use Psr\Log\LoggerInterface;
+use Psr\Log\LogLevel;
 
 return array(
 	'idps'                                  => array(
@@ -59,6 +59,11 @@ return array(
 			'mapping'       => array(
 				'urn:etoegang:1.9:EntityConcernedID:KvKnr' => 'kvk',
 				'urn:etoegang:1.9:EntityConcernedID:RSIN'  => 'rsin',
+
+				// Version 2
+				'chamber_of_commerce'                      => 'kvk',
+				'eherkenning_vestigingsnr'                 => 'vestigingsNummer',
+				'eherkenning_rsin'                         => 'rsin',
 			),
 			'userDataClass' => eHerkenningUserData::class,
 		),
@@ -68,6 +73,7 @@ return array(
 			'init',
 			function () {
 				$file = sprintf( '%s/idps_errors.php', __DIR__ );
+
 				return file_exists( $file ) ? require_once $file : array();
 			}
 		);

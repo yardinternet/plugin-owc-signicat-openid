@@ -169,7 +169,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 		exit();
 	}
 
-	protected function isLegacyImplementation(): bool
+	public function isLegacyImplementation(): bool
 	{
 		return strpos( $this->settings->getSetting( 'configuration_url' ), 'broker/sp/oidc/' ) !== false;
 	}

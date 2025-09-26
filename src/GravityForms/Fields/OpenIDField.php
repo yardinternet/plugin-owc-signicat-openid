@@ -90,7 +90,7 @@ class OpenIDField extends GF_Field
         ];
 
         $supportedScopes = array_map(function ($scope) {
-            if (strpos($scope, $this->idp->getSlug()) === false) {
+            if (strpos($scope, $this->idp->getSlug()) === false && ! $this->openIDService->isLegacyImplementation()) {
                 return null; // Skip scopes that do not match the IDP's slug.
             }
 
