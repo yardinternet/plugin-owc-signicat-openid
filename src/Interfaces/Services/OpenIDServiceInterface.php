@@ -31,6 +31,8 @@ interface OpenIDServiceInterface extends ServiceInterface
 
 	public function authenticate(IdentityProvider $identityProvider, string $redirectUrl, string $refererUrl = null );
 
+	public function isLegacyImplementation(): bool;
+
 	public function redirectToLogout(IdentityProvider $identityProvider, string $redirectUrl, string $refererUrl = null );
 
 	public function refresh(IdentityProvider $identityProvider );
