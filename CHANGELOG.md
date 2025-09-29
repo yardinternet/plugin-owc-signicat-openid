@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.0
+
+- Add: update to new signicat IDP scoping mechanism
+
 ## 1.2.1
 
 - Fix: redirectUrl and refererUrl can not be false
