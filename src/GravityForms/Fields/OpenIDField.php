@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace OWCSignicatOpenID\GravityForms\Fields;
 
-use GF_Field;
 use GFAPI;
 use GFFormDisplay;
 use GFFormsModel;
-use OWC\IdpUserData\DigiDSession;
-use OWC\IdpUserData\eHerkenningSession;
+use GF_Field;
 use OWCSignicatOpenID\IdentityProvider;
 use OWCSignicatOpenID\Interfaces\Services\OpenIDServiceInterface;
+use OWC\IdpUserData\DigiDSession;
+use OWC\IdpUserData\eHerkenningSession;
 
 class OpenIDField extends GF_Field
 {
@@ -101,6 +101,18 @@ class OpenIDField extends GF_Field
         }, $this->openIDService->getScopesSupported() ?? []);
 
         return [$default, ...array_filter($supportedScopes)];
+    }
+
+    protected function addPossibleErrorsToInput(string $input): string
+    {
+        $errors = $this->openIDService->flashErrors();
+
+        return sprintf(
+            "<div class='ginput_container ginput_container_openid'>%s<input name='input_%s' id='%s' type='hidden' value='0'></div>",
+            $input,
+            $this->id,
+            $this->get_first_input_id($form)
+        );
     }
 
     protected function addPossibleErrorsToInput(string $input): string
@@ -236,7 +248,6 @@ class OpenIDField extends GF_Field
             'conditional_logic_field_setting',
             'css_class_setting',
             'rules_setting',
-            'open_id_select_scope_setting',
         ];
     }
 
