@@ -192,7 +192,13 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 	{
 		$rawCallbackParams = parse_callback_params( $server_request );
 		$stateId           = sanitize_key( $rawCallbackParams['state'] ?? '' );
-		$state             = $this->popState( $stateId );
+
+		if (empty($stateId)) {
+			wp_safe_redirect(get_site_url());
+			exit();
+		}
+
+		$state = $this->popState( $stateId );
 
 		try {
 			$callback_params = $this->authorizationService->getCallbackParams( $server_request, $this->client );
