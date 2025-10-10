@@ -76,6 +76,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 	public function retrieveUserInfo(?UserDataInterface $userInfo, string $idpSlug ): ?UserDataInterface
 	{
 		$idp = $this->identityProviderService->getIdentityProvider( $idpSlug );
+
 		if (null === $idp) {
 			return $userInfo;
 		}
@@ -252,9 +253,14 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 		if ( ! $this->hasActiveSession( $identityProvider )) {
 			return array();
 		}
+
 		$userInfoService = ( new UserInfoServiceBuilder() )->build();
 
-		return $userInfoService->getUserInfo( $this->client, $this->getIdpTokenSet( ( $identityProvider ) ) );
+		try {
+			return $userInfoService->getUserInfo( $this->client, $this->getIdpTokenSet( ( $identityProvider ) ) );
+		} catch (Exception $e) {
+			return array();
+		}
 	}
 
 	public function revoke(IdentityProvider $identityProvider ): void
