@@ -139,8 +139,14 @@ class RouteService extends Service implements RouteServiceInterface
 		foreach ($this->identityProviderService->getEnabledIdentityProviders() as $identityProvider) {
 			if ($this->openIDService->hasActiveSession( $identityProvider )) {
 				$result = $this->openIDService->refresh( $identityProvider );
+
 				if (is_wp_error( $result )) {
-					return $result;
+					return new WP_REST_Response(
+						array(
+							'message' => $result->get_error_message(),
+						),
+						WP_Http::BAD_REQUEST
+					);
 				}
 			}
 		}

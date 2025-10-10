@@ -14,6 +14,7 @@ declare (strict_types=1);
 
 namespace OWCSignicatOpenID\Services;
 
+use Exception;
 use Facile\OpenIDClient\Client\ClientInterface;
 use Facile\OpenIDClient\Exception\OAuth2Exception;
 use function Facile\OpenIDClient\parse_callback_params;
@@ -73,6 +74,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 	public function retrieveUserInfo(?UserDataInterface $userInfo, string $idpSlug ): ?UserDataInterface
 	{
 		$idp = $this->identityProviderService->getIdentityProvider( $idpSlug );
+
 		if (null === $idp) {
 			return $userInfo;
 		}
@@ -189,7 +191,13 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 	{
 		$rawCallbackParams = parse_callback_params( $server_request );
 		$stateId           = sanitize_key( $rawCallbackParams['state'] ?? '' );
-		$state             = $this->popState( $stateId );
+
+		if (empty( $stateId )) {
+			wp_safe_redirect( get_site_url() );
+			exit();
+		}
+
+		$state = $this->popState( $stateId );
 
 		try {
 			$callback_params = $this->authorizationService->getCallbackParams( $server_request, $this->client );
@@ -243,9 +251,14 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 		if ( ! $this->hasActiveSession( $identityProvider )) {
 			return array();
 		}
+
 		$userInfoService = ( new UserInfoServiceBuilder() )->build();
 
-		return $userInfoService->getUserInfo( $this->client, $this->getIdpTokenSet( ( $identityProvider ) ) );
+		try {
+			return $userInfoService->getUserInfo( $this->client, $this->getIdpTokenSet( ( $identityProvider ) ) );
+		} catch (Exception $e) {
+			return array();
+		}
 	}
 
 	public function revoke(IdentityProvider $identityProvider ): void

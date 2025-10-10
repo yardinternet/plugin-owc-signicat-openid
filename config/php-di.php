@@ -99,7 +99,7 @@ return array(
 		return ( new IssuerBuilder() )
 			->setMetadataProviderBuilder( $container->get( MetadataProviderBuilder::class ) )
 			->setJwksProviderBuilder( $container->get( JwksProviderBuilder::class ) )
-			->build( $container->get( SettingsServiceInterface::class )->getSetting( 'configuration_url' ) );
+			->build( $container->get( SettingsServiceInterface::class )->getSetting( 'configuration_url' ) ?: '' );
 	},
 	ClientInterface::class                  => fn (ContainerInterface $container ): ClientInterface => ( new ClientBuilder() )
 		->setIssuer( $container->get( IssuerInterface::class ) )
