@@ -10,28 +10,31 @@
  * @since   0.0.1
  */
 
-declare (strict_types=1);
+declare(strict_types=1);
 
 namespace OWCSignicatOpenID\Services;
 
+use Exception;
 use Facile\OpenIDClient\Client\ClientInterface;
 use Facile\OpenIDClient\Exception\OAuth2Exception;
-use function Facile\OpenIDClient\parse_callback_params;
+use Facile\OpenIDClient\Exception\RemoteException;
 use Facile\OpenIDClient\Service\AuthorizationService;
 use Facile\OpenIDClient\Service\Builder\IntrospectionServiceBuilder;
 use Facile\OpenIDClient\Service\Builder\RevocationServiceBuilder;
 use Facile\OpenIDClient\Service\Builder\UserInfoServiceBuilder;
 use Facile\OpenIDClient\Token\TokenSet;
-use Odan\Session\SessionInterface;
-use OWC\IdpUserData\UserDataInterface;
 use OWCSignicatOpenID\ContainerManager;
 use OWCSignicatOpenID\IdentityProvider;
 use OWCSignicatOpenID\Interfaces\Services\IdentityProviderServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\OpenIDServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\SettingsServiceInterface;
+use OWC\IdpUserData\UserDataInterface;
+use Odan\Session\SessionInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
 use WP_Error;
+
+use function Facile\OpenIDClient\parse_callback_params;
 
 class OpenIDService extends Service implements OpenIDServiceInterface
 {
@@ -266,7 +269,11 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 		}
 		$introspectionService = ( new IntrospectionServiceBuilder() )->build();
 
-		return $introspectionService->introspect( $this->client, $this->getIdpTokenSet( $identityProvider )->getAccessToken() );
+		try {
+			return $introspectionService->introspect( $this->client, $this->getIdpTokenSet( $identityProvider )->getAccessToken() );
+		} catch (Exception | RemoteException $e) {
+			return array();
+		}
 	}
 
 	public function hasActiveSession(IdentityProvider $identityProvider ): bool
