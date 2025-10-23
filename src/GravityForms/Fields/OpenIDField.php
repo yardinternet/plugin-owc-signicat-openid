@@ -107,18 +107,6 @@ class OpenIDField extends GF_Field
     {
         $errors = $this->openIDService->flashErrors();
 
-        return sprintf(
-            "<div class='ginput_container ginput_container_openid'>%s<input name='input_%s' id='%s' type='hidden' value='0'></div>",
-            $input,
-            $this->id,
-            $this->get_first_input_id($form)
-        );
-    }
-
-    protected function addPossibleErrorsToInput(string $input): string
-    {
-        $errors = $this->openIDService->flashErrors();
-
         if (! count($errors)) {
             return $input;
         }
@@ -248,6 +236,7 @@ class OpenIDField extends GF_Field
             'conditional_logic_field_setting',
             'css_class_setting',
             'rules_setting',
+            'open_id_select_scope_setting',
         ];
     }
 
