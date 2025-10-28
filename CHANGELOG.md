@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.1
+
+- Fix: uncaught Facile\OpenIDClient\Exception\RemoteException
+
 ## 1.3.0
 
 - Add: update to new signicat IDP scoping mechanism
