@@ -5,7 +5,9 @@ declare(strict_types=1);
  * Register cache service.
  *
  * @package OWC_Signicat_OpenID
+ *
  * @author  Yard | Digital Agency
+ *
  * @since   0.0.1
  */
 
@@ -37,7 +39,7 @@ class CacheService implements CacheServiceInterface
 	 *
 	 * @return mixed | false
 	 */
-	public function get($key, $standard = null )
+	public function get(string $key, mixed $default = null ): mixed
 	{
 		if (get_transient( $key )) {
 			return get_transient( $key );
