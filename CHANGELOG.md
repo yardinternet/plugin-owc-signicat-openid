@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.0.1
+
+- Fix: related CacheService issues after upgrading to php8
+
 ## v2.0.0
 
 - Refactor: update codebase to PHP 8 standards
