@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OWCSignicatOpenID\Services;
 
+use OWCSignicatOpenID\IdentityProvider;
 use OWCSignicatOpenID\Interfaces\Services\BlockServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\IdentityProviderServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\OpenIDServiceInterface;
@@ -71,7 +72,11 @@ class BlockService extends Service implements BlockServiceInterface
 	public function renderBlock(array $attributes, string $block_content, \WP_Block $block ): string
 	{
 		$identityProvider = $this->identityProviderService->getIdentityProvider( $attributes['idp'] );
-		// TODO: afbreken als idp niet gevonden wordt?
+
+		if ( ! $identityProvider instanceof IdentityProvider) {
+			return '';
+		}
+
 		$image       = $identityProvider->getLogoUrl();
 		$redirectUrl = $attributes['redirectUrl'] ?? wp_unslash( $_SERVER['REQUEST_URI'] );
 		$buttonText  = $attributes['buttonText'] ?? '';
