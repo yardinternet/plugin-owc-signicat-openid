@@ -6,9 +6,7 @@ declare(strict_types=1);
  * OWC Signicat OpenID
  *
  * @package OWC_Signicat_OpenID
- *
  * @author  Yard | Digital Agency
- *
  * @since   0.0.1
  */
 

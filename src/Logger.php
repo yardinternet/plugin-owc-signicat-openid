@@ -6,9 +6,7 @@
  * Logs messages to error_log().
  *
  * @package OWC_Signicat_OpenID
- *
  * @author Yard | Digital Agency
- *
  * @since 0.0.1
  */
 

@@ -5,9 +5,7 @@ declare(strict_types=1);
  * Register cache service.
  *
  * @package OWC_Signicat_OpenID
- *
  * @author  Yard | Digital Agency
- *
  * @since   0.0.1
  */
 
