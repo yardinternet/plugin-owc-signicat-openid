@@ -9,17 +9,17 @@ use OWCSignicatOpenID\Services\ViewService;
 
 class FieldSettings
 {
-    public function addFieldSettings($position, $formId): void
-    {
-        if (! class_exists('GFAPI') || 0 !== $position) {
-            return;
-        }
+	public function addFieldSettings($position, $formId): void
+	{
+		if (! class_exists('GFAPI') || 0 !== $position) {
+			return;
+		}
 
-        echo ContainerManager::getContainer()->get(ViewService::class)->render('scope-select');
-    }
+		echo ContainerManager::getContainer()->get(ViewService::class)->render('scope-select');
+	}
 
-    public function addFieldSettingsSelectScript(): void
-    {
-        echo ContainerManager::getContainer()->get(ViewService::class)->render('scope-select-script');
-    }
+	public function addFieldSettingsSelectScript(): void
+	{
+		echo ContainerManager::getContainer()->get(ViewService::class)->render('scope-select-script');
+	}
 }

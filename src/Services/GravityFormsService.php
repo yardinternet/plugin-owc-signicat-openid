@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace OWCSignicatOpenID\Services;
 
-use OWCSignicatOpenID\GravityForms\FieldSettings;
 use OWCSignicatOpenID\GravityForms\Fields\OpenIDField;
+use OWCSignicatOpenID\GravityForms\FieldSettings;
 use OWCSignicatOpenID\Interfaces\Services\GravityFormsServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\IdentityProviderServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\OpenIDServiceInterface;
@@ -38,8 +38,8 @@ class GravityFormsService extends Service implements GravityFormsServiceInterfac
 		add_filter( 'gform_field_groups_form_editor', $this->addFieldGroup( ... ) );
 		add_filter( 'gform_get_input_value', $this->decrypt( ... ), 10, 4 );
 		add_filter( 'gform_save_field_value', $this->encrypt( ... ), 10, 5 );
-		add_action( 'gform_field_standard_settings', array( ( new FieldSettings() )->addFieldSettings( ... ) ), 10, 2 );
-		add_action( 'gform_editor_js', array( ( new FieldSettings() )->addFieldSettingsSelectScript( ... ) ), 10, 2 );
+		add_action( 'gform_field_standard_settings', ( new FieldSettings() )->addFieldSettings( ... ), 10, 2 );
+		add_action( 'gform_editor_js', ( new FieldSettings() )->addFieldSettingsSelectScript( ... ), 10, 2 );
 	}
 
 	public function decrypt(string $value, array $entry, \GF_Field $field, $input_id ): string
