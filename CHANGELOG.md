@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.0.2
+
+- Refactor: replace get_site_url() with home_url()
+
 ## v2.0.1
 
 - Fix: related CacheService issues after upgrading to php8
