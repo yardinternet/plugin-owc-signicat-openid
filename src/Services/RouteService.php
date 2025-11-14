@@ -73,7 +73,7 @@ class RouteService extends Service implements RouteServiceInterface
 				$serverRequest = ServerRequest::fromGlobals();
 				$queryParams   = $serverRequest->getQueryParams();
 				$idp           = $queryParams['idp'] ?? '';
-				$redirectUrl   = isset( $queryParams['redirectUrl'] ) ? rawurldecode( $queryParams['redirectUrl'] ) : get_site_url(); // Maybe always redirect to home?
+				$redirectUrl   = isset( $queryParams['redirectUrl'] ) ? rawurldecode( $queryParams['redirectUrl'] ) : home_url(); // Maybe always redirect to home?
 				$refererUrl    = isset( $queryParams['refererUrl'] ) ? rawurldecode( $queryParams['refererUrl'] ) : wp_get_referer(); // Do we need to validate if the referer is from this site?
 
 				try {

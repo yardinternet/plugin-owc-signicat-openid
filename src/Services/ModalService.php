@@ -73,7 +73,7 @@ class ModalService extends Service implements ModalServiceInterface
 			'owcSignicatOIDCModalSettings',
 			array(
 				'sessionTTL' => 15,
-				'logoutUrl'  => get_site_url(),
+				'logoutUrl'  => home_url(),
 			)
 		);
 

@@ -114,7 +114,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 
 		return add_query_arg(
 			$args,
-			get_site_url( null, $this->settings->getSetting( 'path_login' ) )
+			home_url( $this->settings->getSetting( 'path_login' ) )
 		);
 	}
 
@@ -130,7 +130,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 
 		return add_query_arg(
 			$args,
-			get_site_url( null, $this->settings->getSetting( 'path_logout' ) )
+			home_url( $this->settings->getSetting( 'path_logout' ) )
 		);
 	}
 
@@ -193,7 +193,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 		$stateId           = sanitize_key( $rawCallbackParams['state'] ?? '' );
 
 		if (empty( $stateId )) {
-			wp_safe_redirect( get_site_url() );
+			wp_safe_redirect( home_url() );
 			exit();
 		}
 
@@ -205,7 +205,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 			$this->maybeStartSession();
 			$this->session->getFlash()->add( $exception->getError(), ContainerManager::getContainer()->get( 'idps_errors' )[ $exception->getError() ] ?? $exception->getDescription() );
 			$this->session->save();
-			wp_safe_redirect( $state['refererUrl'] ?? get_site_url() );
+			wp_safe_redirect( $state['refererUrl'] ?? home_url() );
 			exit;
 		}
 

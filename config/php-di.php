@@ -92,7 +92,7 @@ return array(
 				'client_id'     => sanitize_text_field( $settings->getSetting( 'client_id' ) ),
 				'client_secret' => sanitize_text_field( $settings->getSetting( 'client_secret' ) ),
 				'redirect_uris' => array(
-					sanitize_text_field( get_site_url( null, $settings->getSetting( 'path_redirect' ) ) ),
+					sanitize_text_field( home_url( $settings->getSetting( 'path_redirect' ) ) ),
 				),
 			)
 		);
