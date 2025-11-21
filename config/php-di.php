@@ -83,7 +83,7 @@ return array(
 	LoggerInterface::class                  => fn (ContainerInterface $container ): LoggerInterface => new Logger( $container->get( 'logger.level' ) ),
 	'logger.level'                          => fn (): string => ( defined( 'WP_DEBUG' ) && WP_DEBUG ) ? LogLevel::WARNING : '',
 	MetadataProviderBuilder::class          => fn (ContainerInterface $container ): MetadataProviderBuilder => ( new MetadataProviderBuilder() )->setCache( $container->get( CacheServiceInterface::class ) )->setCacheTtl( MONTH_IN_SECONDS ),
-	JwksProviderBuilder::class              => fn (ContainerInterface $container ): JwksProviderBuilder => ( new JwksProviderBuilder() )->withCache( $container->get( CacheServiceInterface::class ) )->withCacheTtl( DAY_IN_SECONDS ),
+	JwksProviderBuilder::class              => fn (ContainerInterface $container ): JwksProviderBuilder => ( new JwksProviderBuilder() )->setCache( $container->get( CacheServiceInterface::class ) )->setCacheTtl( DAY_IN_SECONDS ),
 	ClientMetadataInterface::class          => function (ContainerInterface $container ): ClientMetadata {
 		$settings = $container->get( SettingsServiceInterface::class );
 

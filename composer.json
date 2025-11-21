@@ -38,7 +38,7 @@
 	],
 	"require": {
 		"doctrine/annotations": "^1.13",
-		"facile-it/php-openid-client": "0.4.0-beta1",
+		"facile-it/php-openid-client": "0.3.5",
 		"guzzlehttp/guzzle": "^7.8",
 		"guzzlehttp/psr7": "^1.9.1 || ^2.5.1",
 		"http-interop/http-factory-guzzle": "^1.2",
