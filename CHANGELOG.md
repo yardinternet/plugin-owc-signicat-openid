@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.0.3
+
+- Change: don't use beta version of facile-it/php-openid-client
+
 ## v2.0.2
 
 - Refactor: replace get_site_url() with home_url()
