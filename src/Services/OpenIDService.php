@@ -153,6 +153,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 			$scope[] = $simulatorEnabled ? 'idp_scoping:simulator' : $identityProvider->getScope();
 		} else {
 			$acrValues[] = $simulatorEnabled ? 'idp:simulator' : 'idp:' . $identityProvider->getSlug();
+			$scope[]     = 'nin';
 		}
 
 		$scope = array_merge( $scope, $identityProvider->getIdpScopes() );
