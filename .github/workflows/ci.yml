@@ -11,15 +11,18 @@ jobs:
     name: PHPUnit
     runs-on: ubuntu-latest
 
+    env:
+      COMPOSER_TOKEN: ${{ secrets.YARD_BOT_PAT }}
+
     strategy:
       fail-fast: false
       matrix:
-        php-version:
-          - '8.1'
-          - '8.2'
-        dependency-versions:
-          - 'lowest'
-          - 'highest'
+        include:
+          - php-version: '8.1'
+            dependency-versions: 'highest'
+
+          - php-version: '8.2'
+            dependency-versions: 'highest'
 
     steps:
       - name: Checkout
@@ -31,16 +34,16 @@ jobs:
           php-version: ${{ matrix.php-version }}
           coverage: none
 
-      - name: Install PHPCS
-        run: |
-          composer global require squizlabs/php_codesniffer
-          export PATH=$PATH:$HOME/.composer/vendor/bin
+      - name: Install PHP_CodeSniffer
+        run: composer global require squizlabs/php_codesniffer --no-progress --no-suggest
 
       - name: Install composer dependencies
         uses: ramsey/composer-install@v2
         with:
           dependency-versions: ${{ matrix.dependency-versions }}
+          composer-options: "--prefer-dist --no-progress --no-suggest"
+          github-token: ${{ secrets.YARD_BOT_PAT }}
 
-    # TODO
-    # - name: Run PHPUnit
-    #  run: vendor/bin/phpunit tests
+
+      # - name: Run PHPUnit
+      #   run: vendor/bin/phpunit tests

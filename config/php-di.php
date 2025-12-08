@@ -51,7 +51,8 @@ return array(
 			'slug'          => 'digid',
 			'name'          => 'DigiD',
 			'mapping'       => array(
-				'sub' => 'bsn',
+				'sub' => 'sub',
+				'nin' => 'nin',
 			),
 			'userDataClass' => DigiDUserData::class,
 		),
