@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.1.0
+
+- Change: use nin attribute from signicat response before sub attribute
+- Chore: CODEOWNERS
+
 ## v2.0.3
 
 - Change: don't use beta version of facile-it/php-openid-client
