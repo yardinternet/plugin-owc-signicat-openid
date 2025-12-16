@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.1.1
+
+- Fix: save session after removing IdP token on logout
+
 ## v2.1.0
 
 - Change: use nin attribute from signicat response before sub attribute
