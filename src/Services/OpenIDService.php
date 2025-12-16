@@ -360,13 +360,14 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 		return $this->session->get( 'owc_openid_' . $identityProvider->getSlug() );
 	}
 
-	private function setIdpTokenSet(IdentityProvider $identityProvider, TokenSet $tokenSet )
+	private function setIdpTokenSet(IdentityProvider $identityProvider, TokenSet $tokenSet ): void
 	{
 		$this->session->set( 'owc_openid_' . $identityProvider->getSlug(), $tokenSet );
 	}
 
-	private function removeIdpTokenSet(IdentityProvider $identityProvider )
+	private function removeIdpTokenSet(IdentityProvider $identityProvider ): void
 	{
 		$this->session->remove( 'owc_openid_' . $identityProvider->getSlug() );
+		$this->session->save();
 	}
 }
