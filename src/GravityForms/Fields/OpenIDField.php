@@ -71,6 +71,7 @@ class OpenIDField extends GF_Field
                 $input
             );
 
+			$input = $this->addDefaultDescIDP($input);
             $input = $this->addPossibleErrorsToInput($input);
         }
 
@@ -102,6 +103,31 @@ class OpenIDField extends GF_Field
 
         return [$default, ...array_filter($supportedScopes)];
     }
+
+	protected function addDefaultDescIDP(string $input): string
+	{
+		$defaultDescriptions = [
+			'digid' => 'Voor dit formulier moet u inloggen met DigiD. Heeft u nog geen DigiD vraag dit dan aan <a href="https://www.digid.nl/aanvragen"> op de website van DigiD.</a>',
+			'eherkenning' => '<em>Druk op het logo om in te loggen</em>',
+		];
+
+		$description = (string) ($this->description ?? '');
+
+		if ('' === $description && array_key_exists($this->idp->getSlug(), $defaultDescriptions)) {
+			$description = $defaultDescriptions[$this->idp->getSlug()] ?? '';
+		}
+
+		if ('' !== $description) {
+			$html = sprintf(
+				'<div class="gf_openid_description">%s</div>',
+				$description
+			);
+
+			return $input . $html;
+		}
+
+		return $input;
+	}
 
     protected function addPossibleErrorsToInput(string $input): string
     {
