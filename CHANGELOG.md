@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.1.2
+
+- Fix: idps errors container definition with translatables
+
 ## v2.1.1
 
 - Fix: save session after removing IdP token on logout
