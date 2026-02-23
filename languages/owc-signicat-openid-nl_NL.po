@@ -1,5 +1,3 @@
-# Copyright (C) 2024 Yard | Digital Agency
-# This file is distributed under the EUPL.
 msgid ""
 msgstr ""
 "Project-Id-Version: OWC | Signicat OpenID 1.0.0\n"
@@ -11,6 +9,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "POT-Creation-Date: 2024-12-05T07:15:07+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Language: \n"
 "X-Generator: WP-CLI 2.10.0\n"
 "X-Domain: owc-signicat-openid\n"
 
@@ -39,59 +38,75 @@ msgstr "Yard | Digital Agency"
 msgid "https://www.yard.nl"
 msgstr "https://www.yard.nl"
 
-#: resources/config/idps_errors.php:4
-msgid "The user cancelled"
-msgstr "De gebruiker heeft geannuleerd"
-
-#: resources/config/idps_errors.php:5
-msgid "Authentication with the IdP was aborted, most likely because the end-user cancelled the authentication."
-msgstr "Authenticatie met de IdP is afgebroken, hoogstwaarschijnlijk omdat de eindgebruiker de authenticatie heeft geannuleerd."
-
-#: resources/views/settings.php:19
+#: resources/views/settings.php:17
 #: src/Services/SettingsService.php:39
 msgid "Signicat OpenID"
 msgstr "Signicat OpenID"
 
-#: resources/views/settings.php:28
+#: resources/views/settings.php:26
 msgid "Configuration URL"
 msgstr "Configuratie URL"
 
-#: resources/views/settings.php:34
+#: resources/views/settings.php:32
 msgid "Example: https://example.com/.well-known/openid-configuration"
 msgstr "Voorbeeld: https://example.com/.well-known/openid-configuration"
 
-#: resources/views/settings.php:41
+#: resources/views/settings.php:39
 msgid "Client ID"
 msgstr "Client ID"
 
-#: resources/views/settings.php:51
+#: resources/views/settings.php:49
 msgid "Client Secret"
 msgstr "Client Secret"
 
-#: resources/views/settings.php:61
+#: resources/views/settings.php:59
 msgid "Login path"
 msgstr "Login pad"
 
-#: resources/views/settings.php:67
+#: resources/views/settings.php:65
 msgid "Example: sso-login"
 msgstr "Voorbeeld: sso-login"
 
-#: resources/views/settings.php:74
+#: resources/views/settings.php:72
 msgid "Logout path"
 msgstr "Logout pad"
 
-#: resources/views/settings.php:80
+#: resources/views/settings.php:78
 msgid "Example: sso-logout"
 msgstr "Voorbeeld: sso-logout"
 
-#: resources/views/settings.php:87
+#: resources/views/settings.php:85
 msgid "Redirect path"
 msgstr "Redirect pad"
 
-#: resources/views/settings.php:93
+#: resources/views/settings.php:91
 msgid "Example: redirect"
 msgstr "Voorbeeld: redirect"
 
-#: resources/views/settings.php:100
+#: resources/views/settings.php:98
 msgid "Enable simulator"
 msgstr "Simulator inschakelen"
+
+#: resources/views/scope-select.php:3
+msgid "OIDC-scopes"
+msgstr "OIDC-scopes"
+
+#: resources/views/scope-select.php:10
+msgid "Selecting a scope provides access to additional information about a user."
+msgstr "Het selecteren van een scope geeft toegang tot extra gegevens van een gebruiker."
+
+#: src/GravityForms/Fields/OpenIDField.php:89
+msgid "Select a Service Index"
+msgstr "Selecteer een Service Index"
+
+#: config/idps_errors.php:4
+msgid "The user cancelled"
+msgstr "De gebruiker heeft geannuleerd"
+
+#: config/idps_errors.php:5
+msgid "Authentication with the IdP was aborted, most likely because the end-user cancelled the authentication."
+msgstr "Authenticatie met de IdP is afgebroken, hoogstwaarschijnlijk omdat de eindgebruiker de authenticatie heeft geannuleerd."
+
+#: config/idps_errors.php:6
+msgid "Login cancelled"
+msgstr "Login geannuleerd"

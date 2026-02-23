@@ -19,6 +19,7 @@ use Facile\OpenIDClient\Exception\RemoteException;
 use Facile\OpenIDClient\Service\AuthorizationService;
 use Facile\OpenIDClient\Service\Builder\IntrospectionServiceBuilder;
 use Facile\OpenIDClient\Service\Builder\RevocationServiceBuilder;
+use Facile\OpenIDClient\Service\RevocationService;
 use Facile\OpenIDClient\Service\Builder\UserInfoServiceBuilder;
 use Facile\OpenIDClient\Token\TokenSet;
 use OWCSignicatOpenID\ContainerManager;
@@ -36,6 +37,9 @@ use function Facile\OpenIDClient\parse_callback_params;
 
 class OpenIDService extends Service implements OpenIDServiceInterface
 {
+	private const DIGID_GENERIC_ERROR = 'Inloggen bij deze organisatie is niet gelukt. Probeert u het later nog een keer. Lukt het nog steeds niet? Log in bij Mijn DigiD. Zo controleert u of uw DigiD goed werkt. Mogelijk is er een storing bij de organisatie waar u inlogt.';
+	private const EHERKENNING_GENERIC_ERROR = 'Inloggen bij deze organisatie is niet gelukt. Probeert u het later nog een keer. Mogelijk is er een storing bij de organisatie waar u inlogt.';
+
 	protected ClientInterface $client;
 	protected AuthorizationService $authorizationService;
 	protected SessionInterface $session;
@@ -199,12 +203,13 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 		}
 
 		$state = $this->popState( $stateId );
+		$identityProvider = $state['identityProvider'];
 
 		try {
 			$callback_params = $this->authorizationService->getCallbackParams( $server_request, $this->client );
 		} catch (OAuth2Exception $exception) {
 			$this->maybeStartSession();
-			$this->session->getFlash()->add( $exception->getError(), ContainerManager::getContainer()->get( 'idps_errors' )[ $exception->getError() ] ?? $exception->getDescription() );
+			$this->handleIdpsError($exception, $identityProvider);
 			$this->session->save();
 			wp_safe_redirect( $state['refererUrl'] ?? home_url() );
 			exit;
@@ -216,13 +221,29 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 		if (null === $tokenSet->getIdToken()) {
 			throw new RuntimeException( 'Unauthorized' );
 		}
-		$identityProvider = $state['identityProvider'];
 
 		$this->setIdpTokenSet( $identityProvider, $tokenSet );
 		$this->session->save();
 
 		wp_safe_redirect( $state['redirectUrl'] );
 		exit;
+	}
+
+	private function handleIdpsError(OAuth2Exception $exception, IdentityProvider $identityProvider): void
+	{
+		$allowed = ['AuthnFailed'];
+
+		if (in_array($exception->getError(), $allowed, true)) {
+			$errorText = ContainerManager::getContainer()->get( 'idps_errors' )[ $exception->getError() ] ?? $exception->getDescription();
+		} elseif('digid' === $identityProvider->getSlug()) {
+			$errorText = self::DIGID_GENERIC_ERROR; // Generic error message for all other errors, to avoid showing technical details to the user.
+		} elseif('eherkenning' === $identityProvider->getSlug()) {
+			$errorText = self::EHERKENNING_GENERIC_ERROR; // Generic error message for all other errors, to avoid showing technical details to the user.
+		} else {
+			$errorText = $exception->getDescription();
+		}
+
+		$this->session->getFlash()->add( $exception->getError(), $errorText );
 	}
 
 	/**
@@ -268,9 +289,78 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 		if ( ! $this->hasIdpTokenSet( $identityProvider )) {
 			throw new RuntimeException( 'You are not logged in' );
 		}
+
+		$tokenSet = $this->getIdpTokenSet( $identityProvider );
+
+		if ( ! $tokenSet instanceof TokenSet ) {
+			throw new RuntimeException( 'Invalid token set' );
+		}
+
 		$revocationService = ( new RevocationServiceBuilder() )->build();
-		$revocationService->revoke( $this->client, $this->getIdpTokenSet( $identityProvider )->getAccessToken() );
-		$this->removeIdpTokenSet( $identityProvider );
+
+		try {
+			$this->revokeAccessToken( $tokenSet, $revocationService );
+			$this->revokeRefreshToken( $tokenSet, $revocationService );
+		} catch (Exception $e) {
+			// Ignore revocation errors to ensure local session cleanup still occurs.
+		} finally {
+			$this->removeIdpTokenSet( $identityProvider );
+			$this->redirectToSessionEndpoint( $tokenSet );
+		}
+	}
+
+	protected function revokeAccessToken( TokenSet $tokenSet, RevocationService $revocationService ): void
+	{
+		$accessToken = $tokenSet->getAccessToken();
+
+		if ( ! is_string( $accessToken ) || '' === $accessToken ) {
+			return;
+		}
+
+		$revocationService->revoke(
+			$this->client,
+			$accessToken,
+			array(
+				'token_type_hint' => 'access_token',
+			)
+		);
+	}
+
+	protected function revokeRefreshToken( TokenSet $tokenSet, RevocationService $revocationService ): void
+	{
+		$refreshToken = $tokenSet->getRefreshToken();
+
+		if ( ! is_string( $refreshToken ) || '' === $refreshToken ) {
+			return;
+		}
+
+		$revocationService->revoke(
+			$this->client,
+			$refreshToken,
+			array(
+				'token_type_hint' => 'refresh_token',
+			)
+		);
+	}
+
+	protected function redirectToSessionEndpoint( TokenSet $tokenSet ): void
+	{
+		$endSession = $this->client->getIssuer()->getMetadata()->get( 'end_session_endpoint' );
+		$idToken    = $tokenSet->getIdToken();
+
+		if ( ! is_string( $endSession ) || '' === $endSession || ! is_string( $idToken ) || '' === $idToken ) {
+			return;
+		}
+
+		$params = array(
+			'id_token_hint'            => $idToken,
+			'post_logout_redirect_uri' => home_url(),
+		);
+
+		$logoutUrl = esc_url_raw( $endSession . ( str_contains( $endSession, '?' ) ? '&' : '?' ) . http_build_query( $params ));
+
+		wp_redirect( $logoutUrl );
+		exit;
 	}
 
 	public function introspect(IdentityProvider $identityProvider ): array
