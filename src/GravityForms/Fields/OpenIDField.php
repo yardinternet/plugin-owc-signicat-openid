@@ -86,7 +86,7 @@ class OpenIDField extends GF_Field
     {
         $default = [
             'value' => '',
-            'label' => __('Selecteer een Service Index', 'owc-signicat-openid'),
+            'label' => __('Select a Service Index', 'owc-signicat-openid'),
         ];
 
         $supportedScopes = array_map(function ($scope) {

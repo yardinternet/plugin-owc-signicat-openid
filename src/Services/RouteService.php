@@ -11,6 +11,7 @@ use OWCSignicatOpenID\Interfaces\Services\IdentityProviderServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\OpenIDServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\RouteServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\SettingsServiceInterface;
+use Psr\Log\LoggerInterface;
 use WP_Http;
 use WP_REST_Response;
 use WP_REST_Server;
@@ -22,15 +23,18 @@ class RouteService extends Service implements RouteServiceInterface
 	protected SettingsServiceInterface $settings;
 	protected OpenIDServiceInterface $openIDService;
 	protected IdentityProviderServiceInterface $identityProviderService;
+	protected LoggerInterface $logger;
 
 	public function __construct(
 		SettingsServiceInterface $settings,
 		OpenIDServiceInterface $openIDService,
-		IdentityProviderServiceInterface $identityProviderService
+		IdentityProviderServiceInterface $identityProviderService,
+		LoggerInterface $logger
 	) {
 		$this->settings                = $settings;
 		$this->openIDService           = $openIDService;
 		$this->identityProviderService = $identityProviderService;
+		$this->logger                  = $logger;
 	}
 
 	public function register()
@@ -85,7 +89,12 @@ class RouteService extends Service implements RouteServiceInterface
 
 					$this->openIDService->revoke( $identityProvider );
 				} catch (Exception $e) {
-					// Fail gracefully.
+					$this->logger->error(
+						'Failed to revoke tokens during logout',
+						array(
+							'exception' => $e,
+						)
+					);
 				} finally {
 					wp_safe_redirect( esc_url( $redirectUrl ) );
 					exit;

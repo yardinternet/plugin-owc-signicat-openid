@@ -7,7 +7,7 @@
 		<!-- Options will be populated by JavaScript -->
 	</select>
 	<small>
-		<?php _e( 'Het selecteren van een scope geeft toegang tot extra gegevens van een gebruiker.', 'owc-signicat-openid' ); ?>
+		<?php _e( 'Selecting a scope provides access to additional information about a user.', 'owc-signicat-openid' ); ?>
 	</small>
 </li>
 
