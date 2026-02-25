@@ -112,7 +112,12 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 				'idp'         => $identityProvider->getSlug(),
 				'redirectUrl' => $redirectUrl,
 				'refererUrl'  => $refererUrl,
-				'idpScopes'   => $selectedIdpScopes ? implode( ' ', $selectedIdpScopes ) : null,
+				'idpScopes' => implode(
+					' ',
+					array_unique(
+						array_merge( array( 'offline_access' ), $selectedIdpScopes )
+					)
+				),
 			)
 		);
 
