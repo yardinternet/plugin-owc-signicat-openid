@@ -115,7 +115,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 				'idpScopes' => implode(
 					' ',
 					array_unique(
-						array_merge(['offline_access'], $selectedIdpScopes)
+						array_merge( array( 'offline_access' ), $selectedIdpScopes )
 					)
 				),
 			)
