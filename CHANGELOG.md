@@ -1,5 +1,9 @@
 # Changelog
 
+## [v2.1.5] - 2026-02-26
+
+- Fix: rest logout
+
 ## [v2.1.4] - 2026-02-26
 
 - Fix: add offline_access scope to login request to resolve missing refresh token
