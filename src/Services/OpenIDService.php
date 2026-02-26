@@ -288,7 +288,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 		}
 	}
 
-	public function revoke(IdentityProvider $identityProvider ): void
+	public function revoke(IdentityProvider $identityProvider ): string
 	{
 		$this->maybeStartSession();
 		if ( ! $this->hasIdpTokenSet( $identityProvider )) {
@@ -310,11 +310,12 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 			// Ignore revocation errors to ensure local session cleanup still occurs.
 		} finally {
 			$this->removeIdpTokenSet( $identityProvider );
-			$this->redirectToSessionEndpoint( $tokenSet );
 		}
+
+		return $this->buildEndSessionUrl( $tokenSet );
 	}
 
-	protected function revokeAccessToken( TokenSet $tokenSet, RevocationService $revocationService ): void
+	private function revokeAccessToken( TokenSet $tokenSet, RevocationService $revocationService ): void
 	{
 		$accessToken = $tokenSet->getAccessToken();
 
@@ -331,7 +332,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 		);
 	}
 
-	protected function revokeRefreshToken( TokenSet $tokenSet, RevocationService $revocationService ): void
+	private function revokeRefreshToken( TokenSet $tokenSet, RevocationService $revocationService ): void
 	{
 		$refreshToken = $tokenSet->getRefreshToken();
 
@@ -348,13 +349,18 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 		);
 	}
 
-	protected function redirectToSessionEndpoint( TokenSet $tokenSet ): void
+	private function buildEndSessionUrl( TokenSet $tokenSet ): string
 	{
 		$endSession = $this->client->getIssuer()->getMetadata()->get( 'end_session_endpoint' );
-		$idToken    = $tokenSet->getIdToken();
 
-		if ( ! is_string( $endSession ) || '' === $endSession || ! is_string( $idToken ) || '' === $idToken ) {
-			return;
+		if ( ! is_string( $endSession ) || '' === $endSession) {
+			throw new RuntimeException( 'End session endpoint not configured for this identity provider' );
+		}
+
+		$idToken = $tokenSet->getIdToken();
+
+		if ( ! is_string( $idToken ) || '' === $idToken ) {
+			throw new RuntimeException( 'ID token is required for logout' );
 		}
 
 		$params = array(
@@ -364,8 +370,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 
 		$logoutUrl = esc_url_raw( $endSession . ( str_contains( $endSession, '?' ) ? '&' : '?' ) . http_build_query( $params ));
 
-		wp_redirect( $logoutUrl );
-		exit;
+		return ( $logoutUrl );
 	}
 
 	public function introspect(IdentityProvider $identityProvider ): array

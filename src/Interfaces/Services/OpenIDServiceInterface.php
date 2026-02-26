@@ -21,7 +21,7 @@ interface OpenIDServiceInterface extends ServiceInterface
 
 	public function getUserInfo(IdentityProvider $identityProvider ): array;
 
-	public function revoke(IdentityProvider $identityProvider ): void;
+	public function revoke(IdentityProvider $identityProvider ): string;
 
 	public function getLoginUrl(IdentityProvider $identityProvider, string $redirectUrl = null, string $refererUrl = null, array $selectedIdpScopes = array() ): string;
 

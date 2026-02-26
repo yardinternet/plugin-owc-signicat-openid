@@ -127,10 +127,12 @@ class OWC_Signicat_OIDC_Modal {
 	};
 
 	logout = () => {
-		apiFetch({
-			path: 'owc-signicat-openid/v1/revoke',
-		}).then(() => {
-			window.location = this.logoutUrl;
+		apiFetch({ path: 'owc-signicat-openid/v1/revoke' }).then((res) => {
+			if (res?.logoutUrl) {
+				window.location.assign(res.logoutUrl);
+				return;
+			}
+			window.location.assign(this.logoutUrl); // fallback
 		});
 	};
 
