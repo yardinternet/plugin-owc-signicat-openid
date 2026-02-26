@@ -1,5 +1,9 @@
 # Changelog
 
+## [v2.1.4] - 2026-02-26
+
+- Fix: add offline_access scope to login request to resolve missing refresh token
+
 ## [v2.1.3] - 2026-02-24
 
 - Fix: implement proper logout flow and DigiD compliant error handling
