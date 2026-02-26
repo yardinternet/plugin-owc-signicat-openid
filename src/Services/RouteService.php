@@ -87,14 +87,14 @@ class RouteService extends Service implements RouteServiceInterface
 						throw new Exception();
 					}
 
-					$this->openIDService->revoke( $identityProvider );
+					$logoutUrl = $this->openIDService->revoke( $identityProvider );
+
+					wp_redirect( $logoutUrl );
+					exit;
 				} catch (Exception $e) {
-					$this->logger->error(
-						'Failed to revoke tokens during logout',
-						array(
-							'exception' => $e,
-						)
-					);
+					$this->logger->error('Failed to revoke tokens during logout', array(
+						'exception' => $e,
+					));
 				} finally {
 					wp_safe_redirect( esc_url( $redirectUrl ) );
 					exit;
@@ -129,17 +129,31 @@ class RouteService extends Service implements RouteServiceInterface
 	public function revoke(): WP_REST_Response
 	{
 		foreach ($this->identityProviderService->getEnabledIdentityProviders() as $identityProvider) {
-			if ($this->openIDService->hasActiveSession( $identityProvider )) {
-				$result = $this->openIDService->revoke( $identityProvider );
+			if (! $this->openIDService->hasActiveSession($identityProvider)) {
+				continue;
 			}
+
+			try {
+				$logoutUrl = $this->openIDService->revoke($identityProvider);
+			} catch (Exception $e) {
+				$this->logger->error('Failed to revoke tokens during REST logout', array(
+					'exception' => $e,
+				));
+
+				return new WP_REST_Response([
+					'message' => 'Failed to revoke tokens',
+				], WP_Http::INTERNAL_SERVER_ERROR);
+			}
+
+			return new WP_REST_Response([
+				'message'   => 'Tokens revoked',
+				'logoutUrl' => $logoutUrl,
+			], WP_Http::OK);
 		}
 
-		return new WP_REST_Response(
-			array(
-				'message' => 'Tokens revoked',
-			),
-			WP_Http::OK
-		);
+		return new WP_REST_Response([
+			'message' => 'No active session',
+		], WP_Http::OK);
 	}
 
 	public function refresh(): WP_REST_Response
