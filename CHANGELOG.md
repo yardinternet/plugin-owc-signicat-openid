@@ -1,5 +1,9 @@
 # Changelog
 
+## [v2.1.6] - 2026-02-27
+
+- Fix: make session timeout logout more robust and prevent race conditions
+
 ## [v2.1.5] - 2026-02-26
 
 - Fix: rest logout
