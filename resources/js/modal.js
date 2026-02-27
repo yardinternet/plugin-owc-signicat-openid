@@ -23,8 +23,9 @@ class OWC_Signicat_OIDC_Modal {
 
 		this.modalOpenClass = 'show';
 		this.modalIsOpen = false;
-		this.lastActivity = new Date();
+		this.lastActivity = Date.now();
 		this.lastActivityIsUpdated = false;
+		this.isLoggingOut = false;
 
 		this.modalEl = document.getElementById(modalWrapperId);
 		this.refreshButtonEl = document.getElementById(refreshButtonId);
@@ -127,13 +128,16 @@ class OWC_Signicat_OIDC_Modal {
 	};
 
 	logout = () => {
-		apiFetch({ path: 'owc-signicat-openid/v1/revoke' }).then((res) => {
-			if (res?.logoutUrl) {
-				window.location.assign(res.logoutUrl);
-				return;
-			}
-			window.location.assign(this.logoutUrl); // fallback
-		});
+		if (this.isLoggingOut) return;
+		this.isLoggingOut = true;
+
+		apiFetch({ path: 'owc-signicat-openid/v1/revoke', method: 'GET' })
+			.then((res) => {
+				window.location.assign(res?.logoutUrl || this.logoutUrl);
+			})
+			.catch(() => {
+				window.location.assign(this.logoutUrl);
+			});
 	};
 
 	keepSessionAlive = () => {
