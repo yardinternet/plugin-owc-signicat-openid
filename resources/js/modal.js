@@ -55,8 +55,17 @@ class OWC_Signicat_OIDC_Modal {
 	}
 
 	initTimer() {
-		setInterval(this.checkSessionStatus, this.second);
-		setInterval(this.keepSessionAlive, this.minute);
+		this.sessionCheckInterval = setInterval(
+			this.checkSessionStatus,
+			this.second
+		);
+		this.keepAliveInterval = setInterval(this.keepSessionAlive, this.minute);
+	}
+
+	clearAllIntervals() {
+		clearInterval(this.sessionCheckInterval);
+		clearInterval(this.keepAliveInterval);
+		this.clearCountdown();
 	}
 
 	checkSessionStatus = () => {
@@ -77,7 +86,7 @@ class OWC_Signicat_OIDC_Modal {
 	}
 
 	sessionEnd() {
-		this.clearCountdown();
+		this.clearAllIntervals();
 		this.logout();
 	}
 
@@ -130,6 +139,7 @@ class OWC_Signicat_OIDC_Modal {
 	logout = () => {
 		if (this.isLoggingOut) return;
 		this.isLoggingOut = true;
+		this.clearAllIntervals();
 
 		apiFetch({ path: 'owc-signicat-openid/v1/revoke', method: 'GET' })
 			.then((res) => {
@@ -141,6 +151,8 @@ class OWC_Signicat_OIDC_Modal {
 	};
 
 	keepSessionAlive = () => {
+		if (this.isLoggingOut) return;
+
 		if (this.lastActivityIsUpdated) {
 			apiFetch({
 				path: 'owc-signicat-openid/v1/refresh',
