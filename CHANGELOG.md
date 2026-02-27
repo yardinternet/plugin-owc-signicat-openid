@@ -1,5 +1,9 @@
 # Changelog
 
+## [v2.1.7] - 2026-02-27
+
+- Fix: first clear refresh intervals before logging out to avoid race condition
+
 ## [v2.1.6] - 2026-02-27
 
 - Fix: make session timeout logout more robust and prevent race conditions
