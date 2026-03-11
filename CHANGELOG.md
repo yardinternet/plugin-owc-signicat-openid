@@ -1,5 +1,11 @@
 # Changelog
 
+## [v3.0.0] - 2026-03-11
+
+- Change: display idp errors by idp in openid block
+- Chore: upgrade odan/session to v6
+- Chore: require PHP ^8.2
+
 ## [v2.1.7] - 2026-02-27
 
 - Fix: first clear refresh intervals before logging out to avoid race condition
