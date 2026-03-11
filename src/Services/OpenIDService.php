@@ -248,7 +248,31 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 			$errorText = $exception->getDescription();
 		}
 
-		$this->session->getFlash()->add( $exception->getError(), $errorText );
+		$this->session->getFlash()->add($identityProvider->getSlug(), $errorText);
+	}
+
+	/**
+	 * Retrieves flash errors for a specific IDP.
+	 *
+	 * Flash messages are automatically removed after retrieval. Due to the hybrid
+	 * session setup, the flash storage is explicitly cleared to prevent stale
+	 * messages from reappearing on subsequent requests.
+	 *
+	 * @since NEXT
+	 */
+	public function flashErrorsByIdp(string $idp): array
+	{
+		$errors = $this->session->getFlash()->get($idp);
+
+		if ( 0 === count($errors) ) {
+			return array();
+		}
+
+		// Clear the flash messages for this IDP to avoid them persisting through the native session storage.
+		$this->session->getFlash()->set($idp, array());
+		$this->session->save();
+
+		return $errors;
 	}
 
 	/**
