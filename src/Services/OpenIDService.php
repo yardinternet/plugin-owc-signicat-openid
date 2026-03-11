@@ -258,7 +258,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 	 * session setup, the flash storage is explicitly cleared to prevent stale
 	 * messages from reappearing on subsequent requests.
 	 *
-	 * @since NEXT
+	 * @since 3.0.0
 	 */
 	public function flashErrorsByIdp(string $idp): array
 	{
