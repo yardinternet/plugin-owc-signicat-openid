@@ -33,6 +33,8 @@ interface OpenIDServiceInterface extends ServiceInterface
 
 	public function redirectToLogout(IdentityProvider $identityProvider, string $redirectUrl, string $refererUrl = null );
 
+	public function flashErrorsByIdp(string $idp): array;
+
 	public function refresh(IdentityProvider $identityProvider );
 
 	public function introspect(IdentityProvider $identityProvider ): array;

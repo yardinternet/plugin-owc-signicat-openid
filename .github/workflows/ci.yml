@@ -18,9 +18,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - php-version: '8.1'
-            dependency-versions: 'highest'
-
           - php-version: '8.2'
             dependency-versions: 'highest'
 
@@ -41,9 +38,8 @@ jobs:
         uses: ramsey/composer-install@v2
         with:
           dependency-versions: ${{ matrix.dependency-versions }}
-          composer-options: "--prefer-dist --no-progress --no-suggest"
+          composer-options: '--prefer-dist --no-progress --no-suggest'
           github-token: ${{ secrets.YARD_BOT_PAT }}
-
 
       # - name: Run PHPUnit
       #   run: vendor/bin/phpunit tests
