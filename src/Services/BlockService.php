@@ -9,6 +9,8 @@ use OWCSignicatOpenID\Interfaces\Services\BlockServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\IdentityProviderServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\OpenIDServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\ViewServiceInterface;
+use WP_Block_Editor_Context;
+use WP_Block;
 
 class BlockService extends Service implements BlockServiceInterface
 {
@@ -59,7 +61,7 @@ class BlockService extends Service implements BlockServiceInterface
 		);
 	}
 
-	public function registerBlockCategory(array $blockCategories, \WP_Block_Editor_Context $blockEditorContext ): array
+	public function registerBlockCategory(array $blockCategories, WP_Block_Editor_Context $blockEditorContext ): array
 	{
 		$blockCategories[] = array(
 			'slug'  => self::BLOCK_CATEGORY,
@@ -69,7 +71,7 @@ class BlockService extends Service implements BlockServiceInterface
 		return $blockCategories;
 	}
 
-	public function renderBlock(array $attributes, string $block_content, \WP_Block $block ): string
+	public function renderBlock(array $attributes, string $blockContent, WP_Block $block ): string
 	{
 		$identityProvider = $this->identityProviderService->getIdentityProvider( $attributes['idp'] );
 
@@ -88,7 +90,7 @@ class BlockService extends Service implements BlockServiceInterface
 				'url'        => $url,
 				'image'      => $image,
 				'buttonText' => $buttonText,
-				'errors'     => $this->openIDClient->flashErrors(),
+				'errors'     => $this->openIDClient->flashErrorsByIdp($attributes['idp']),
 			)
 		);
 	}

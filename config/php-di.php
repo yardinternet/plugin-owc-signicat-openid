@@ -110,8 +110,7 @@ return array(
 		'cookie_httponly' => true,
 	),
 	SessionInterface::class                 => function (ContainerInterface $container ): PhpSession {
-		$session = new PhpSession();
-		$session->setOptions( $container->get( 'session_options' ) );
+		$session = new PhpSession($container->get( 'session_options' ) );
 
 		return $session;
 	},
