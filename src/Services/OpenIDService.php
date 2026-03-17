@@ -438,7 +438,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 			$this->session->start();
 		} elseif (count( $this->session->all() ) === 0 && $this->isNativeSessionValid()) {
 			// Replace the current session with an existing session already started by another plugin.
-			$this->session->replace( $_SESSION );
+			$this->session->setValues( $_SESSION );
 		}
 	}
 
