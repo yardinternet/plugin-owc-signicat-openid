@@ -1,5 +1,9 @@
 # Changelog
 
+## [v3.0.1] - 2026-03-17
+
+- Fix: call to undefined method Odan\Session\PhpSession::replace()
+
 ## [v3.0.0] - 2026-03-11
 
 - Change: display idp errors by idp in openid block
