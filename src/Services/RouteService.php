@@ -6,6 +6,7 @@ namespace OWCSignicatOpenID\Services;
 
 use Exception;
 use GuzzleHttp\Psr7\ServerRequest;
+use OWCSignicatOpenID\ContainerManager;
 use OWCSignicatOpenID\IdentityProvider;
 use OWCSignicatOpenID\Interfaces\Services\IdentityProviderServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\OpenIDServiceInterface;
@@ -53,14 +54,16 @@ class RouteService extends Service implements RouteServiceInterface
 				$idpScopes        = $queryParams['idpScopes'] ?? '';
 				$redirectUrl      = $queryParams['redirectUrl'] ?? ( wp_get_referer() ?: '' );
 				$refererUrl       = $queryParams['refererUrl'] ?? ( wp_get_referer() ?: '' );
+				$rawSlot          = $queryParams['slot'] ?? '';
+				$slot             = $this->validateLoginSlot( $rawSlot ) ? $rawSlot : '';
 				$identityProvider = $this->identityProviderService->getIdentityProvider( $idp );
 
-				if ($identityProvider instanceof IdentityProvider && ! $this->openIDService->hasActiveSession( $identityProvider )) {
+				if ($identityProvider instanceof IdentityProvider && ! $this->openIDService->hasActiveSession( $identityProvider, $slot )) {
 					if (strlen( $idpScopes ) > 0) {
 						$identityProvider->addIdpScopes( explode( ' ', $idpScopes ) ?: array() );
 					}
 
-					$this->openIDService->authenticate( $identityProvider, esc_url( $redirectUrl ), esc_url( $refererUrl ) );
+					$this->openIDService->authenticate( $identityProvider, esc_url( $redirectUrl ), esc_url( $refererUrl ), $slot );
 				} else {
 					wp_safe_redirect( esc_url( $redirectUrl ) );
 					exit;
@@ -87,6 +90,16 @@ class RouteService extends Service implements RouteServiceInterface
 						throw new Exception();
 					}
 
+					// Revoke non-default login slots (e.g. partner/second login) before revoking the primary session.
+					// array_filter removes the default empty-string slot, so only additional slots are iterated here.
+					foreach (array_filter(ContainerManager::getContainer()->get( 'allowed_login_slots' )) as $slot) {
+						try {
+							$this->openIDService->revoke( $identityProvider, $slot );
+						} catch (Exception $e) {
+							// Fail silently; the local token is still removed in revoke()'s finally block.
+						}
+					}
+
 					$logoutUrl = $this->openIDService->revoke( $identityProvider );
 
 					wp_redirect( $logoutUrl );
@@ -100,6 +113,17 @@ class RouteService extends Service implements RouteServiceInterface
 					exit;
 				}
 		}
+	}
+
+	private function validateLoginSlot(string $slot): bool
+	{
+		if ('' === $slot) {
+			return true; // Default slot is always valid
+		}
+
+		$allowedLoginSlots = ContainerManager::getContainer()->get( 'allowed_login_slots' );
+
+		return in_array($slot, $allowedLoginSlots, true);
 	}
 
 	public function registerRestRoutes(): void
@@ -134,6 +158,16 @@ class RouteService extends Service implements RouteServiceInterface
 			}
 
 			try {
+				// Revoke non-default login slots (e.g. partner/second login) before revoking the primary session.
+				// array_filter removes the default empty-string slot, so only additional slots are iterated here.
+				foreach (array_filter(ContainerManager::getContainer()->get( 'allowed_login_slots' )) as $slot) {
+					try {
+						$this->openIDService->revoke( $identityProvider, $slot );
+					} catch (Exception $e) {
+						// Fail silently; the local token is still removed in revoke()'s finally block.
+					}
+				}
+
 				$logoutUrl = $this->openIDService->revoke($identityProvider);
 			} catch (Exception $e) {
 				$this->logger->error('Failed to revoke tokens during REST logout', array(

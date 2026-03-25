@@ -68,6 +68,7 @@ class GravityFormsService extends Service implements GravityFormsServiceInterfac
 			case "<?php printf( 'owc-signicat-openid-%s', $idp->getSlug() ); ?>":
 				field.label = "<?php echo $idp->getName(); ?>";
 				field.idpSlug = "<?php echo $idp->getSlug(); ?>";
+				field.openIdIsSecondLogin = false;
 				break;
 			<?php
 		}

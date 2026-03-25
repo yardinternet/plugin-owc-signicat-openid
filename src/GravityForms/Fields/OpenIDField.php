@@ -10,15 +10,19 @@ use GFFormsModel;
 use GF_Field;
 use OWCSignicatOpenID\IdentityProvider;
 use OWCSignicatOpenID\Interfaces\Services\OpenIDServiceInterface;
+use OWC\IdpUserData\DigiDPartnerSession;
 use OWC\IdpUserData\DigiDSession;
+use OWC\IdpUserData\eHerkenningPartnerSession;
 use OWC\IdpUserData\eHerkenningSession;
 
 class OpenIDField extends GF_Field
 {
     protected OpenIDServiceInterface $openIDService;
     public IdentityProvider $idp;
-    public string $idpSlug;
     public string $label;
+    public string $idpSlug;
+	public ?string $openIdSelectedScopeValue = null;
+	public ?bool $openIdIsSecondLogin = null;
     public array $selectableScopes = [];
 
     public function __construct($data = [])
@@ -39,17 +43,26 @@ class OpenIDField extends GF_Field
         return $this->idp->getName();
     }
 
+    private function getLoginSlot(): string
+    {
+        return ($this->openIdIsSecondLogin ?? false) ? '2' : '';
+    }
+
     public function get_field_input($form, $value = '', $entry = null)
     {
         if (isset($this->openIdSelectedScopeValue) && null !== $this->openIdSelectedScopeValue) {
             $this->idp->addIdpScope($this->openIdSelectedScopeValue);
         }
 
-        if ($this->openIDService->getUserInfo($this->idp) && ! $this->is_form_editor()) {
+		$userInfo = $this->openIDService->getUserInfo($this->idp, $this->getLoginSlot());
+        if ($userInfo && ! $this->is_form_editor()) {
+            $loggedInMessage = ($this->openIdIsSecondLogin ?? false)
+                ? 'Medeaanvrager is ingelogd'
+                : 'Je bent ingelogd';
+
             return sprintf(
                 "<div class='ginput_container ginput_container_openid'>%s</div>",
-                'Je bent ingelogd',
-                print_r($this->openIDService->getUserInfo($this->idp), true)
+                $loggedInMessage
             );
         }
 
@@ -67,7 +80,7 @@ class OpenIDField extends GF_Field
             $resumeUrl = $this->getResumeUrl();
             $input = sprintf(
                 "<a href='%s'>%s</a>",
-                esc_url($this->openIDService->getLoginUrl($this->idp, $resumeUrl, $resumeUrl, $this->idp->getIdpScopes())),
+                esc_url($this->openIDService->getLoginUrl($this->idp, $resumeUrl, $resumeUrl, $this->idp->getIdpScopes(), $this->getLoginSlot())),
                 $input
             );
 
@@ -177,9 +190,9 @@ class OpenIDField extends GF_Field
     }
 
     /**
-     * If a different IDP session is already active like DigiD or eHerkenning, another field with a different IDP will pass the validation.
-     * This enables form editors to use multiple IDP fields in the same form.
-     * If there is only one IDP field in the form, this validation will also pass.
+     * Validates that the user (or partner, when openIdIsSecondLogin is true) has an active IDP session.
+     * When multiple IDP fields are used in the same form, a field passes validation as long as any
+     * supported IDP session is active for the relevant login slot.
      */
     public function validate($value, $form)
     {
@@ -190,19 +203,50 @@ class OpenIDField extends GF_Field
         }
 
         $this->failed_validation = true;
-        $this->validation_message = 'Je bent niet ingelogd';
+        $this->validation_message = ($this->openIdIsSecondLogin ?? false)
+            ? 'De medeaanvrager is niet ingelogd'
+            : 'Je bent niet ingelogd';
     }
 
     private function has_active_idp_session(): bool
     {
-        $digidSession = DigiDSession::isLoggedIn() && ! is_null(DigiDSession::getUserData());
-        $eHerkenningSession = eHerkenningSession::isLoggedIn() && ! is_null(eHerkenningSession::getUserData());
+		$activeSessions = $this->active_idp_session_by_slot();
+		$digidSession = $activeSessions['digid'] ?? false;
+		$eHerkenningSession = $activeSessions['eherkenning'] ?? false;
 
-        return $digidSession || $eHerkenningSession;
+		return $digidSession || $eHerkenningSession;
     }
+
+	private function active_idp_session_by_slot(): array
+	{
+		$loginSlot = $this->getLoginSlot();
+
+		if ($loginSlot === '2') {
+			return [
+				'digid' => DigiDSession::isPartnerLoggedIn() && ! is_null(DigiDPartnerSession::getUserData()),
+				'eherkenning' => eHerkenningSession::isPartnerLoggedIn() && ! is_null(eHerkenningPartnerSession::getUserData()),
+			];
+		}
+
+		if ($loginSlot !== '') {
+			return [
+				'digid' => false,
+				'eherkenning' => false,
+			];
+		}
+
+		return [
+			'digid' => DigiDSession::isLoggedIn() && ! is_null(DigiDSession::getUserData()),
+			'eherkenning' => eHerkenningSession::isLoggedIn() && ! is_null(eHerkenningSession::getUserData()),
+		];
+	}
 
     public function get_value_save_entry($value, $form, $input_name, $lead_id, $lead)
     {
+        if ($this->openIdIsSecondLogin ?? false) {
+            return sprintf('Ingelogd medeaanvrager (%s)', $this->idp->getName());
+        }
+
         return sprintf('Ingelogd (%s)', $this->idp->getName());
     }
 
@@ -218,12 +262,12 @@ class OpenIDField extends GF_Field
 
     public function is_value_submission_empty($formId)
     {
-        return empty($this->openIDService->getUserInfo($this->idp));
+        return empty($this->openIDService->getUserInfo($this->idp, $this->getLoginSlot()));
     }
 
     public function get_value_submission($field_values, $get_from_post_global_var = true)
     {
-        return $this->openIDService->getUserInfo($this->idp);
+        return $this->openIDService->getUserInfo($this->idp, $this->getLoginSlot());
     }
 
     public function get_form_editor_field_settings()
@@ -237,6 +281,7 @@ class OpenIDField extends GF_Field
             'css_class_setting',
             'rules_setting',
             'open_id_select_scope_setting',
+            'open_id_second_login_setting',
         ];
     }
 
