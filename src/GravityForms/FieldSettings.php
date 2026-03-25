@@ -16,6 +16,7 @@ class FieldSettings
 		}
 
 		echo ContainerManager::getContainer()->get(ViewService::class)->render('scope-select');
+		echo ContainerManager::getContainer()->get(ViewService::class)->render('second-login-setting');
 	}
 
 	public function addFieldSettingsSelectScript(): void

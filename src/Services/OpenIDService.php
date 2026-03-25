@@ -62,6 +62,10 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 		foreach ($this->getEnabledIdentityProviders() as $identityProvider) {
 			add_filter( 'owc_' . $identityProvider->getSlug() . '_is_logged_in', fn (bool $isLoggedIn ): bool => $this->isUserLoggedIn( $isLoggedIn, $identityProvider->getSlug() ) );
 			add_filter( 'owc_' . $identityProvider->getSlug() . '_userdata', fn (?UserDataInterface $userData ): ?UserDataInterface => $this->retrieveUserInfo( $userData, $identityProvider->getSlug() ) );
+
+			// Filters for the partner/second login session (slot '2'). Mirrors the primary filters above, scoped to slot '2'.
+			add_filter( 'owc_' . $identityProvider->getSlug() . '_is_logged_in_2', fn (bool $isLoggedIn ): bool => $this->isUserLoggedIn( $isLoggedIn, $identityProvider->getSlug(), '2' ) );
+			add_filter( 'owc_' . $identityProvider->getSlug() . '_userdata_2', fn (?UserDataInterface $userData ): ?UserDataInterface => $this->retrieveUserInfo( $userData, $identityProvider->getSlug(), '2' ) );
 		}
 	}
 
@@ -75,7 +79,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 		return $this->identityProviderService->getEnabledIdentityProviders();
 	}
 
-	public function retrieveUserInfo(?UserDataInterface $userInfo, string $idpSlug ): ?UserDataInterface
+	public function retrieveUserInfo(?UserDataInterface $userInfo, string $idpSlug, string $slot = '' ): ?UserDataInterface
 	{
 		$idp = $this->identityProviderService->getIdentityProvider( $idpSlug );
 
@@ -83,41 +87,42 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 			return $userInfo;
 		}
 
-		if ($this->hasActiveSession( $idp )) {
+		if ($this->hasActiveSession( $idp, $slot )) {
 			$userDataClass = $idp->getUserDataClass();
-			$userInfo      = new $userDataClass( $this->getUserInfo( $idp ), $idp->getMapping() );
+			$userInfo      = new $userDataClass( $this->getUserInfo( $idp, $slot ), $idp->getMapping() );
 		}
 
 		return $userInfo;
 	}
 
-	public function isUserLoggedIn(bool $isUserLoggedIn, string $idpSlug ): bool
+	public function isUserLoggedIn(bool $isUserLoggedIn, string $idpSlug, string $slot = '' ): bool
 	{
 		$idp = $this->identityProviderService->getIdentityProvider( $idpSlug );
 		if (null === $idp) {
 			return $isUserLoggedIn;
 		}
 
-		if ($this->hasActiveSession( $idp )) {
+		if ($this->hasActiveSession( $idp, $slot )) {
 			$isUserLoggedIn = true;
 		}
 
 		return $isUserLoggedIn;
 	}
 
-	public function getLoginUrl(IdentityProvider $identityProvider, ?string $redirectUrl = null, ?string $refererUrl = null, array $selectedIdpScopes = array() ): string
+	public function getLoginUrl(IdentityProvider $identityProvider, ?string $redirectUrl = null, ?string $refererUrl = null, array $selectedIdpScopes = array(), string $slot = '' ): string
 	{
 		$args = array_filter(
 			array(
 				'idp'         => $identityProvider->getSlug(),
 				'redirectUrl' => $redirectUrl,
 				'refererUrl'  => $refererUrl,
-				'idpScopes' => implode(
+				'idpScopes'   => implode(
 					' ',
 					array_unique(
 						array_merge( array( 'offline_access' ), $selectedIdpScopes )
 					)
 				),
+				'slot'        => $slot,
 			)
 		);
 
@@ -143,13 +148,14 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 		);
 	}
 
-	public function authenticate(IdentityProvider $identityProvider, ?string $redirectUrl, ?string $refererUrl = null ): void
+	public function authenticate(IdentityProvider $identityProvider, ?string $redirectUrl, ?string $refererUrl = null, string $slot = '' ): void
 	{
 		$stateID = $this->saveState(
 			array(
 				'identityProvider' => $identityProvider,
 				'redirectUrl'      => $redirectUrl,
 				'refererUrl'       => $refererUrl ?? wp_get_referer(),
+				'slot'             => $slot,
 			)
 		);
 
@@ -172,6 +178,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 				'scope'      => implode( ' ', array_unique( array_filter( $scope ) ) ),
 				'state'      => $stateID,
 				'acr_values' => implode( ',', $acrValues ),
+				'prompt'     => 'login',
 			)
 		);
 
@@ -209,6 +216,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 
 		$state = $this->popState( $stateId );
 		$identityProvider = $state['identityProvider'];
+		$slot             = $state['slot'] ?? '';
 
 		try {
 			$callback_params = $this->authorizationService->getCallbackParams( $server_request, $this->client );
@@ -227,7 +235,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 			throw new RuntimeException( 'Unauthorized' );
 		}
 
-		$this->setIdpTokenSet( $identityProvider, $tokenSet );
+		$this->setIdpTokenSet( $identityProvider, $tokenSet, $slot );
 		$this->session->save();
 
 		wp_safe_redirect( $state['redirectUrl'] );
@@ -240,6 +248,8 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 
 		if (in_array($exception->getError(), $allowed, true)) {
 			$errorText = ContainerManager::getContainer()->get( 'idps_errors' )[ $exception->getError() ] ?? $exception->getDescription();
+		} elseif('IDP-3200' === $exception->getError()) {
+			$errorText = __('The user cancelled the login process', 'owc-signicat-openid' );
 		} elseif('digid' === $identityProvider->getSlug()) {
 			$errorText = self::DIGID_GENERIC_ERROR; // Generic error message for all other errors, to avoid showing technical details to the user.
 		} elseif('eherkenning' === $identityProvider->getSlug()) {
@@ -278,48 +288,48 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 	/**
 	 * @return WP_Error|bool
 	 */
-	public function refresh(IdentityProvider $identityProvider )
+	public function refresh(IdentityProvider $identityProvider, string $slot = '' )
 	{
 		$this->maybeStartSession();
 
-		if ( ! $this->hasIdpTokenSet( $identityProvider ) || null === $this->getIdpTokenSet( $identityProvider )->getRefreshToken()) {
+		if ( ! $this->hasIdpTokenSet( $identityProvider, $slot ) || null === $this->getIdpTokenSet( $identityProvider, $slot )->getRefreshToken()) {
 			return new WP_Error( 'missing_refresh_token', 'Missing refresh token' );
 		}
-		if ($this->hasActiveSession( $identityProvider )) {
+		if ($this->hasActiveSession( $identityProvider, $slot )) {
 			return true;
 		}
 
-		$tokenSet = $this->authorizationService->refresh( $this->client, $this->getIdpTokenSet( $identityProvider )->getRefreshToken() );
-		$this->setIdpTokenSet( $identityProvider, $tokenSet );
+		$tokenSet = $this->authorizationService->refresh( $this->client, $this->getIdpTokenSet( $identityProvider, $slot )->getRefreshToken() );
+		$this->setIdpTokenSet( $identityProvider, $tokenSet, $slot );
 
 		// $this->session->save();
 		return true;
 	}
 
-	public function getUserInfo(IdentityProvider $identityProvider ): array
+	public function getUserInfo(IdentityProvider $identityProvider, string $slot = '' ): array
 	{
 		$this->maybeStartSession();
-		if ( ! $this->hasActiveSession( $identityProvider )) {
+		if ( ! $this->hasActiveSession( $identityProvider, $slot )) {
 			return array();
 		}
 
 		$userInfoService = ( new UserInfoServiceBuilder() )->build();
 
 		try {
-			return $userInfoService->getUserInfo( $this->client, $this->getIdpTokenSet( ( $identityProvider ) ) );
+			return $userInfoService->getUserInfo( $this->client, $this->getIdpTokenSet( $identityProvider, $slot ) );
 		} catch (Exception $e) {
 			return array();
 		}
 	}
 
-	public function revoke(IdentityProvider $identityProvider ): string
+	public function revoke(IdentityProvider $identityProvider, string $slot = '' ): string
 	{
 		$this->maybeStartSession();
-		if ( ! $this->hasIdpTokenSet( $identityProvider )) {
+		if ( ! $this->hasIdpTokenSet( $identityProvider, $slot )) {
 			throw new RuntimeException( 'You are not logged in' );
 		}
 
-		$tokenSet = $this->getIdpTokenSet( $identityProvider );
+		$tokenSet = $this->getIdpTokenSet( $identityProvider, $slot );
 
 		if ( ! $tokenSet instanceof TokenSet ) {
 			throw new RuntimeException( 'Invalid token set' );
@@ -333,7 +343,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 		} catch (Exception $e) {
 			// Ignore revocation errors to ensure local session cleanup still occurs.
 		} finally {
-			$this->removeIdpTokenSet( $identityProvider );
+			$this->removeIdpTokenSet( $identityProvider, $slot );
 		}
 
 		return $this->buildEndSessionUrl( $tokenSet );
@@ -397,24 +407,25 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 		return ( $logoutUrl );
 	}
 
-	public function introspect(IdentityProvider $identityProvider ): array
+	public function introspect(IdentityProvider $identityProvider, string $slot = '' ): array
 	{
-		if ( ! $this->hasIdpTokenSet( $identityProvider )) {
+		if ( ! $this->hasIdpTokenSet( $identityProvider, $slot )) {
 			return array();
 		}
+
 		$introspectionService = ( new IntrospectionServiceBuilder() )->build();
 
 		try {
-			return $introspectionService->introspect( $this->client, $this->getIdpTokenSet( $identityProvider )->getAccessToken() );
+			return $introspectionService->introspect( $this->client, $this->getIdpTokenSet( $identityProvider, $slot )->getAccessToken() );
 		} catch (Exception | RemoteException $e) {
 			return array();
 		}
 	}
 
-	public function hasActiveSession(IdentityProvider $identityProvider ): bool
+	public function hasActiveSession(IdentityProvider $identityProvider, string $slot = '' ): bool
 	{
 		$this->maybeStartSession();
-		$introspect = $this->introspect( $identityProvider );
+		$introspect = $this->introspect( $identityProvider, $slot );
 
 		return ! empty( $introspect['active'] );
 	}
@@ -474,24 +485,33 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 		return $state;
 	}
 
-	private function hasIdpTokenSet(IdentityProvider $identityProvider ): bool
+	private function getSessionKey(IdentityProvider $identityProvider, string $slot = '' ): string
 	{
-		return $this->session->has( 'owc_openid_' . $identityProvider->getSlug() ) && is_a( $this->session->get( 'owc_openid_' . $identityProvider->getSlug() ), TokenSet::class );
+		$key = 'owc_openid_' . $identityProvider->getSlug();
+
+		return $slot !== '' ? $key . '_' . $slot : $key;
 	}
 
-	private function getIdpTokenSet(IdentityProvider $identityProvider ): ?TokenSet
+	private function hasIdpTokenSet(IdentityProvider $identityProvider, string $slot = '' ): bool
 	{
-		return $this->session->get( 'owc_openid_' . $identityProvider->getSlug() );
+		$key = $this->getSessionKey( $identityProvider, $slot );
+
+		return $this->session->has( $key ) && is_a( $this->session->get( $key ), TokenSet::class );
 	}
 
-	private function setIdpTokenSet(IdentityProvider $identityProvider, TokenSet $tokenSet ): void
+	private function getIdpTokenSet(IdentityProvider $identityProvider, string $slot = '' ): ?TokenSet
 	{
-		$this->session->set( 'owc_openid_' . $identityProvider->getSlug(), $tokenSet );
+		return $this->session->get( $this->getSessionKey( $identityProvider, $slot ) );
 	}
 
-	private function removeIdpTokenSet(IdentityProvider $identityProvider ): void
+	private function setIdpTokenSet(IdentityProvider $identityProvider, TokenSet $tokenSet, string $slot = '' ): void
 	{
-		$this->session->delete( 'owc_openid_' . $identityProvider->getSlug() );
+		$this->session->set( $this->getSessionKey( $identityProvider, $slot ), $tokenSet );
+	}
+
+	private function removeIdpTokenSet(IdentityProvider $identityProvider, string $slot = '' ): void
+	{
+		$this->session->delete( $this->getSessionKey( $identityProvider, $slot ) );
 		$this->session->save();
 	}
 }

@@ -95,7 +95,7 @@ msgstr "OIDC-scopes"
 msgid "Selecting a scope provides access to additional information about a user."
 msgstr "Het selecteren van een scope geeft toegang tot extra gegevens van een gebruiker."
 
-#: src/GravityForms/Fields/OpenIDField.php:89
+#: src/GravityForms/Fields/OpenIDField.php:101
 msgid "Select a Service Index"
 msgstr "Selecteer een Service Index"
 
@@ -110,3 +110,15 @@ msgstr "Authenticatie met de IdP is afgebroken, hoogstwaarschijnlijk omdat de ei
 #: config/idps_errors.php:6
 msgid "Login cancelled"
 msgstr "Login geannuleerd"
+
+#: resources/views/second-login-setting.php:6
+msgid "Second applicant (co-applicant)"
+msgstr "Tweede aanvrager (medeaanvrager)"
+
+#: resources/views/second-login-setting.php:11
+msgid "Activate this option if this field is intended for the co-applicant. The co-applicant logs in with a separate session."
+msgstr "Activeer deze optie als dit veld bedoeld is voor de medeaanvrager. De medeaanvrager logt in met een aparte sessie."
+
+#: src/Services/OpenIDService.php:252
+msgid "The user cancelled the login process"
+msgstr "De gebruiker heeft het inloggen geannuleerd"
