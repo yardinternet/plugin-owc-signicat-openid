@@ -1,5 +1,9 @@
 # Changelog
 
+## [v3.1.0] - 2026-03-27
+
+- Added: extra session for e.g. partners
+
 ## [v3.0.1] - 2026-03-17
 
 - Fix: call to undefined method Odan\Session\PhpSession::replace()
