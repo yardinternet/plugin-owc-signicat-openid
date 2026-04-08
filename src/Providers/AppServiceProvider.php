@@ -30,6 +30,8 @@ use OWCSignicatOpenID\Interfaces\Services\RouteServiceInterface;
  */
 class AppServiceProvider extends ServiceProvider implements AppServiceProviderInterface
 {
+	private const ASSETS_HANDLE = 'owc-signicat-openid-editor';
+
 	public function __construct(
 		LifeCycleServiceInterface $lifeCycleService,
 		BlockServiceInterface $blockService,
@@ -45,10 +47,32 @@ class AppServiceProvider extends ServiceProvider implements AppServiceProviderIn
 			'modal'         => $modalService,
 		);
 
-		$this->register_hooks();
+		$this->registerHooks();
 	}
 
-	protected function register_hooks()
+	protected function registerHooks(): void
 	{
+		add_action( 'admin_enqueue_scripts', $this->enqueueAssets( ... ) );
+	}
+
+	public function enqueueAssets(): void
+	{
+		$script_asset_path = OWC_SIGNICAT_OPENID_DIR_PATH . 'dist/editor.asset.php';
+		$script_asset      = require $script_asset_path;
+
+		wp_enqueue_script(
+			self::ASSETS_HANDLE,
+			OWC_SIGNICAT_OPENID_PLUGIN_URL . 'dist/editor.js',
+			$script_asset['dependencies'],
+			$script_asset['version'],
+			true
+		);
+
+		wp_enqueue_style(
+			self::ASSETS_HANDLE,
+			OWC_SIGNICAT_OPENID_PLUGIN_URL . 'dist/editor.css',
+			array(),
+			$script_asset['version']
+		);
 	}
 }
