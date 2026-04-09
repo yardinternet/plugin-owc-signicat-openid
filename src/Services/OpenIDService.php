@@ -301,8 +301,8 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 
 		$tokenSet = $this->authorizationService->refresh( $this->client, $this->getIdpTokenSet( $identityProvider, $slot )->getRefreshToken() );
 		$this->setIdpTokenSet( $identityProvider, $tokenSet, $slot );
+		$this->session->save();
 
-		// $this->session->save();
 		return true;
 	}
 
@@ -447,9 +447,27 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 	{
 		if ( ! $this->session->isStarted() && ! headers_sent()) {
 			$this->session->start();
-		} elseif (count( $this->session->all() ) === 0 && $this->isNativeSessionValid()) {
-			// Replace the current session with an existing session already started by another plugin.
+
+			return;
+		}
+
+		if (count( $this->session->all() ) > 0) {
+			return; // Storage is already populated — nothing to do.
+		}
+
+		if ( ! $this->isNativeSessionValid()) {
+			return;
+		}
+
+		$configuredName = ContainerManager::getContainer()->get( 'session_options' )['name'] ?? 'OWC_Signicat_OpenID';
+
+		if (session_name() === $configuredName) {
+			// The running session is ours, sync the storage.
 			$this->session->setValues( $_SESSION );
+		} elseif ( ! headers_sent()) {
+			// A different session is running. Close it and start our own so the correct token data is loaded.
+			session_write_close();
+			$this->session->start();
 		}
 	}
 
