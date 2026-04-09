@@ -119,7 +119,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 				'idpScopes'   => implode(
 					' ',
 					array_unique(
-						array_merge( array( 'offline_access' ), $selectedIdpScopes )
+						array_merge( $identityProvider->getSlug() === 'digid' ? array( 'offline_access' ) : array(), $selectedIdpScopes )
 					)
 				),
 				'slot'        => $slot,
@@ -452,7 +452,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 		}
 
 		if (count( $this->session->all() ) > 0) {
-			return; // Storage is already populated — nothing to do.
+			return; // Storage is already populated.
 		}
 
 		if ( ! $this->isNativeSessionValid()) {
