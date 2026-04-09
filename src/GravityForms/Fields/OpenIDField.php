@@ -54,22 +54,26 @@ class OpenIDField extends GF_Field
             $this->idp->addIdpScope($this->openIdSelectedScopeValue);
         }
 
+		$logoElement = sprintf(
+            "<img src='%s' width='90px' height='90px' class='gform-theme__disable-reset'>",
+            $this->idp->getLogoUrl(),
+        );
+
 		$userInfo = $this->openIDService->getUserInfo($this->idp, $this->getLoginSlot());
-        if ($userInfo && ! $this->is_form_editor()) {
+
+        if (($userInfo || $this->has_active_idp_session()) && ! $this->is_form_editor()) {
             $loggedInMessage = ($this->openIdIsSecondLogin ?? false)
                 ? 'Medeaanvrager is ingelogd'
                 : 'Je bent ingelogd';
 
             return sprintf(
-                "<div class='ginput_container ginput_container_openid'>%s</div>",
+                "<div class='ginput_container ginput_container_openid'>%s<p>%s</p></div>",
+                $logoElement,
                 $loggedInMessage
             );
         }
 
-        $input = sprintf(
-            "<img src='%s' width='90px' height='90px' class='gform-theme__disable-reset'>",
-            $this->idp->getLogoUrl(),
-        );
+        $input = $logoElement;
 
         if ($this->is_form_editor()) {
             // Set the field property used for the scope select in the form editor.
