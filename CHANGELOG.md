@@ -1,5 +1,12 @@
 # Changelog
 
+## [v3.1.1] - 2026-04-10
+
+- Added: GF editor styling of custom fields
+- Fix: logo was not displayed when logged in
+- Fix: session management
+- Fix: remove 'offline_acces' scope when IDP is not DigiD
+
 ## [v3.1.0] - 2026-03-27
 
 - Added: extra session for e.g. partners
