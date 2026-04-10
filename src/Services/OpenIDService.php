@@ -111,6 +111,11 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 
 	public function getLoginUrl(IdentityProvider $identityProvider, ?string $redirectUrl = null, ?string $refererUrl = null, array $selectedIdpScopes = array(), string $slot = '' ): string
 	{
+		$idpScopes = [
+			'digid' => array( 'offline_access' ),
+			'eherkenning' => array( 'eherkenning-extra' ),
+		];
+
 		$args = array_filter(
 			array(
 				'idp'         => $identityProvider->getSlug(),
@@ -119,7 +124,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 				'idpScopes'   => implode(
 					' ',
 					array_unique(
-						array_merge( $identityProvider->getSlug() === 'digid' ? array( 'offline_access' ) : array(), $selectedIdpScopes )
+						array_merge( $idpScopes[$identityProvider->getSlug()] ?? array(), $selectedIdpScopes )
 					)
 				),
 				'slot'        => $slot,
