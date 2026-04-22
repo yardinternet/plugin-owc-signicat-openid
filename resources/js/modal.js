@@ -14,6 +14,7 @@ class OWC_Signicat_OIDC_Modal {
 
 		this.countdownInterval = null;
 		this.countdownTime = this.sessionShouldEnd - this.modalShouldOpen;
+		this.keepAliveAbortController = null;
 	}
 
 	init() {
@@ -141,6 +142,11 @@ class OWC_Signicat_OIDC_Modal {
 		this.isLoggingOut = true;
 		this.clearAllIntervals();
 
+		if (this.keepAliveAbortController) {
+			this.keepAliveAbortController.abort();
+			this.keepAliveAbortController = null;
+		}
+
 		apiFetch({ path: 'owc-signicat-openid/v1/revoke', method: 'GET' })
 			.then((res) => {
 				window.location.assign(res?.logoutUrl || this.logoutUrl);
@@ -152,13 +158,30 @@ class OWC_Signicat_OIDC_Modal {
 
 	keepSessionAlive = () => {
 		if (this.isLoggingOut) return;
+		if (this.keepAliveAbortController) return;
 
 		if (this.lastActivityIsUpdated) {
+			const activityAtRequestStart = this.lastActivity;
+			this.keepAliveAbortController = new AbortController();
+
+			const timeoutId = setTimeout(() => {
+				this.keepAliveAbortController?.abort();
+			}, 30 * this.second);
+
 			apiFetch({
 				path: 'owc-signicat-openid/v1/refresh',
-			}).then(() => {
-				this.lastActivityIsUpdated = false;
-			});
+				signal: this.keepAliveAbortController.signal,
+			})
+				.then(() => {
+					if (this.lastActivity === activityAtRequestStart) {
+						this.lastActivityIsUpdated = false;
+					}
+				})
+				.catch(() => {})
+				.finally(() => {
+					clearTimeout(timeoutId);
+					this.keepAliveAbortController = null;
+				});
 		}
 	};
 
