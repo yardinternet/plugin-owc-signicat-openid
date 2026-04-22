@@ -1,5 +1,9 @@
 # Changelog
 
+## [v3.1.3] - 2026-04-22
+
+- Fix: race condition when automatic logout should occure
+
 ## [v3.1.2] - 2026-04-10
 
 - Fix: add default scopes for DigiD and eHerkenning IDPS
