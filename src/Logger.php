@@ -18,6 +18,7 @@ use Exception;
 use Psr\Log\AbstractLogger;
 use Psr\Log\LogLevel;
 use Stringable;
+use Throwable;
 
 /**
  * Default logger class.
@@ -76,6 +77,12 @@ final class Logger extends AbstractLogger
 	 */
 	public function log($level, string|Stringable $message, array $context = array() ): void
 	{
+		if (isset($context['exception']) && $context['exception'] instanceof Throwable) {
+			do_action('owc_signicat_openid_exception_intercept', $context['exception']);
+		} else {
+			do_action('owc_signicat_openid_log_intercept', $level, $message, $context);
+		}
+
 		if ( ! $this->handle_level( $level )) {
 			return;
 		}
