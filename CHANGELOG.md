@@ -1,5 +1,9 @@
 # Changelog
 
+## [v3.2.0] - 2026-05-11
+
+- Added: WordPress actions to capture exceptions and logging messages
+
 ## [v3.1.4] - 2026-05-08
 
 - Fix: correctly detect partner session for ‘Medeaanvrager is ingelogd’ and add login button title/subtitle support
