@@ -1,5 +1,9 @@
 # Changelog
 
+## [v3.1.4] - 2026-05-08
+
+- Fix: correctly detect partner session for ‘Medeaanvrager is ingelogd’ and add login button title/subtitle support
+
 ## [v3.1.3] - 2026-04-22
 
 - Fix: race condition when automatic logout should occure

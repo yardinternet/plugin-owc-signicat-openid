@@ -332,7 +332,7 @@ class OpenIDField extends GF_Field
     }
 
 	/**
-	 * @since NEXT
+	 * @since 3.1.4
 	 */
 	protected function field_title(): string
 	{
@@ -340,7 +340,7 @@ class OpenIDField extends GF_Field
 	}
 
 	/**
-	 * @since NEXT
+	 * @since 3.1.4
 	 */
 	protected function field_sub_title(): string
 	{
