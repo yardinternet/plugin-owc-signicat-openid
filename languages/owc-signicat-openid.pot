@@ -116,8 +116,12 @@ msgstr ""
 msgid "Enable simulator"
 msgstr ""
 
-#: src/GravityForms/Fields/OpenIDField.php:101
+#: src/GravityForms/Fields/OpenIDField.php:108
 msgid "Select a Service Index"
+msgstr ""
+
+#: src/GravityForms/Fields/OpenIDField.php:304
+msgid "Login to"
 msgstr ""
 
 #: src/Services/OpenIDService.php:252

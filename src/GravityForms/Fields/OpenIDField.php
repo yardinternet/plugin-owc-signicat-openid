@@ -8,6 +8,8 @@ use GFAPI;
 use GFFormDisplay;
 use GFFormsModel;
 use GF_Field;
+use OWCSignicatOpenID\ContainerManager;
+use OWCSignicatOpenID\Interfaces\Services\IdentityProviderServiceInterface;
 use OWCSignicatOpenID\IdentityProvider;
 use OWCSignicatOpenID\Interfaces\Services\OpenIDServiceInterface;
 use OWC\IdpUserData\DigiDPartnerSession;
@@ -48,51 +50,53 @@ class OpenIDField extends GF_Field
         return ($this->openIdIsSecondLogin ?? false) ? '2' : '';
     }
 
-    public function get_field_input($form, $value = '', $entry = null)
-    {
-        if (isset($this->openIdSelectedScopeValue) && null !== $this->openIdSelectedScopeValue) {
-            $this->idp->addIdpScope($this->openIdSelectedScopeValue);
-        }
+	public function get_field_input($form, $value = '', $entry = null)
+	{
+		if (isset($this->openIdSelectedScopeValue) && null !== $this->openIdSelectedScopeValue) {
+			$this->idp->addIdpScope($this->openIdSelectedScopeValue);
+		}
 
 		$logoElement = sprintf(
-            "<img src='%s' width='90px' height='90px' class='gform-theme__disable-reset'>",
-            $this->idp->getLogoUrl(),
-        );
+			"<img src='%s' width='90px' height='90px' class='gform-theme__disable-reset'>",
+			$this->idp->getLogoUrl(),
+		);
 
 		$userInfo = $this->openIDService->getUserInfo($this->idp, $this->getLoginSlot());
 
-        if (($userInfo || $this->has_active_idp_session()) && ! $this->is_form_editor()) {
-            $loggedInMessage = ($this->openIdIsSecondLogin ?? false)
-                ? 'Medeaanvrager is ingelogd'
-                : 'Je bent ingelogd';
+		if (($userInfo || $this->hasActiveSessionForIDP()) && ! $this->is_form_editor()) {
+			$loggedInMessage = ($this->openIdIsSecondLogin ?? false)
+				? 'Medeaanvrager is ingelogd'
+				: 'Je bent ingelogd';
 
-            return sprintf(
-                "<div class='ginput_container ginput_container_openid'>%s<p>%s</p></div>",
-                $logoElement,
-                $loggedInMessage
-            );
-        }
+			return sprintf(
+				"<div class='ginput_container ginput_container_openid'>%s<p>%s</p></div>",
+				$logoElement,
+				$loggedInMessage
+			);
+		}
 
-        $input = $logoElement;
+		$input = $logoElement;
 
-        if ($this->is_form_editor()) {
-            // Set the field property used for the scope select in the form editor.
-            $this->selectableScopes = $this->prepareScopeSelectOptions();
-        }
+		if ($this->is_form_editor()) {
+			// Set the field property used for the scope select in the form editor.
+			$this->selectableScopes = $this->prepareScopeSelectOptions();
+		}
 
-        if (! $this->is_entry_detail() && ! $this->is_form_editor() && ! $this->has_active_idp_session()) {
-            $resumeUrl = $this->getResumeUrl();
-            $input = sprintf(
-                "<a href='%s'>%s</a>",
-                esc_url($this->openIDService->getLoginUrl($this->idp, $resumeUrl, $resumeUrl, $this->idp->getIdpScopes(), $this->getLoginSlot())),
-                $input
-            );
+		if (! $this->is_entry_detail() && ! $this->is_form_editor() && ! $this->hasActiveSessionForIDP()) {
+			$resumeUrl = $this->getResumeUrl();
+			$input = sprintf(
+				"<a href='%s'>%s<div class='ginput_container_openid__text'><div>%s</div><div>%s</div></div></a>",
+				esc_url($this->openIDService->getLoginUrl($this->idp, $resumeUrl, $resumeUrl, $this->idp->getIdpScopes(), $this->getLoginSlot())),
+				$input,
+				$this->field_title(),
+				$this->field_sub_title()
+			);
 
-            $input = $this->addPossibleErrorsToInput($input);
-        }
+			$input = $this->addPossibleErrorsToInput($input);
+		}
 
-        return sprintf("<div class='ginput_container ginput_container_openid'>%s</div>", $input);
-    }
+		return sprintf("<div class='ginput_container ginput_container_openid'>%s</div>", $input);
+	}
 
     /**
      * Prepare the scope options for the select field in the form editor.
@@ -245,6 +249,39 @@ class OpenIDField extends GF_Field
 		];
 	}
 
+	private function hasActiveSessionForIDP(): bool
+	{
+		$slug = $this->resolveIDP() instanceof IdentityProvider ? $this->resolveIDP()->getSlug() : '';
+
+		if ($this->getLoginSlot() === '2') {
+			return match ($slug) {
+				'digid' => DigiDSession::isPartnerLoggedIn() && ! is_null(DigiDPartnerSession::getUserData()),
+				'eherkenning' => eHerkenningSession::isPartnerLoggedIn() && ! is_null(eHerkenningPartnerSession::getUserData()),
+				default => false,
+			};
+		}
+
+		return match ($slug) {
+			'digid' => DigiDSession::isLoggedIn() && ! is_null(DigiDSession::getUserData()),
+			'eherkenning' => eHerkenningSession::isLoggedIn() && ! is_null(eHerkenningSession::getUserData()),
+			default => false,
+		};
+	}
+
+	/**
+	 * Resolves the IDP from the field type (e.g. 'owc-signicat-openid-digid' → 'digid').
+	 */
+	private function resolveIDP(): ?IdentityProvider
+	{
+		if (null === $this->idp) {
+			$slug = str_replace('owc-signicat-openid-', '', (string) $this->type);
+			$idp_service = ContainerManager::getContainer()->get(IdentityProviderServiceInterface::class);
+			$this->idp = $idp_service->get_identity_provider($slug);
+		}
+
+		return $this->idp;
+	}
+
     public function get_value_save_entry($value, $form, $input_name, $lead_id, $lead)
     {
         if ($this->openIdIsSecondLogin ?? false) {
@@ -293,4 +330,20 @@ class OpenIDField extends GF_Field
     {
         return $this->idp->getLogoUrl();
     }
+
+	/**
+	 * @since NEXT
+	 */
+	protected function field_title(): string
+	{
+		return apply_filters('owc_signicat_openid_field_display_title', __('Login to', 'owc-signicat-openid'));
+	}
+
+	/**
+	 * @since NEXT
+	 */
+	protected function field_sub_title(): string
+	{
+		return apply_filters('owc_signicat_openid_field_display_subtitle', get_bloginfo('name'));
+	}
 }

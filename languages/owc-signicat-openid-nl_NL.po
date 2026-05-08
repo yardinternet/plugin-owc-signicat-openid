@@ -95,9 +95,13 @@ msgstr "OIDC-scopes"
 msgid "Selecting a scope provides access to additional information about a user."
 msgstr "Het selecteren van een scope geeft toegang tot extra gegevens van een gebruiker."
 
-#: src/GravityForms/Fields/OpenIDField.php:101
+#: src/GravityForms/Fields/OpenIDField.php:304
 msgid "Select a Service Index"
 msgstr "Selecteer een Service Index"
+
+#: src/GravityForms/Fields/OpenIDField.php:304
+msgid "Login to"
+msgstr "Inloggen bij"
 
 #: config/idps_errors.php:4
 msgid "The user cancelled"
