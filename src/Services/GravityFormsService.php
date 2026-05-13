@@ -34,6 +34,7 @@ class GravityFormsService extends Service implements GravityFormsServiceInterfac
 		$this->registerFields();
 		add_filter( 'gform_gf_field_create', $this->setOpenIDService( ... ), 10, 2 );
 		add_filter( 'gform_incomplete_submission_pre_save', $this->setPageNumber( ... ), 10, 3 );
+		add_filter( 'gform_pre_process', $this->preserveSingleFileUploadsOnBackwardNavigation( ... ) );
 		add_action( 'gform_editor_js_set_default_values', $this->setDefaults( ... ) );
 		add_filter( 'gform_field_groups_form_editor', $this->addFieldGroup( ... ) );
 		add_filter( 'gform_get_input_value', $this->decrypt( ... ), 10, 4 );
@@ -109,6 +110,66 @@ class GravityFormsService extends Service implements GravityFormsServiceInterfac
 		$submissionData->page_number = \GFFormDisplay::get_current_page( $form['id'] );
 
 		return \json_encode( $submissionData );
+	}
+
+	/**
+	 * GF skips $_FILES processing during backward page navigation (target < source), losing single-file
+	 * uploads when users navigate back to the OpenID page for SSO authentication. Fires before
+	 * set_uploaded_files() in process_form(), moves pending files to temp storage, and writes the result —
+	 * merged with files already tracked from other pages — into $_POST['gform_uploaded_files'] so the
+	 * hidden input is rendered and uploads survive subsequent navigations.
+	 *
+	 * @since NEXT
+	 */
+	public function preserveSingleFileUploadsOnBackwardNavigation(array $form): array
+	{
+		$formId     = $form['id'];
+		$sourcePage = (int) rgpost('gform_source_page_number_' . $formId);
+		$targetPage = (int) rgpost('gform_target_page_number_' . $formId);
+
+		if ($targetPage === 0 || $targetPage >= $sourcePage || empty($_FILES)) {
+			return $form;
+		}
+
+		$sourceFields = \GFFormDisplay::get_fields_by_page($form, $sourcePage);
+
+		if (! is_array($sourceFields) || [] === $sourceFields) {
+			return $form;
+		}
+
+		$singleFileFields  = array_filter(
+			$sourceFields,
+			fn($field) => $field instanceof \GF_Field_FileUpload && ! $field->multipleFiles
+		);
+
+		if ([] === $singleFileFields) {
+			return $form;
+		}
+
+		// GFFormDisplay::upload_files() is private; replicate its one pre-condition: ensure temp dir exists.
+		$tmpLocation = \GFFormsModel::get_tmp_upload_location($formId);
+		$targetPath  = rgar($tmpLocation, 'path');
+		if ($targetPath && ! is_dir($targetPath)) {
+			wp_mkdir_p($targetPath);
+			\GFCommon::recursive_add_index_file($targetPath);
+		}
+
+		foreach ($singleFileFields as $field) {
+			$field->upload_submission_tmp_files();
+		}
+
+		// Persist the result so set_uploaded_files() (process_form line 70) restores it,
+		// keeping $uploaded_files non-empty so GF renders the gform_uploaded_files hidden input.
+		// Merge with any files already tracked in the hidden input (e.g. uploads from earlier pages)
+		// so backward navigation on page N doesn't discard uploads from pages < N.
+		$uploaded = \GFFormsModel::$uploaded_files[$formId] ?? [];
+
+		if (is_array($uploaded) && [] !== $uploaded) {
+			$existing = json_decode(rgpost('gform_uploaded_files'), true) ?: [];
+			$_POST['gform_uploaded_files'] = json_encode(array_merge($existing, $uploaded), JSON_UNESCAPED_UNICODE);
+		}
+
+		return $form;
 	}
 
 	public function addFieldGroup(array $fieldGroups ): array

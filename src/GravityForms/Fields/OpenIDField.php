@@ -165,6 +165,17 @@ class OpenIDField extends GF_Field
 
     protected function getResumeUrl(): string
     {
+        $currentPageURL = GFFormsModel::get_current_page_url(true);
+
+		/**
+		 * Reuse the current page URL, it already contains the existing token via REQUEST_URI when present.
+		 * Creating a new one would overwrite GFFormsModel::$uploaded_files via set_uploaded_files() (called inside
+         * process_form()) and discard previously saved file data.
+		 */
+        if ($this->shouldReturnCurrentPageURL()) {
+            return $currentPageURL;
+        }
+
         add_filter('gform_incomplete_submission_pre_save', function ($submissionJSON, $resumeToken, $form) {
             $submissionData = json_decode($submissionJSON);
             $submissionData->page_number = GFFormDisplay::get_current_page($this->formId);
@@ -173,7 +184,7 @@ class OpenIDField extends GF_Field
             return $submissionJSON;
         }, 10, 3);
 
-        $currentPageURL = GFFormsModel::get_current_page_url(true);
+        $this->preserveUploadedFilesInPost();
 
         $resume = GFAPI::submit_form(
             $this->formId,
@@ -197,6 +208,39 @@ class OpenIDField extends GF_Field
         return add_query_arg('gf_token', $resumeToken, $currentPageURL);
     }
 
+	/**
+	 * Check if a gf_token is already present in the URL, or any IDP session is active for this login slot, based on the result of this method we can
+	 * reuse the current page URL as the resume URL.
+	 * This avoids creating a new incomplete submission and overwriting previously saved file data in GFFormsModel::$uploaded_files.
+	 *
+	 * @since NEXT
+	 */
+	private function shouldReturnCurrentPageURL(): bool
+	{
+		$gfTokenPresentInURL = isset($_GET['gf_token']) && is_string($_GET['gf_token']) && strlen($_GET['gf_token']) > 0;
+
+		return $gfTokenPresentInURL || $this->hasActiveIDPSession();
+	}
+
+	/**
+	 * Preserve files uploaded on earlier pages so they survive inside the draft.
+	 * set_uploaded_files() inside process_form() reads $_POST['gform_uploaded_files']; without this
+	 * the read is empty and wipes the temp paths that forward navigation already stored in
+	 * GFFormsModel::$uploaded_files, causing the draft to be saved with no file data.
+	 *
+	 * @since NEXT
+	 */
+	private function preserveUploadedFilesInPost(): void
+	{
+		$currentFiles = GFFormsModel::$uploaded_files[$this->formId] ?? [];
+
+		if (! is_array($currentFiles) || [] === $currentFiles) {
+			return;
+		}
+
+		$_POST['gform_uploaded_files'] = json_encode($currentFiles, JSON_UNESCAPED_UNICODE);
+	}
+
     /**
      * Validates that the user (or partner, when openIdIsSecondLogin is true) has an active IDP session.
      * When multiple IDP fields are used in the same form, a field passes validation as long as any
@@ -204,7 +248,7 @@ class OpenIDField extends GF_Field
      */
     public function validate($value, $form)
     {
-        if ($this->has_active_idp_session()) {
+        if ($this->hasActiveIDPSession()) {
             $this->failed_validation = false;
 
             return;
@@ -216,7 +260,7 @@ class OpenIDField extends GF_Field
             : 'Je bent niet ingelogd';
     }
 
-    private function has_active_idp_session(): bool
+    private function hasActiveIDPSession(): bool
     {
 		$activeSessions = $this->active_idp_session_by_slot();
 		$digidSession = $activeSessions['digid'] ?? false;
