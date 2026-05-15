@@ -213,7 +213,7 @@ class OpenIDField extends GF_Field
 	 * reuse the current page URL as the resume URL.
 	 * This avoids creating a new incomplete submission and overwriting previously saved file data in GFFormsModel::$uploaded_files.
 	 *
-	 * @since NEXT
+	 * @since 3.2.1
 	 */
 	private function shouldReturnCurrentPageURL(): bool
 	{
@@ -228,7 +228,7 @@ class OpenIDField extends GF_Field
 	 * the read is empty and wipes the temp paths that forward navigation already stored in
 	 * GFFormsModel::$uploaded_files, causing the draft to be saved with no file data.
 	 *
-	 * @since NEXT
+	 * @since 3.2.1
 	 */
 	private function preserveUploadedFilesInPost(): void
 	{

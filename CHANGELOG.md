@@ -1,5 +1,9 @@
 # Changelog
 
+## [v3.2.1] - 2026-05-15
+
+- Fix: missing uploads when using multiple OpenID fields
+
 ## [v3.2.0] - 2026-05-11
 
 - Added: WordPress actions to capture exceptions and logging messages

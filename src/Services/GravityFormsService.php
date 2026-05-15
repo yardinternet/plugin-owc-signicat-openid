@@ -119,7 +119,7 @@ class GravityFormsService extends Service implements GravityFormsServiceInterfac
 	 * merged with files already tracked from other pages — into $_POST['gform_uploaded_files'] so the
 	 * hidden input is rendered and uploads survive subsequent navigations.
 	 *
-	 * @since NEXT
+	 * @since 3.2.1
 	 */
 	public function preserveSingleFileUploadsOnBackwardNavigation(array $form): array
 	{
