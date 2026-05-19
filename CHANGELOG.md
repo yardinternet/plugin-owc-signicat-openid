@@ -1,5 +1,9 @@
 # Changelog
 
+## [v3.2.2] - 2026-05-19
+
+- Perf: replace Guzzle with Symfony HTTP client and add local token fallbacks
+
 ## [v3.2.1] - 2026-05-15
 
 - Fix: missing uploads when using multiple OpenID fields
