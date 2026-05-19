@@ -42,8 +42,10 @@ use OWCSignicatOpenID\UserData\eHerkenningUserData;
 use Odan\Session\PhpSession;
 use Odan\Session\SessionInterface;
 use Psr\Container\ContainerInterface;
+use Psr\Http\Client\ClientInterface as HttpClientInterface;
 use Psr\Log\LogLevel;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpClient\Psr18Client;
 
 return array(
 	'idps'                                  => array(
@@ -79,8 +81,9 @@ return array(
 	'allowed_login_slots'                   => array( '', '2' ),
 	LoggerInterface::class                  => fn (ContainerInterface $container ): LoggerInterface => new Logger( $container->get( 'logger.level' ) ),
 	'logger.level'                          => fn (): string => ( defined( 'WP_DEBUG' ) && WP_DEBUG ) ? LogLevel::WARNING : '',
-	MetadataProviderBuilder::class          => fn (ContainerInterface $container ): MetadataProviderBuilder => ( new MetadataProviderBuilder() )->setCache( $container->get( CacheServiceInterface::class ) )->setCacheTtl( MONTH_IN_SECONDS ),
-	JwksProviderBuilder::class              => fn (ContainerInterface $container ): JwksProviderBuilder => ( new JwksProviderBuilder() )->setCache( $container->get( CacheServiceInterface::class ) )->setCacheTtl( DAY_IN_SECONDS ),
+	HttpClientInterface::class              => fn (): HttpClientInterface => new Psr18Client(),
+	MetadataProviderBuilder::class          => fn (ContainerInterface $container ): MetadataProviderBuilder => ( new MetadataProviderBuilder() )->setHttpClient( $container->get( HttpClientInterface::class ) )->setCache( $container->get( CacheServiceInterface::class ) )->setCacheTtl( MONTH_IN_SECONDS ),
+	JwksProviderBuilder::class              => fn (ContainerInterface $container ): JwksProviderBuilder => ( new JwksProviderBuilder() )->setHttpClient( $container->get( HttpClientInterface::class ) )->setCache( $container->get( CacheServiceInterface::class ) )->setCacheTtl( DAY_IN_SECONDS ),
 	ClientMetadataInterface::class          => function (ContainerInterface $container ): ClientMetadata {
 		$settings = $container->get( SettingsServiceInterface::class );
 

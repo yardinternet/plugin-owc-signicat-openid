@@ -29,6 +29,7 @@ use OWCSignicatOpenID\Interfaces\Services\OpenIDServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\SettingsServiceInterface;
 use OWC\IdpUserData\UserDataInterface;
 use Odan\Session\SessionInterface;
+use Psr\Http\Client\ClientInterface as HttpClientInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
 use WP_Error;
@@ -45,19 +46,25 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 	protected SessionInterface $session;
 	protected SettingsServiceInterface $settings;
 	protected IdentityProviderServiceInterface $identityProviderService;
+	protected HttpClientInterface $httpClient;
+
+	private array $introspectCache = array();
+	private array $userInfoCache   = array();
 
 	public function __construct(
 		ClientInterface $client,
 		AuthorizationService $authorizationService,
 		SessionInterface $session,
 		SettingsServiceInterface $settings,
-		IdentityProviderServiceInterface $identityProviderService
+		IdentityProviderServiceInterface $identityProviderService,
+		HttpClientInterface $httpClient
 	) {
 		$this->client                  = $client;
 		$this->authorizationService    = $authorizationService;
 		$this->session                 = $session;
 		$this->settings                = $settings;
 		$this->identityProviderService = $identityProviderService;
+		$this->httpClient              = $httpClient;
 
 		foreach ($this->getEnabledIdentityProviders() as $identityProvider) {
 			add_filter( 'owc_' . $identityProvider->getSlug() . '_is_logged_in', fn (bool $isLoggedIn ): bool => $this->isUserLoggedIn( $isLoggedIn, $identityProvider->getSlug() ) );
@@ -318,13 +325,28 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 			return array();
 		}
 
-		$userInfoService = ( new UserInfoServiceBuilder() )->build();
+		$cacheKey = $identityProvider->getSlug() . '_' . $slot;
+
+		if (isset( $this->userInfoCache[ $cacheKey ] )) {
+			return $this->userInfoCache[ $cacheKey ];
+		}
+
+		$tokenSet        = $this->getIdpTokenSet( $identityProvider, $slot );
+		$userInfoService = ( new UserInfoServiceBuilder() )->setHttpClient( $this->httpClient )->build();
 
 		try {
-			return $userInfoService->getUserInfo( $this->client, $this->getIdpTokenSet( $identityProvider, $slot ) );
+			$userInfo = $userInfoService->getUserInfo( $this->client, $tokenSet );
 		} catch (Exception $e) {
-			return array();
+			$userInfo = array();
 		}
+
+		if (array() === $userInfo && $tokenSet instanceof TokenSet) {
+			$userInfo = $tokenSet->claims();
+		}
+
+		$this->userInfoCache[ $cacheKey ] = $userInfo;
+
+		return $userInfo;
 	}
 
 	public function revoke(IdentityProvider $identityProvider, string $slot = '' ): string
@@ -418,13 +440,23 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 			return array();
 		}
 
+		$cacheKey = $identityProvider->getSlug() . '_' . $slot;
+
+		if (isset( $this->introspectCache[ $cacheKey ] )) {
+			return $this->introspectCache[ $cacheKey ];
+		}
+
 		$introspectionService = ( new IntrospectionServiceBuilder() )->build();
 
 		try {
-			return $introspectionService->introspect( $this->client, $this->getIdpTokenSet( $identityProvider, $slot )->getAccessToken() );
+			$result = $introspectionService->introspect( $this->client, $this->getIdpTokenSet( $identityProvider, $slot )->getAccessToken() );
 		} catch (Exception | RemoteException $e) {
-			return array();
+			$result = array();
 		}
+
+		$this->introspectCache[ $cacheKey ] = $result;
+
+		return $result;
 	}
 
 	public function hasActiveSession(IdentityProvider $identityProvider, string $slot = '' ): bool
@@ -432,7 +464,23 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 		$this->maybeStartSession();
 		$introspect = $this->introspect( $identityProvider, $slot );
 
-		return ! empty( $introspect['active'] );
+		if ( true === ( $introspect['active'] ?? false ) ) {
+			return true;
+		}
+
+		$tokenSet = $this->getIdpTokenSet( $identityProvider, $slot );
+
+		if (null === $tokenSet) {
+			return false;
+		}
+
+		$exp = $tokenSet->claims()['exp'] ?? null;
+
+		if (is_int( $exp )) {
+			return time() < $exp;
+		}
+
+		return false;
 	}
 
 	public function flashErrors(): array
@@ -536,5 +584,8 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 	{
 		$this->session->delete( $this->getSessionKey( $identityProvider, $slot ) );
 		$this->session->save();
+
+		$cacheKey = $identityProvider->getSlug() . '_' . $slot;
+		unset( $this->introspectCache[ $cacheKey ], $this->userInfoCache[ $cacheKey ] );
 	}
 }
