@@ -243,12 +243,19 @@ class OpenIDField extends GF_Field
 
     /**
      * Validates that the user (or partner, when openIdIsSecondLogin is true) has an active IDP session.
-     * When multiple IDP fields are used in the same form, a field passes validation as long as any
-     * supported IDP session is active for the relevant login slot.
+     * When multiple IDP fields are used in the same form, a field passes validation if either its own
+     * IDP session is active, or another OpenID field in the form has an active session for the same
+     * login slot (meaning the user authenticated via a different IDP).
      */
     public function validate($value, $form)
     {
-        if ($this->hasActiveIDPSession()) {
+        if ($this->hasActiveSessionForIDP()) {
+            $this->failed_validation = false;
+
+            return;
+        }
+
+        if ($this->otherOpenIDFieldHasActiveSession($form)) {
             $this->failed_validation = false;
 
             return;
@@ -260,16 +267,35 @@ class OpenIDField extends GF_Field
             : 'Je bent niet ingelogd';
     }
 
+    private function otherOpenIDFieldHasActiveSession(array $form): bool
+    {
+        foreach ($form['fields'] as $field) {
+            if ($field->id === $this->id || ! $field instanceof self) {
+                continue;
+            }
+
+            if (($field->openIdIsSecondLogin ?? false) !== ($this->openIdIsSecondLogin ?? false)) {
+                continue;
+            }
+
+            if ($field->hasActiveSessionForIDP()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private function hasActiveIDPSession(): bool
     {
-		$activeSessions = $this->active_idp_session_by_slot();
+		$activeSessions = $this->activeIPSessionBySlot();
 		$digidSession = $activeSessions['digid'] ?? false;
 		$eHerkenningSession = $activeSessions['eherkenning'] ?? false;
 
 		return $digidSession || $eHerkenningSession;
     }
 
-	private function active_idp_session_by_slot(): array
+	private function activeIPSessionBySlot(): array
 	{
 		$loginSlot = $this->getLoginSlot();
 
