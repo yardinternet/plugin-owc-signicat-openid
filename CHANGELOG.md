@@ -1,5 +1,9 @@
 # Changelog
 
+## [v3.2.3] - 2026-05-22
+
+- Fix: validate against field's own IDP session unless another OpenID field in the form has an active session
+
 ## [v3.2.2] - 2026-05-19
 
 - Perf: replace Guzzle with Symfony HTTP client and add local token fallbacks
