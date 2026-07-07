@@ -28,7 +28,7 @@ class IdentityProvider implements JsonSerializable
 		$this->scope = sprintf( 'idp_scoping:%s', $this->slug );
 	}
 
-	public function jsonSerialize()
+	public function jsonSerialize(): mixed
 	{
 		return array(
 			'slug' => $this->slug,
