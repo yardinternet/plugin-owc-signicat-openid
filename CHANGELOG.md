@@ -1,5 +1,10 @@
 # Changelog
 
+## [v3.2.4] - 2026-07-07
+
+- Fix: Odan PHP session constructor params
+- Fix: return type of jsonSerialize is not compatible
+
 ## [v3.2.3] - 2026-05-22
 
 - Fix: validate against field's own IDP session unless another OpenID field in the form has an active session
