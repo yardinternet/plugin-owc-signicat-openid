@@ -109,9 +109,9 @@ return array(
 		->build(),
 	AuthorizationService::class             => fn (): AuthorizationService => ( new AuthorizationServiceBuilder() )->build(),
 	'session_options'                       => array(
-		'name'            => 'OWC_Signicat_OpenID',
-		'cookie_secure'   => true,
-		'cookie_httponly' => true,
+		'name'     => 'OWC_Signicat_OpenID',
+		'secure'   => true,
+		'httponly' => true,
 	),
 	SessionInterface::class                 => function (ContainerInterface $container ): PhpSession {
 		$session = new PhpSession($container->get( 'session_options' ) );
