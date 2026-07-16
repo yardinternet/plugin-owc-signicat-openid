@@ -39,6 +39,7 @@ use OWCSignicatOpenID\Services\SettingsService;
 use OWCSignicatOpenID\Services\ViewService;
 use OWCSignicatOpenID\UserData\DigiDUserData;
 use OWCSignicatOpenID\UserData\eHerkenningUserData;
+use OWCSignicatOpenID\UserData\eIDASUserData;
 use Odan\Session\PhpSession;
 use Odan\Session\SessionInterface;
 use Psr\Container\ContainerInterface;
@@ -71,6 +72,28 @@ return array(
 				'eherkenning_rsin'                         => 'rsin',
 			),
 			'userDataClass' => eHerkenningUserData::class,
+		),
+		array(
+			'slug'          => 'eidas',
+			'name'          => 'eIDAS',
+			'brokerSlug'    => 'eherkenning',
+			'mapping'       => array(
+				'sub'                                       => 'sub',
+				'nin'                                       => 'nin',
+
+				// Claims as delivered by the Signicat broker.
+				'given_name'                                => 'givenName',
+				'family_name'                               => 'familyName',
+				'birthdate'                                 => 'birthdate',
+				'eherkenning_pseudo'                        => 'personIdentifier',
+
+				// Legacy eToegang attribute names.
+				'urn:etoegang:1.9:attribute:FirstName'      => 'givenName',
+				'urn:etoegang:1.9:attribute:FamilyName'     => 'familyName',
+				'urn:etoegang:1.9:attribute:DateOfBirth'    => 'birthdate',
+				'urn:etoegang:1.9:EntityConcernedID:Pseudo' => 'personIdentifier',
+			),
+			'userDataClass' => eIDASUserData::class,
 		),
 	),
 	'idps_errors'                           => function () {
@@ -107,7 +130,7 @@ return array(
 		->setIssuer( $container->get( IssuerInterface::class ) )
 		->setClientMetadata( $container->get( ClientMetadataInterface::class ) )
 		->build(),
-	AuthorizationService::class             => fn (): AuthorizationService => ( new AuthorizationServiceBuilder() )->build(),
+	AuthorizationService::class             => fn (ContainerInterface $container ): AuthorizationService => ( new AuthorizationServiceBuilder() )->setHttpClient( $container->get( HttpClientInterface::class ) )->build(),
 	'session_options'                       => array(
 		'name'     => 'OWC_Signicat_OpenID',
 		'secure'   => true,
