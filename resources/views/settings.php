@@ -102,6 +102,32 @@ namespace OWCSignicatOpenID;
 					<input type='checkbox' name='owc_signicat_openid_enable_simulator_settings' <?php checked( $enable_simulator, 1 ); ?> value='1'>
 				</td>
 			</tr>
+			<tr>
+				<th scope="row">
+					<label for="owc_signicat_openid_service_index_eherkenning_settings">
+						<?php esc_html_e( 'eHerkenning service index', 'owc-signicat-openid' ); ?>
+					</label>
+				</th>
+				<td>
+					<input type="text" name="owc_signicat_openid_service_index_eherkenning_settings" id="owc_signicat_openid_service_index_eherkenning_settings" value="<?php echo esc_attr( $service_index_eherkenning ); ?>">
+					<p class="description">
+						<?php esc_html_e( 'The service index of the eHerkenning service in your Signicat catalogue. Leave empty to use the default service configured in Signicat. Example: 9701', 'owc-signicat-openid' ); ?>
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<th scope="row">
+					<label for="owc_signicat_openid_service_index_eidas_settings">
+						<?php esc_html_e( 'eIDAS service index', 'owc-signicat-openid' ); ?>
+					</label>
+				</th>
+				<td>
+					<input type="text" name="owc_signicat_openid_service_index_eidas_settings" id="owc_signicat_openid_service_index_eidas_settings" value="<?php echo esc_attr( $service_index_eidas ); ?>">
+					<p class="description">
+						<?php esc_html_e( 'The service index of the eIDAS-enabled service in your Signicat catalogue. Leave empty to use the default service configured in Signicat. Example: 9702', 'owc-signicat-openid' ); ?>
+					</p>
+				</td>
+			</tr>
 		</table>
 		<?php submit_button(); ?>
 	</form>

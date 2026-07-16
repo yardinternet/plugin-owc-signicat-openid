@@ -40,6 +40,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 {
 	private const DIGID_GENERIC_ERROR = 'Inloggen bij deze organisatie is niet gelukt. Probeert u het later nog een keer. Lukt het nog steeds niet? Log in bij Mijn DigiD. Zo controleert u of uw DigiD goed werkt. Mogelijk is er een storing bij de organisatie waar u inlogt.';
 	private const EHERKENNING_GENERIC_ERROR = 'Inloggen bij deze organisatie is niet gelukt. Probeert u het later nog een keer. Mogelijk is er een storing bij de organisatie waar u inlogt.';
+	private const EIDAS_GENERIC_ERROR = 'Inloggen bij deze organisatie is niet gelukt. Probeert u het later nog een keer. Mogelijk is er een storing bij de organisatie waar u inlogt.';
 
 	protected ClientInterface $client;
 	protected AuthorizationService $authorizationService;
@@ -179,8 +180,15 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 		if ($this->isLegacyImplementation()) {
 			$scope[] = $simulatorEnabled ? 'idp_scoping:simulator' : $identityProvider->getScope();
 		} else {
-			$acrValues[] = $simulatorEnabled ? 'idp:simulator' : 'idp:' . $identityProvider->getSlug();
+			$acrValues[] = $simulatorEnabled ? 'idp:simulator' : 'idp:' . $identityProvider->getBrokerSlug();
 			$scope[]     = 'nin';
+
+			$serviceIndex = $this->settings->getSetting( 'service_index_' . $identityProvider->getSlug() );
+			$serviceIndex = is_string( $serviceIndex ) ? trim( $serviceIndex ) : '';
+
+			if ( ! $simulatorEnabled && '' !== $serviceIndex) {
+				$acrValues[] = 'service_index:' . $serviceIndex;
+			}
 		}
 
 		$scope = array_merge( $scope, $identityProvider->getIdpScopes() );
@@ -189,7 +197,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 			array(
 				'scope'      => implode( ' ', array_unique( array_filter( $scope ) ) ),
 				'state'      => $stateID,
-				'acr_values' => implode( ',', $acrValues ),
+				'acr_values' => implode( ' ', $acrValues ),
 				'prompt'     => 'login',
 			)
 		);
@@ -266,6 +274,8 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 			$errorText = self::DIGID_GENERIC_ERROR; // Generic error message for all other errors, to avoid showing technical details to the user.
 		} elseif('eherkenning' === $identityProvider->getSlug()) {
 			$errorText = self::EHERKENNING_GENERIC_ERROR; // Generic error message for all other errors, to avoid showing technical details to the user.
+		} elseif('eidas' === $identityProvider->getSlug()) {
+			$errorText = self::EIDAS_GENERIC_ERROR; // Generic error message for all other errors, to avoid showing technical details to the user.
 		} else {
 			$errorText = $exception->getDescription();
 		}
