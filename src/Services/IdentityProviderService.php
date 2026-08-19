@@ -27,6 +27,24 @@ class IdentityProviderService extends Service implements IdentityProviderService
 		$this->settings = $settings;
 	}
 
+	/**
+	 * The enabled-IDPs cache is derived from the broker's IDP list and the
+	 * service_index_* settings, so it must be invalidated whenever either
+	 * could have changed. Otherwise a newly configured service (e.g. eIDAS)
+	 * stays hidden from the form editor until the cache expires on its own.
+	 */
+	public function register(): void
+	{
+		add_action( 'updated_option', $this->maybeClearCache( ... ) );
+	}
+
+	public function maybeClearCache(string $option ): void
+	{
+		if ('owc_signicat_openid_configuration_url_settings' === $option || str_starts_with( $option, 'owc_signicat_openid_service_index_' )) {
+			$this->cache->delete( self::CACHE_KEY );
+		}
+	}
+
 	public function setIdps(array $idps ): void
 	{
 		foreach ($idps as $idp) {
@@ -55,7 +73,23 @@ class IdentityProviderService extends Service implements IdentityProviderService
 
 		$enabledIdps = array_filter(
 			$this->idps,
-			fn (IdentityProvider $idp ): bool => in_array( $idp->getSlug(), $enabledIdps, true )
+			function (IdentityProvider $idp ) use ( $enabledIdps ): bool {
+				if ( ! in_array( $idp->getBrokerSlug(), $enabledIdps, true )) {
+					return false;
+				}
+
+				// IDPs that piggyback on another broker IDP (e.g. eIDAS on eHerkenning)
+				// are only usable once their catalogue service index is configured,
+				// otherwise they can't be distinguished from the underlying broker IDP.
+				if ($idp->getBrokerSlug() !== $idp->getSlug()) {
+					$serviceIndex = $this->settings->getSetting( 'service_index_' . $idp->getSlug() );
+					$serviceIndex = is_string( $serviceIndex ) ? trim( $serviceIndex ) : '';
+
+					return '' !== $serviceIndex;
+				}
+
+				return true;
+			}
 		);
 
 		if (count( $enabledIdps ) === 0) {

@@ -14,6 +14,13 @@ class IdentityProvider implements JsonSerializable
 
 	protected string $userDataClass;
 
+	/**
+	 * The IDP internalName as known by the Signicat broker. Defaults to the
+	 * slug, but can differ for IDPs that are actually a catalogue service of
+	 * another broker IDP (e.g. 'eidas' is a service under 'eherkenning').
+	 */
+	protected string $brokerSlug = '';
+
 	public function __construct(array $data )
 	{
 		$class_vars = get_class_vars( static::class );
@@ -26,6 +33,10 @@ class IdentityProvider implements JsonSerializable
 		}
 
 		$this->scope = sprintf( 'idp_scoping:%s', $this->slug );
+
+		if ('' === $this->brokerSlug) {
+			$this->brokerSlug = $this->slug;
+		}
 	}
 
 	public function jsonSerialize(): mixed
@@ -39,6 +50,11 @@ class IdentityProvider implements JsonSerializable
 	public function getSlug(): string
 	{
 		return $this->slug;
+	}
+
+	public function getBrokerSlug(): string
+	{
+		return $this->brokerSlug;
 	}
 
 	public function getName(): string

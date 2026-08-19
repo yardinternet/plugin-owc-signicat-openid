@@ -2,14 +2,14 @@
 # This file is distributed under the EUPL.
 msgid ""
 msgstr ""
-"Project-Id-Version: OWC | Signicat OpenID 3.0.1\n"
+"Project-Id-Version: OWC | Signicat OpenID 3.2.4\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/owc-signicat-openid\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-03-26T12:22:54+00:00\n"
+"POT-Creation-Date: 2026-08-18T04:52:53+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: owc-signicat-openid\n"
@@ -68,7 +68,7 @@ msgid "Activate this option if this field is intended for the co-applicant. The 
 msgstr ""
 
 #: resources/views/settings.php:17
-#: src/Services/SettingsService.php:39
+#: src/Services/SettingsService.php:41
 msgid "Signicat OpenID"
 msgstr ""
 
@@ -116,14 +116,52 @@ msgstr ""
 msgid "Enable simulator"
 msgstr ""
 
-#: src/GravityForms/Fields/OpenIDField.php:108
+#: resources/views/settings.php:108
+msgid "eHerkenning service index"
+msgstr ""
+
+#: resources/views/settings.php:114
+msgid "The service index of the eHerkenning service in your Signicat catalogue. Leave empty to use the default service configured in Signicat. Example: 9701"
+msgstr ""
+
+#: resources/views/settings.php:121
+msgid "eIDAS service index"
+msgstr ""
+
+#: resources/views/settings.php:127
+msgid "The service index of the eIDAS-enabled service in your Signicat catalogue. Leave empty to use the default service configured in Signicat. Example: 9702"
+msgstr ""
+
+#: src/GravityForms/Fields/OpenIDField.php:112
 msgid "Select a Service Index"
 msgstr ""
 
-#: src/GravityForms/Fields/OpenIDField.php:304
+#: src/GravityForms/Fields/OpenIDField.php:417
 msgid "Login to"
 msgstr ""
 
-#: src/Services/OpenIDService.php:252
+#: src/Services/OpenIDService.php:271
 msgid "The user cancelled the login process"
+msgstr ""
+
+#: resources/blocks/openid/edit.js:31
+msgid "Settings"
+msgstr ""
+
+#: resources/blocks/openid/edit.js:36
+msgid "Redirect URL"
+msgstr ""
+
+#: resources/blocks/openid/edit.js:43
+msgid "Button text"
+msgstr ""
+
+#: resources/blocks/openid/block.json
+msgctxt "block title"
+msgid "OpenID"
+msgstr ""
+
+#: resources/blocks/openid/block.json
+msgctxt "block description"
+msgid "Show the OpenID login block"
 msgstr ""
