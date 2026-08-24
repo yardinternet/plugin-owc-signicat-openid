@@ -354,6 +354,10 @@ class OpenIDField extends GF_Field
 
     public function get_value_save_entry($value, $form, $input_name, $lead_id, $lead)
     {
+        if (! $this->hasActiveSessionForIDP()) {
+            return '';
+        }
+
         if ($this->openIdIsSecondLogin ?? false) {
             return sprintf('Ingelogd medeaanvrager (%s)', $this->idp->getName());
         }
