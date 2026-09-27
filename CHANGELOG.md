@@ -1,5 +1,9 @@
 # Changelog
 
+## [v3.2.5] - 2026-09-27
+
+- Fix: Only save active OpenID session values
+
 ## [v3.2.4] - 2026-07-07
 
 - Fix: Odan PHP session constructor params
