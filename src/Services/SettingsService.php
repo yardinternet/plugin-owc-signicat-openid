@@ -19,6 +19,8 @@ class SettingsService extends Service implements SettingsServiceInterface
 		'path_logout',
 		'path_redirect',
 		'enable_simulator',
+		'service_index_eherkenning',
+		'service_index_eidas',
 	);
 
 	public function __construct(ViewServiceInterface $view_service )

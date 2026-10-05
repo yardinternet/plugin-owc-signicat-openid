@@ -1,15 +1,16 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: OWC | Signicat OpenID 1.0.0\n"
-"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/owc-signicat-openid\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/owc-signicat-"
+"openid\n"
+"POT-Creation-Date: 2026-08-18T04:52:53+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2024-12-05T07:15:07+00:00\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Language: \n"
 "X-Generator: WP-CLI 2.10.0\n"
 "X-Domain: owc-signicat-openid\n"
 
@@ -38,8 +39,46 @@ msgstr "Yard | Digital Agency"
 msgid "https://www.yard.nl"
 msgstr "https://www.yard.nl"
 
-#: resources/views/settings.php:17
-#: src/Services/SettingsService.php:39
+#: config/idps_errors.php:4
+msgid "The user cancelled"
+msgstr "De gebruiker heeft geannuleerd"
+
+#: config/idps_errors.php:5
+msgid ""
+"Authentication with the IdP was aborted, most likely because the end-user "
+"cancelled the authentication."
+msgstr ""
+"Authenticatie met de IdP is afgebroken, hoogstwaarschijnlijk omdat de "
+"eindgebruiker de authenticatie heeft geannuleerd."
+
+#: config/idps_errors.php:6
+msgid "Login cancelled"
+msgstr "Login geannuleerd"
+
+#: resources/views/scope-select.php:3
+msgid "OIDC-scopes"
+msgstr "OIDC-scopes"
+
+#: resources/views/scope-select.php:10
+msgid ""
+"Selecting a scope provides access to additional information about a user."
+msgstr ""
+"Het selecteren van een scope geeft toegang tot extra gegevens van een "
+"gebruiker."
+
+#: resources/views/second-login-setting.php:6
+msgid "Second applicant (co-applicant)"
+msgstr "Tweede aanvrager (medeaanvrager)"
+
+#: resources/views/second-login-setting.php:11
+msgid ""
+"Activate this option if this field is intended for the co-applicant. The co-"
+"applicant logs in with a separate session."
+msgstr ""
+"Activeer deze optie als dit veld bedoeld is voor de medeaanvrager. De "
+"medeaanvrager logt in met een aparte sessie."
+
+#: resources/views/settings.php:17 src/Services/SettingsService.php:41
 msgid "Signicat OpenID"
 msgstr "Signicat OpenID"
 
@@ -87,42 +126,62 @@ msgstr "Voorbeeld: redirect"
 msgid "Enable simulator"
 msgstr "Simulator inschakelen"
 
-#: resources/views/scope-select.php:3
-msgid "OIDC-scopes"
-msgstr "OIDC-scopes"
+#: resources/views/settings.php:108
+msgid "eHerkenning service index"
+msgstr "eHerkenning service index"
 
-#: resources/views/scope-select.php:10
-msgid "Selecting a scope provides access to additional information about a user."
-msgstr "Het selecteren van een scope geeft toegang tot extra gegevens van een gebruiker."
+#: resources/views/settings.php:114
+msgid ""
+"The service index of the eHerkenning service in your Signicat catalogue. "
+"Leave empty to use the default service configured in Signicat. Example: 9701"
+msgstr ""
+"De service index van de eHerkenning-dienst in uw Signicat catalogus. Laat "
+"leeg om de standaarddienst te gebruiken die in Signicat is ingesteld. "
+"Voorbeeld: 9701"
 
-#: src/GravityForms/Fields/OpenIDField.php:304
+#: resources/views/settings.php:121
+msgid "eIDAS service index"
+msgstr "eIDAS service index"
+
+#: resources/views/settings.php:127
+msgid ""
+"The service index of the eIDAS-enabled service in your Signicat catalogue. "
+"Leave empty to use the default service configured in Signicat. Example: 9702"
+msgstr ""
+"De service index van de eIDAS-dienst in uw Signicat catalogus. Laat leeg "
+"om de standaarddienst te gebruiken die in Signicat is ingesteld. "
+"Voorbeeld: 9702"
+
+#: src/GravityForms/Fields/OpenIDField.php:112
 msgid "Select a Service Index"
 msgstr "Selecteer een Service Index"
 
-#: src/GravityForms/Fields/OpenIDField.php:304
+#: src/GravityForms/Fields/OpenIDField.php:417
 msgid "Login to"
 msgstr "Inloggen bij"
 
-#: config/idps_errors.php:4
-msgid "The user cancelled"
-msgstr "De gebruiker heeft geannuleerd"
-
-#: config/idps_errors.php:5
-msgid "Authentication with the IdP was aborted, most likely because the end-user cancelled the authentication."
-msgstr "Authenticatie met de IdP is afgebroken, hoogstwaarschijnlijk omdat de eindgebruiker de authenticatie heeft geannuleerd."
-
-#: config/idps_errors.php:6
-msgid "Login cancelled"
-msgstr "Login geannuleerd"
-
-#: resources/views/second-login-setting.php:6
-msgid "Second applicant (co-applicant)"
-msgstr "Tweede aanvrager (medeaanvrager)"
-
-#: resources/views/second-login-setting.php:11
-msgid "Activate this option if this field is intended for the co-applicant. The co-applicant logs in with a separate session."
-msgstr "Activeer deze optie als dit veld bedoeld is voor de medeaanvrager. De medeaanvrager logt in met een aparte sessie."
-
-#: src/Services/OpenIDService.php:252
+#: src/Services/OpenIDService.php:271
 msgid "The user cancelled the login process"
 msgstr "De gebruiker heeft het inloggen geannuleerd"
+
+#: resources/blocks/openid/edit.js:31
+msgid "Settings"
+msgstr ""
+
+#: resources/blocks/openid/edit.js:36
+msgid "Redirect URL"
+msgstr ""
+
+#: resources/blocks/openid/edit.js:43
+msgid "Button text"
+msgstr ""
+
+#: resources/blocks/openid/block.json
+msgctxt "block title"
+msgid "OpenID"
+msgstr ""
+
+#: resources/blocks/openid/block.json
+msgctxt "block description"
+msgid "Show the OpenID login block"
+msgstr ""

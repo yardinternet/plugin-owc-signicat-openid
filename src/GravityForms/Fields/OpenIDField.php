@@ -16,6 +16,8 @@ use OWC\IdpUserData\DigiDPartnerSession;
 use OWC\IdpUserData\DigiDSession;
 use OWC\IdpUserData\eHerkenningPartnerSession;
 use OWC\IdpUserData\eHerkenningSession;
+use OWC\IdpUserData\eIDASPartnerSession;
+use OWC\IdpUserData\eIDASSession;
 
 class OpenIDField extends GF_Field
 {
@@ -291,8 +293,9 @@ class OpenIDField extends GF_Field
 		$activeSessions = $this->activeIPSessionBySlot();
 		$digidSession = $activeSessions['digid'] ?? false;
 		$eHerkenningSession = $activeSessions['eherkenning'] ?? false;
+		$eIDASSession = $activeSessions['eidas'] ?? false;
 
-		return $digidSession || $eHerkenningSession;
+		return $digidSession || $eHerkenningSession || $eIDASSession;
     }
 
 	private function activeIPSessionBySlot(): array
@@ -303,6 +306,7 @@ class OpenIDField extends GF_Field
 			return [
 				'digid' => DigiDSession::isPartnerLoggedIn() && ! is_null(DigiDPartnerSession::getUserData()),
 				'eherkenning' => eHerkenningSession::isPartnerLoggedIn() && ! is_null(eHerkenningPartnerSession::getUserData()),
+				'eidas' => eIDASSession::isPartnerLoggedIn() && ! is_null(eIDASPartnerSession::getUserData()),
 			];
 		}
 
@@ -310,12 +314,14 @@ class OpenIDField extends GF_Field
 			return [
 				'digid' => false,
 				'eherkenning' => false,
+				'eidas' => false,
 			];
 		}
 
 		return [
 			'digid' => DigiDSession::isLoggedIn() && ! is_null(DigiDSession::getUserData()),
 			'eherkenning' => eHerkenningSession::isLoggedIn() && ! is_null(eHerkenningSession::getUserData()),
+			'eidas' => eIDASSession::isLoggedIn() && ! is_null(eIDASSession::getUserData()),
 		];
 	}
 
@@ -327,6 +333,7 @@ class OpenIDField extends GF_Field
 			return match ($slug) {
 				'digid' => DigiDSession::isPartnerLoggedIn() && ! is_null(DigiDPartnerSession::getUserData()),
 				'eherkenning' => eHerkenningSession::isPartnerLoggedIn() && ! is_null(eHerkenningPartnerSession::getUserData()),
+				'eidas' => eIDASSession::isPartnerLoggedIn() && ! is_null(eIDASPartnerSession::getUserData()),
 				default => false,
 			};
 		}
@@ -334,6 +341,7 @@ class OpenIDField extends GF_Field
 		return match ($slug) {
 			'digid' => DigiDSession::isLoggedIn() && ! is_null(DigiDSession::getUserData()),
 			'eherkenning' => eHerkenningSession::isLoggedIn() && ! is_null(eHerkenningSession::getUserData()),
+			'eidas' => eIDASSession::isLoggedIn() && ! is_null(eIDASSession::getUserData()),
 			default => false,
 		};
 	}

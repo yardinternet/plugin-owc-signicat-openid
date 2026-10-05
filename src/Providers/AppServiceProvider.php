@@ -19,6 +19,7 @@ if ( ! defined( 'ABSPATH' )) {
 use OWCSignicatOpenID\Interfaces\Providers\AppServiceProviderInterface;
 use OWCSignicatOpenID\Interfaces\Services\BlockServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\GravityFormsServiceInterface;
+use OWCSignicatOpenID\Interfaces\Services\IdentityProviderServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\LifeCycleServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\ModalServiceInterface;
 use OWCSignicatOpenID\Interfaces\Services\RouteServiceInterface;
@@ -37,14 +38,16 @@ class AppServiceProvider extends ServiceProvider implements AppServiceProviderIn
 		BlockServiceInterface $blockService,
 		RouteServiceInterface $routeService,
 		GravityFormsServiceInterface $gravityFormsService,
-		ModalServiceInterface $modalService
+		ModalServiceInterface $modalService,
+		IdentityProviderServiceInterface $identityProviderService
 	) {
 		$this->services = array(
-			'life_cycle'    => $lifeCycleService,
-			'block'         => $blockService,
-			'route'         => $routeService,
-			'gravity_forms' => $gravityFormsService,
-			'modal'         => $modalService,
+			'life_cycle'        => $lifeCycleService,
+			'block'             => $blockService,
+			'route'             => $routeService,
+			'gravity_forms'     => $gravityFormsService,
+			'modal'             => $modalService,
+			'identity_provider' => $identityProviderService,
 		);
 
 		$this->registerHooks();
