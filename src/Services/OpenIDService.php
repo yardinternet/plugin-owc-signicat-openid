@@ -14,6 +14,7 @@ namespace OWCSignicatOpenID\Services;
 
 use Exception;
 use Facile\OpenIDClient\Client\ClientInterface;
+use Facile\OpenIDClient\Exception\ExceptionInterface as OpenIDClientException;
 use Facile\OpenIDClient\Exception\OAuth2Exception;
 use Facile\OpenIDClient\Exception\RemoteException;
 use Facile\OpenIDClient\Service\AuthorizationService;
@@ -31,6 +32,7 @@ use OWC\IdpUserData\UserDataInterface;
 use Odan\Session\SessionInterface;
 use Psr\Http\Client\ClientInterface as HttpClientInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Log\LoggerInterface;
 use RuntimeException;
 use WP_Error;
 
@@ -40,6 +42,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 {
 	private const DIGID_GENERIC_ERROR = 'Inloggen bij deze organisatie is niet gelukt. Probeert u het later nog een keer. Lukt het nog steeds niet? Log in bij Mijn DigiD. Zo controleert u of uw DigiD goed werkt. Mogelijk is er een storing bij de organisatie waar u inlogt.';
 	private const EHERKENNING_GENERIC_ERROR = 'Inloggen bij deze organisatie is niet gelukt. Probeert u het later nog een keer. Mogelijk is er een storing bij de organisatie waar u inlogt.';
+	private const EIDAS_GENERIC_ERROR = 'Inloggen bij deze organisatie is niet gelukt. Probeert u het later nog een keer. Mogelijk is er een storing bij de organisatie waar u inlogt.';
 
 	protected ClientInterface $client;
 	protected AuthorizationService $authorizationService;
@@ -47,6 +50,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 	protected SettingsServiceInterface $settings;
 	protected IdentityProviderServiceInterface $identityProviderService;
 	protected HttpClientInterface $httpClient;
+	protected LoggerInterface $logger;
 
 	private array $introspectCache = array();
 	private array $userInfoCache   = array();
@@ -57,7 +61,8 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 		SessionInterface $session,
 		SettingsServiceInterface $settings,
 		IdentityProviderServiceInterface $identityProviderService,
-		HttpClientInterface $httpClient
+		HttpClientInterface $httpClient,
+		LoggerInterface $logger
 	) {
 		$this->client                  = $client;
 		$this->authorizationService    = $authorizationService;
@@ -65,6 +70,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 		$this->settings                = $settings;
 		$this->identityProviderService = $identityProviderService;
 		$this->httpClient              = $httpClient;
+		$this->logger                  = $logger;
 
 		foreach ($this->getEnabledIdentityProviders() as $identityProvider) {
 			add_filter( 'owc_' . $identityProvider->getSlug() . '_is_logged_in', fn (bool $isLoggedIn ): bool => $this->isUserLoggedIn( $isLoggedIn, $identityProvider->getSlug() ) );
@@ -121,6 +127,8 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 		$idpScopes = [
 			'digid' => array( 'offline_access' ),
 			'eherkenning' => array( 'eherkenning-extra' ),
+			// eIDAS runs through the eHerkenning broker, its identity attributes (name, birthdate, pseudo ID) require these scopes.
+			'eidas'       => array( 'eherkenning-extra', 'profile' ),
 		];
 
 		$args = array_filter(
@@ -179,8 +187,15 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 		if ($this->isLegacyImplementation()) {
 			$scope[] = $simulatorEnabled ? 'idp_scoping:simulator' : $identityProvider->getScope();
 		} else {
-			$acrValues[] = $simulatorEnabled ? 'idp:simulator' : 'idp:' . $identityProvider->getSlug();
+			$acrValues[] = $simulatorEnabled ? 'idp:simulator' : 'idp:' . $identityProvider->getBrokerSlug();
 			$scope[]     = 'nin';
+
+			$serviceIndex = $this->settings->getSetting( 'service_index_' . $identityProvider->getSlug() );
+			$serviceIndex = is_string( $serviceIndex ) ? trim( $serviceIndex ) : '';
+
+			if ( ! $simulatorEnabled && '' !== $serviceIndex) {
+				$acrValues[] = 'service_index:' . $serviceIndex;
+			}
 		}
 
 		$scope = array_merge( $scope, $identityProvider->getIdpScopes() );
@@ -189,7 +204,7 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 			array(
 				'scope'      => implode( ' ', array_unique( array_filter( $scope ) ) ),
 				'state'      => $stateID,
-				'acr_values' => implode( ',', $acrValues ),
+				'acr_values' => implode( ' ', $acrValues ),
 				'prompt'     => 'login',
 			)
 		);
@@ -242,7 +257,27 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 
 		$this->maybeStartSession();
 
-		$tokenSet = $this->authorizationService->callback( $this->client, $callback_params );
+		try {
+			$tokenSet = $this->authorizationService->callback( $this->client, $callback_params );
+		} catch (OAuth2Exception $exception) {
+			// Error response from the token endpoint, e.g. an invalid or already used authorization code.
+			$this->logger->error( 'OpenID token endpoint returned an error', array( 'exception' => $exception ) );
+			$this->handleIdpsError( $exception, $identityProvider );
+			$this->session->save();
+			wp_safe_redirect( $state['refererUrl'] ?? home_url() );
+			exit;
+		} catch (OpenIDClientException $exception) {
+			// Transport or validation failure, e.g. the token endpoint is unreachable or the ID token is invalid.
+			$this->logger->error( 'OpenID token exchange failed', array( 'exception' => $exception ) );
+			$this->session->getFlash()->add(
+				$identityProvider->getSlug(),
+				$this->getGenericIdpError( $identityProvider ) ?: __( 'Something went wrong while logging in, please try again later.', 'owc-signicat-openid' )
+			);
+			$this->session->save();
+			wp_safe_redirect( $state['refererUrl'] ?? home_url() );
+			exit;
+		}
+
 		if (null === $tokenSet->getIdToken()) {
 			throw new RuntimeException( 'Unauthorized' );
 		}
@@ -262,15 +297,26 @@ class OpenIDService extends Service implements OpenIDServiceInterface
 			$errorText = ContainerManager::getContainer()->get( 'idps_errors' )[ $exception->getError() ] ?? $exception->getDescription();
 		} elseif('IDP-3200' === $exception->getError()) {
 			$errorText = __('The user cancelled the login process', 'owc-signicat-openid' );
-		} elseif('digid' === $identityProvider->getSlug()) {
-			$errorText = self::DIGID_GENERIC_ERROR; // Generic error message for all other errors, to avoid showing technical details to the user.
-		} elseif('eherkenning' === $identityProvider->getSlug()) {
-			$errorText = self::EHERKENNING_GENERIC_ERROR; // Generic error message for all other errors, to avoid showing technical details to the user.
 		} else {
-			$errorText = $exception->getDescription();
+			// Generic error message for all other errors, to avoid showing technical details to the user.
+			$errorText = $this->getGenericIdpError($identityProvider) ?: $exception->getDescription();
 		}
 
 		$this->session->getFlash()->add($identityProvider->getSlug(), $errorText);
+	}
+
+	private function getGenericIdpError(IdentityProvider $identityProvider): string
+	{
+		switch ($identityProvider->getSlug()) {
+			case 'digid':
+				return self::DIGID_GENERIC_ERROR;
+			case 'eherkenning':
+				return self::EHERKENNING_GENERIC_ERROR;
+			case 'eidas':
+				return self::EIDAS_GENERIC_ERROR;
+			default:
+				return '';
+		}
 	}
 
 	/**
